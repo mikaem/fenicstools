@@ -675,7 +675,7 @@ if __name__=='__main__':
     import time
     mesh = UnitCubeMesh(10, 10, 10)
     #mesh = UnitSquareMesh(10, 10)
-    V = FunctionSpace(mesh, 'CG', 1)
+    V = FunctionSpace(mesh, 'CG', 2)
     Vv = VectorFunctionSpace(mesh, 'CG', 1)
     W = V * Vv
     
@@ -703,7 +703,7 @@ if __name__=='__main__':
     origin = [0.25, 0.25, 0.25]               # origin of box
     vectors = [[1, 0, 0], [0, 1, 0], [0, 0, 1]] # coordinate vectors (scaled in StructuredGrid)
     dL = [0.5, 0.5, 0.5]                      # extent of slice in both directions
-    N  = [5, 4, 3]                           # number of points in each direction
+    N  = [100, 100, 100]                           # number of points in each direction
     
     # 2D slice
     #origin = [0.1, 0.1, 0.5]               # origin of slice
