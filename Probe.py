@@ -5,8 +5,8 @@ __license__  = "GNU Lesser GPL version 3 or any later version"
 """
 This module contains functionality for efficiently probing a Function many times. 
 """
-from cbc.cfd.oasis import *
-#from dolfin import *
+#from cbc.cfd.oasis import *
+from dolfin import *
 from numpy import alltrue, cos, zeros, array, repeat, squeeze, argmax, cumsum, reshape, resize, linspace, abs, sign, all, float32
 from numpy.linalg import norm as numpy_norm
 try:
@@ -41,6 +41,9 @@ class Probe(compiled_module.Probe):
 
     def __len__(self):
         return self.value_size()
+    
+    def __getitem__(self, i):
+        return self.get_probe_at_snapshot(i)
 
 class Probes(compiled_module.Probes):
 
@@ -69,7 +72,7 @@ class Probes(compiled_module.Probes):
         """Dump data to numpy format on root processor for all or one snapshot"""
         is_root = comm.Get_rank() == root
         size = self.get_total_number_probes() if is_root else len(self)
-        if N:
+        if not N is None:
             z  = zeros((size, self.value_size()))
         else:
             z  = zeros((size, self.value_size(), self.number_of_evaluations()))
@@ -78,7 +81,7 @@ class Probes(compiled_module.Probes):
         if len(self) > 0: 
             for i, (index, probe) in enumerate(self):
                 j = index if is_root else i
-                if N:
+                if not N is None:
                     z[j, :] = probe.get_probe_at_snapshot(N)
                 else:
                     for k in range(self.value_size()):
@@ -99,11 +102,11 @@ class Probes(compiled_module.Probes):
             
         if is_root:
             if filename:
-                if N:
+                if not N is None:
                     z.dump(filename+"_snapshot_"+str(N)+".probes")
                 else:
                     z.dump(filename+"_all.probes")
-            return z
+            return squeeze(z)
 
 class StatisticsProbe(compiled_module.StatisticsProbe):
     
@@ -165,7 +168,7 @@ class StatisticsProbes(compiled_module.StatisticsProbes):
         if is_root:
             if filename:
                 z.dump(filename+"_statistics.probes")
-            return z
+            return squeeze(z)
 
 class StructuredGrid:
     """A Structured grid of probe points. A slice of a 3D (possibly 2D if needed) 
