@@ -645,8 +645,8 @@ class ChannelGrid(StructuredGrid):
         dy[1][:] = cos(pi*(dy[1][:]+self.origin[1] - 1.) / 2.) - self.origin[1]
         return dx, dy, dz
 
-def project_nonmatching_mesh(u0, V):
-    """project from Function u0 to a Function in V."""
+def interpolate_nonmatching_mesh(u0, V):
+    """interpolate from Function u0 in V0 to a Function in V."""
     V0 = u0.function_space()
     mesh0 = V0.mesh()
     mesh1 = V.mesh()
@@ -764,7 +764,7 @@ if __name__=='__main__':
     x = mesh2.coordinates()
     x[:, :] = x[:, :] * 0.5 + 0.25
     V2 = FunctionSpace(mesh2, 'CG', 1)
-    u = project_nonmatching_mesh(x0, V2)
+    u = interpolate_nonmatching_mesh(x0, V2)
     ff = File('test_project_nonmatching.pvd')
     ff << u
     plot(u)
