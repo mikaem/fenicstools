@@ -6,7 +6,7 @@
 
 namespace dolfin
 {
-  
+
   class StatisticsProbes : public Probes
   {
       

@@ -5,9 +5,10 @@
 
 namespace dolfin
 {
+
   class Probes 
   {
-      
+
   public:
       
     Probes(const Array<double>& x, const FunctionSpace& V);

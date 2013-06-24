@@ -96,7 +96,7 @@ class Probes(compiled_module.Probes):
                     z0 = comm.recv(source=j, tag=102)
                     z[ids, :] = z0[:, :]
         else:
-            ids = self.get_probe_ids()
+            ids = self.probes.get_probe_ids()
             comm.send(ids, dest=root, tag=101)
             comm.send(z, dest=root, tag=102)
             
@@ -115,6 +115,10 @@ class StatisticsProbe(compiled_module.StatisticsProbe):
 
     def __len__(self):
         return self.value_size()
+    
+    def __getitem__(self, i):
+        assert(i < 2)
+        return self.get_probe_at_snapshot(i)
 
 class StatisticsProbes(compiled_module.StatisticsProbes):
 
@@ -189,7 +193,7 @@ class StructuredGrid:
     """
     def __init__(self, V, dims=None, origin=None, dX=None, dL=None, statistics=False, restart=False, tstep=None):
         if restart:
-            statistics = self.read_grid_from_hdf5(restart)
+            statistics = self.read_grid(restart)
         else:
             self.dims = dims
             self.dL, self.dX = array(dL, float), array(dX, float)
@@ -198,7 +202,7 @@ class StructuredGrid:
             
         self.initialize_probes(statistics, V)
         if restart:
-            self.set_data_from_hdf5(filename=restart, tstep=tstep)
+            self.set_data_from_file(filename=restart, tstep=tstep)
                  
     def initialize_probes(self, statistics, V):
         if len(self.dims) == 2 and statistics:
@@ -235,6 +239,19 @@ class StructuredGrid:
         self.i += 1
         return p   
         
+    def read_grid(self, restart):
+        if restart.endswith(".vtk"):
+            statistics = self.read_grid_from_vtk(restart)
+        else:
+            statistics = self.read_grid_from_hdf5(restart)
+        return statistics
+    
+    def set_data_from_file(self, filename='', tstep=0):
+        if filename.endswith('.vtk'):
+            self.set_data_from_vtk(filename)
+        else:
+            self.set_data_from_hdf5(filename=filename, tstep=tstep)
+
     def create_coordinate_vectors(self):
         """Create the vectors that span the entire computational box.
         dx, dy, dz are lists of length dim (2 for 2D, 3 for 3D)
@@ -529,34 +546,8 @@ class StructuredGrid:
 
     def array(self, N=None, filename=None, root=0):
         """Dump data to numpy format on root processor for all or one snapshot"""
-        is_root = comm.Get_rank() == root
-        size = self.get_total_number_probes() if is_root else len(self)
-        if N:
-            z  = zeros((size, self.value_size()))
-        else:
-            z  = zeros((size, self.value_size(), self.number_of_evaluations()))
-        
-        if len(self) > 0: 
-            for i, (index, probe) in enumerate(self):
-                j = index if is_root else i
-                if N:
-                    z[j, :] = probe.get_probe_at_snapshot(N)
-                else:
-                    for k in range(self.value_size()):
-                        z[j, k, :] = probe.get_probe_sub(k)
-                            
-        recvfrom = comm.gather(len(self), root=root)
-        if is_root:
-            for j, k in enumerate(recvfrom):                
-                if comm.Get_rank() != j:
-                    ids = comm.recv(source=j, tag=101)
-                    z0 = comm.recv(source=j, tag=102)
-                    z[ids, :] = z0[:, :]
-        else:
-            ids = self.get_probe_ids()
-            comm.send(ids, dest=root, tag=101)
-            comm.send(z, dest=root, tag=102)
-
+        return self.probes.array(N=N, filename=filename, root=root)
+    
     def tovtk(self, N, filename):
         """Dump probes to VTK file.
         ## FIXME
@@ -612,7 +603,7 @@ class StructuredGrid:
         turbulence geometries like channels or cylinders"""
         z = self.probes.array()
         if comm.Get_rank() == 0:
-            z = reshape(z, self.dims + [z.shape[-1]])
+            z = reshape(z, self.dims[::-1] + [z.shape[-1]]).transpose((2,1,0,3))
             if isinstance(i, int):
                 return z.mean(i)
             else:
@@ -624,20 +615,75 @@ class StructuredGrid:
                     j -= k
                     z = z.mean(j)
                 return z
-                    
-class Probedict(dict):
-    """Dictionary of probes. The keys are the names of the functions 
-    we're probing and the values are lists of probes returned from 
-    the function Probes.
-    """
-    def __call__(self, q_):
-        for ui, p in self.iteritems():
-            p(q_[ui])
-                
-    def dump(self, filename):
-        for ui, p in self.iteritems():
-            p.dump(filename+"_"+ui)
+            
+    def read_grid_from_vtk(self, filename="restart.vtk"):
+        """Read vtk-file stored previously with tovtk."""
+        p = pyvtk.VtkData(filename)
+        xn = array(p.structure.points)
+        dims = p.structure.dimensions
+        try:
+            N = eval(p.header.split(" ")[-1])
+        except:
+            N = 0
+        num_evals = N if isinstance(N, int) else 0
+                        
+        self.dims = list(dims)
+        d = copy.deepcopy(self.dims)
+        d.reverse()
+        x = squeeze(reshape(xn, d + [3]))            
+        if 1 in self.dims: self.dims.remove(1)
+        
+        if len(squeeze(array(self.dims))) == 2:
+            xs = [x[0,:,0] - x[0,0,0]]
+            xs.append(x[:,0,0] - x[0,0,0])
+            ys = [x[0,:,1] - x[0,0,1]]
+            ys.append(x[:,0,1] - x[0,0,1])
+            zs = [x[0,:,2] - x[0,0,2]]
+            zs.append(x[:,0,2] - x[0,0,2])
+        else:
+            xs = [x[0,0,:,0] - x[0,0,0,0]]
+            xs.append(x[0,:,0,0] - x[0,0,0,0])
+            xs.append(x[:,0,0,0] - x[0,0,0,0])
+            ys = [x[0,0,:,1] - x[0,0,0,1]]
+            ys.append(x[0,:,0,1] - x[0,0,0,1])
+            ys.append(x[:,0,0,1] - x[0,0,0,1])
+            zs = [x[0,0,:,2] - x[0,0,0,2]]
+            zs.append(x[0,:,0,2] - x[0,0,0,2])
+            zs.append(x[:,0,0,2] - x[0,0,0,2])
+            
+        self.dx, self.dy, self.dz = xs, ys, zs
+        self.origin = xn[0]
+        self._num_eval = num_evals
+        return True
+        
+    def set_data_from_vtk(self, filename):        
+        p = pyvtk.VtkData(filename)
+        vtkdata = p.point_data.data
 
+        ids = self.probes.get_probe_ids()        
+        nn = len(ids)
+
+        # Count the number of fields
+        i = 0
+        for d in vtkdata:
+            if hasattr(d, 'vectors'):
+                i += 3
+            else:
+                i += 1        
+
+        # Put all field in data
+        data = zeros((array(self.dims).prod(), i))
+        i = 0
+        for d in vtkdata:
+            if hasattr(d, 'vectors'):
+                data[:, i:(i+3)] = array(d.vectors)
+                i += 3
+            else:
+                data[:, i] = array(d.scalars)
+                i += 1
+                
+        self.probes.restart_probes(data.flatten(), self._num_eval)
+                    
 # Create a class for a skewed channel mesh 
 class ChannelGrid(StructuredGrid):
     def modify_mesh(self, dx, dy, dz):
@@ -703,7 +749,7 @@ if __name__=='__main__':
     origin = [0.25, 0.25, 0.25]               # origin of box
     vectors = [[1, 0, 0], [0, 1, 0], [0, 0, 1]] # coordinate vectors (scaled in StructuredGrid)
     dL = [0.5, 0.5, 0.5]                      # extent of slice in both directions
-    N  = [100, 100, 100]                           # number of points in each direction
+    N  = [10, 10, 10]                           # number of points in each direction
     
     # 2D slice
     #origin = [0.1, 0.1, 0.5]               # origin of slice
@@ -759,6 +805,22 @@ if __name__=='__main__':
     sl6 = StructuredGrid(W, restart='dump_mixed.h5')
     sl6.toh5(0, 1, 'dump_mixed_again.h5')
     
+    # 3D box
+    tol = 1e-8
+    origin = [0.+tol, -1.+tol, -1.+tol]                     # origin of box
+    vectors = [[1, 0, 0], [0, 1, 0], [0, 0, 1]] # coordinate vectors (scaled in StructuredGrid)
+    dL = [4.-2*tol, 2.-2*tol, 2.-2*tol]                           # extent of slice in both directions
+    N  = [10, 10, 10]                           # number of points in each direction
+    mesh = BoxMesh(0., -1., -1., 4., 1., 1., 10, 10, 10)
+    V = FunctionSpace(mesh, 'CG', 1)
+    x0 = interpolate(Expression('x[0]'), V)
+    y0 = interpolate(Expression('x[1]'), V)
+    z0 = interpolate(Expression('x[2]'), V)
+    slc = ChannelGrid(V, N, origin, vectors, dL, True)
+    slc(x0, y0, z0)
+    slc.tovtk(0, 'testing_dump.vtk')
+    slc.toh5(0, 1, 'testing_dump.h5')
+    
     # Test for nonmatching mesh and FunctionSpace
     mesh2 = UnitCubeMesh(16, 16, 16)
     x = mesh2.coordinates()
@@ -769,11 +831,3 @@ if __name__=='__main__':
     ff << u
     plot(u)
     interactive()
-
-    ### Test Probedict
-    #q_ = {'u0':v0, 'u1':x0}
-    #VV = {'u0':Vv, 'u1':V}
-    #pd = Probedict((ui, Probes(x.flatten(), VV[ui])) for ui in ['u0', 'u1'])
-    #for i in range(7):
-        #pd(q_)
-    #pd.dump('testdict')

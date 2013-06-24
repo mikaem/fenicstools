@@ -55,9 +55,9 @@ Probe::Probe(const Array<double>& x, const FunctionSpace& V) :
       for (std::size_t j = 0; j < _value_size_loc; ++j)
         basis_matrix[j][i] = basis[j];
     }
-  }
+  }  
   else
-  {
+  {  
     dolfin_error("Probe.cpp","set probe","Probe is not found on processor");
   }
 }
