@@ -10,7 +10,7 @@ Probe::~Probe()
 }
 
 Probe::Probe(const Array<double>& x, const FunctionSpace& V) :
-   _element(V.element()), _num_evals(0)
+  _element(V.element()), _num_evals(0)
 {
 
   const Mesh& mesh = *V.mesh();
@@ -18,11 +18,11 @@ Probe::Probe(const Array<double>& x, const FunctionSpace& V) :
     
   // Find the cell that contains probe
   const Point point(gdim, x.data());
-  int id = mesh.intersected_cell(point);
+  unsigned int id = mesh.bounding_box_tree()->compute_first_collision(point);
   
   // If the cell is on this process, then create an instance 
   // of the Probe class. Otherwise raise a dolfin_error.
-  if (id != -1)
+  if (id != std::numeric_limits<unsigned int>::max())
   {
     // Store position of probe
     for (std::size_t i = 0; i < 3; i++) 
@@ -38,9 +38,6 @@ Probe::Probe(const Array<double>& x, const FunctionSpace& V) :
     // Create cell that contains point
     dolfin_cell = new Cell(mesh, id);
     ufc_cell = new UFCCell(*dolfin_cell);
-
-    // Create work vector for basis
-    std::vector<double> basis(_value_size_loc);
     
     coefficients.resize(_element->space_dimension());
         
@@ -49,6 +46,7 @@ Probe::Probe(const Array<double>& x, const FunctionSpace& V) :
     for (std::size_t i = 0; i < _value_size_loc; ++i)
       basis_matrix[i].resize(_element->space_dimension());
         
+    std::vector<double> basis(_value_size_loc);
     for (std::size_t i = 0; i < _element->space_dimension(); ++i)
     {
       _element->evaluate_basis(i, &basis[0], &x[0], *ufc_cell);
@@ -156,7 +154,6 @@ void Probe::dump(std::string filename, std::size_t id)
 //
 void Probe::restart_probe(const Array<double>& u)
 {
-  // Make room for one more evaluation
   for (std::size_t j = 0; j < _value_size_loc; j++)
     _probes[j].push_back(u[j]);
 }

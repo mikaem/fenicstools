@@ -96,7 +96,7 @@ class Probes(compiled_module.Probes):
                     z0 = comm.recv(source=j, tag=102)
                     z[ids, :] = z0[:, :]
         else:
-            ids = self.probes.get_probe_ids()
+            ids = self.get_probe_ids()
             comm.send(ids, dest=root, tag=101)
             comm.send(z, dest=root, tag=102)
             

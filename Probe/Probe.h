@@ -3,7 +3,8 @@
 
 #include <dolfin/function/FunctionSpace.h>
 #include <dolfin/function/Function.h>
-#include <fstream>
+#include <dolfin/geometry/BoundingBoxTree.h>
+#include <fstream> 
 #include <boost/lexical_cast.hpp>
 
 namespace dolfin
@@ -16,11 +17,11 @@ namespace dolfin
       
     Probe(const Array<double>& x, const FunctionSpace& V);
     
-    virtual ~Probe();
+    virtual ~Probe(); 
 
     // evaluate the probe.
-    virtual void eval(const Function& u);
-    
+    virtual void eval(const Function& u);  
+      
     // Return all probe values for one component
     std::vector<double> get_probe_sub(std::size_t i);
     
@@ -46,7 +47,7 @@ namespace dolfin
     virtual void erase_snapshot(std::size_t i);
     
     // Reset probe by deleting all previous evaluations
-    virtual void clear();
+    virtual void clear();  
     
     // Reset probe values for entire tensor
     virtual void restart_probe(const Array<double>& u, std::size_t num_evals) 
