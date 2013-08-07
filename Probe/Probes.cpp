@@ -27,7 +27,7 @@ Probes::Probes(const Array<double>& x, const FunctionSpace& V)
     { // do-nothing
     }
   }
-  cout << _allprobes.size() << " of " << N  << " probes found on processor " << MPI::process_number() << endl;
+  //cout << _allprobes.size() << " of " << N  << " probes found on processor " << MPI::process_number() << endl;
 }
 //
 Probes::~Probes()

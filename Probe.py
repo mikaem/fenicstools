@@ -8,6 +8,7 @@ This module contains functionality for efficiently probing a Function many times
 #from cbc.cfd.oasis import *
 from dolfin import *
 from numpy import alltrue, cos, zeros, array, repeat, squeeze, argmax, cumsum, reshape, resize, linspace, abs, sign, all, float32
+from pylab import find
 from numpy.linalg import norm as numpy_norm
 try:
     from scitools.std import surfc
@@ -32,7 +33,10 @@ headers = map(lambda x: os.path.join(dolfin_folder, x), ['Probe.h', 'Probes.h', 
 code = strip_essential_code(headers)
 compiled_module = compile_extension_module(code=code, source_directory=os.path.abspath(dolfin_folder),
                                            sources=sources, include_dirs=[".", os.path.abspath(dolfin_folder)])
- 
+
+fem_code = open('fem/interpolation.cpp', 'r').read()
+compiled_fem_module = compile_extension_module(code=fem_code)
+                                           
 # Give the compiled classes some additional pythonic functionality
 class Probe(compiled_module.Probe):
     
@@ -173,6 +177,11 @@ class StatisticsProbes(compiled_module.StatisticsProbes):
             if filename:
                 z.dump(filename+"_statistics.probes")
             return squeeze(z)
+
+def nonmatching_interpolation(u0, V):
+    u = Function(V)
+    compiled_fem_module.interpolate_nonmatching_mesh(u, u0, V)
+    return u
 
 class StructuredGrid:
     """A Structured grid of probe points. A slice of a 3D (possibly 2D if needed) 
@@ -389,7 +398,7 @@ class StructuredGrid:
         """Dump probes to HDF5 file. The data can be used for 3D visualization
         using voluviz or to restart the probe. 
         """
-        f = h5py.File(filename, 'w')
+        f = h5py.File(filename, 'w', driver='mpio', comm=comm)
         d = self.dims
         if not 'origin' in f.attrs:
             f.attrs.create('origin', self.origin)
@@ -505,6 +514,7 @@ class StructuredGrid:
         z0 = z0.transpose((2,1,0,3))
         # Write owned data to hdf5 file
         owned = slice(owned_planes[myrank], owned_planes[myrank+1])
+        MPI.barrier()
         if owned.stop > owned.start:
             if self.probes.value_size() == 1:
                 f[loc+"/Scalar"][owned, :, :] = z0[:, :, :, 0]
@@ -524,6 +534,7 @@ class StructuredGrid:
                     f[loc+"/U"][owned, :, :] = z0[:, :, :, 0]
                     f[loc+"/V"][owned, :, :] = z0[:, :, :, 1]
                     f[loc+"/W"][owned, :, :] = z0[:, :, :, 2]
+        MPI.barrier()
         f.close()
 
     def surf(self, N, component=0):
@@ -694,16 +705,33 @@ class ChannelGrid(StructuredGrid):
 def interpolate_nonmatching_mesh(u0, V):
     """interpolate from Function u0 in V0 to a Function in V."""
     V0 = u0.function_space()
-    mesh0 = V0.mesh()
     mesh1 = V.mesh()
     gdim = mesh1.geometry().dim()
     owner_range = V.dofmap().ownership_range()
-    xs = zeros((owner_range[1]-owner_range[0], gdim), float)
-    for i in range(gdim):
-        xs[:, i] = interpolate(Expression("x[{0}]".format(i)), V).vector().array()
     u = Function(V)
+    xs = V.dofmap().tabulate_all_coordinates(mesh1).reshape((-1, gdim))
+    
+    def extract_dof_component_map(dof_component_map, VV, comp):
+        
+        if VV.num_sub_spaces() == 0:
+            ss = VV.dofmap().collapse(VV.mesh())
+            comp[0] += 1 
+            for val in ss[1].values():
+                dof_component_map[val] = comp[0]
+            
+        else:
+            for i in range(VV.num_sub_spaces()):
+                Vs = VV.extract_sub_space(array([i], 'I'))
+                extract_dof_component_map(dof_component_map, Vs, comp)
+
+    # Create a map from global dof to component in Mixed space
+    dof_component_map = {}
+    comp = array([-1], 'I')
+    extract_dof_component_map(dof_component_map, V, comp)
+    
     # Now find the values of all these locations using Probes
-    # Do this sequentially to save memory
+    # Do this sequentially to save memory    
+    dd = zeros(u.vector().local_size())
     for i in range(MPI.num_processes()):
         # Put all locations of this mesh on other processes
         xb = comm.bcast(xs, root=i)        
@@ -712,16 +740,26 @@ def interpolate_nonmatching_mesh(u0, V):
         probes(u0)  # evaluate the probes
         data = probes.array(N=0, root=i)
         probes.clear()
-        if i == comm.Get_rank():            
-            u.vector().set_local(squeeze(data))
+        if i == comm.Get_rank():
+            if V.num_sub_spaces() < 1:
+                u.vector().set_local(squeeze(data))
+            else:
+                for j in range(data.shape[0]):
+                    dof = j + owner_range[0]
+                    dd[j] = data[j, dof_component_map[dof]]
+                u.vector().set_local(dd)
+        
     return u
+
     
 # Test the probe functions:
 if __name__=='__main__':
     import time
-    mesh = UnitCubeMesh(10, 10, 10)
+    set_log_active(False)
+
+    mesh = UnitCubeMesh(16, 16, 16)
     #mesh = UnitSquareMesh(10, 10)
-    V = FunctionSpace(mesh, 'CG', 2)
+    V = FunctionSpace(mesh, 'CG', 1)
     Vv = VectorFunctionSpace(mesh, 'CG', 1)
     W = V * Vv
     
@@ -731,7 +769,7 @@ if __name__=='__main__':
     z0 = interpolate(Expression('x[2]'), V)
     s0 = interpolate(Expression('exp(-(pow(x[0]-0.5, 2)+ pow(x[1]-0.5, 2) + pow(x[2]-0.5, 2)))'), V)
     v0 = interpolate(Expression(('x[0]', '2*x[1]', '3*x[2]')), Vv)
-    w0 = interpolate(Expression(('x[0]', 'x[1]', 'x[2]', 'x[1]*x[2]')), W)    
+    w0 = interpolate(Expression(('x[0]', 'x[1]', 'x[2]', 'x[1]*x[2]')), W)
         
     x = array([[1.5, 0.5, 0.5], [0.2, 0.3, 0.4], [0.8, 0.9, 1.0]])
     p = Probes(x.flatten(), W)
@@ -749,7 +787,7 @@ if __name__=='__main__':
     origin = [0.25, 0.25, 0.25]               # origin of box
     vectors = [[1, 0, 0], [0, 1, 0], [0, 0, 1]] # coordinate vectors (scaled in StructuredGrid)
     dL = [0.5, 0.5, 0.5]                      # extent of slice in both directions
-    N  = [10, 10, 10]                           # number of points in each direction
+    N  = [3, 3, 6]                           # number of points in each direction
     
     # 2D slice
     #origin = [0.1, 0.1, 0.5]               # origin of slice
@@ -764,8 +802,8 @@ if __name__=='__main__':
     sl.surf(0) # check first probe
     sl.tovtk(0, filename="dump_scalar.vtk")
     sl.toh5(0, 1, 'dump_scalar.h5')
-    sl.toh5(0, 2, 'dump_scalar.h5')
-    sl.toh5(0, 3, 'dump_scalar.h5')
+   # sl.toh5(0, 2, 'dump_scalar.h5')
+   # sl.toh5(0, 3, 'dump_scalar.h5')
     
     # then vector
     sl2 = StructuredGrid(Vv, N, origin, vectors, dL)
@@ -774,13 +812,15 @@ if __name__=='__main__':
     sl2.surf(3)     # Check the fourth probe instance
     sl2.tovtk(3, filename="dump_vector.vtk")
     sl2.toh5(0, 1, 'dump_vector.h5')
-    sl2.toh5(0, 2, 'dump_vector.h5')
-    sl2.toh5(0, 3, 'dump_vector.h5')
+    #sl2.toh5(0, 2, 'dump_vector.h5')
+    #sl2.toh5(0, 3, 'dump_vector.h5')
     
     # Test statistics
     x0.update()
     y0.update()
     z0.update()
+    v0.update()
+    w0.update()
     sl3 = StructuredGrid(V, N, origin, vectors, dL, True)
     for i in range(10): 
         sl3(x0, y0, z0)     # probe a few times
@@ -826,8 +866,35 @@ if __name__=='__main__':
     x = mesh2.coordinates()
     x[:, :] = x[:, :] * 0.5 + 0.25
     V2 = FunctionSpace(mesh2, 'CG', 1)
+    VV2 = VectorFunctionSpace(mesh2, 'CG', 1)
     u = interpolate_nonmatching_mesh(x0, V2)
-    ff = File('test_project_nonmatching.pvd')
-    ff << u
-    plot(u)
+    
+    t0 = time.time()
+    vv1 = interpolate_nonmatching_mesh(v0, VV2)
+    print 'Python ', time.time()-t0
+    
+    t0 = time.time()
+    vv2 = nonmatching_interpolation(v0, VV2)
+    print 'C++ ', time.time()-t0
+        
+    print all(abs(vv1.vector().array()-vv2.vector().array())<1e-15)
+    
+    plot(vv1[0])
+    plot(vv2[0])
     interactive()
+    #W2 = V2 * VV2
+    #ww = interpolate_nonmatching_mesh(w0, W2)
+    
+    #WS = W * W
+    #w11 = interpolate(Expression(('x[0]', 'x[1]', 'x[2]', 'x[1]*x[2]', 'x[0]', 'x[1]', 'x[2]', 'x[1]*x[2]')), WS)
+    #WS2 = W2 * W2
+    #w11.update()
+    #x1 = interpolate_nonmatching_mesh(w11, WS2)
+
+    #ff = File('test_project_nonmatching.pvd')
+    #ff << u
+    #plot(u)
+    #plot(vv[0], title='vector')
+    #plot(ww[0], title='mixed')
+    #interactive()
+    
