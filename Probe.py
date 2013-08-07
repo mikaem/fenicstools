@@ -180,7 +180,7 @@ class StatisticsProbes(compiled_module.StatisticsProbes):
 
 def nonmatching_interpolation(u0, V):
     u = Function(V)
-    compiled_fem_module.interpolate_nonmatching_mesh(u, u0, V)
+    compiled_fem_module.interpolate_nonmatching_mesh(u0, u)
     return u
 
 class StructuredGrid:
