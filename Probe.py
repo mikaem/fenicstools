@@ -178,7 +178,7 @@ class StatisticsProbes(compiled_module.StatisticsProbes):
                 z.dump(filename+"_statistics.probes")
             return squeeze(z)
 
-def nonmatching_interpolation(u0, V):
+def interpolate_nonmatching_mesh(u0, V):
     u = Function(V)
     compiled_fem_module.interpolate_nonmatching_mesh(u0, u)
     return u
@@ -702,7 +702,7 @@ class ChannelGrid(StructuredGrid):
         dy[1][:] = cos(pi*(dy[1][:]+self.origin[1] - 1.) / 2.) - self.origin[1]
         return dx, dy, dz
 
-def interpolate_nonmatching_mesh(u0, V):
+def interpolate_nonmatching_mesh_python(u0, V):
     """interpolate from Function u0 in V0 to a Function in V."""
     V0 = u0.function_space()
     mesh1 = V.mesh()
@@ -755,7 +755,8 @@ def interpolate_nonmatching_mesh(u0, V):
 # Test the probe functions:
 if __name__=='__main__':
     import time
-    set_log_active(False)
+    #set_log_active(False)
+    set_log_level(20)
 
     mesh = UnitCubeMesh(16, 16, 16)
     #mesh = UnitSquareMesh(10, 10)
@@ -771,130 +772,133 @@ if __name__=='__main__':
     v0 = interpolate(Expression(('x[0]', '2*x[1]', '3*x[2]')), Vv)
     w0 = interpolate(Expression(('x[0]', 'x[1]', 'x[2]', 'x[1]*x[2]')), W)
         
-    x = array([[1.5, 0.5, 0.5], [0.2, 0.3, 0.4], [0.8, 0.9, 1.0]])
-    p = Probes(x.flatten(), W)
-    x = x*0.9 
-    p.add_positions(x.flatten(), W)
-    for i in range(6):
-        p(w0)
-        
-    print p.array(2, "testarray")         # dump snapshot 2
-    print p.array(filename="testarray")   # dump all snapshots
-    print p.dump("testarray")
-
-    # Test StructuredGrid
-    # 3D box
-    origin = [0.25, 0.25, 0.25]               # origin of box
-    vectors = [[1, 0, 0], [0, 1, 0], [0, 0, 1]] # coordinate vectors (scaled in StructuredGrid)
-    dL = [0.5, 0.5, 0.5]                      # extent of slice in both directions
-    N  = [3, 3, 6]                           # number of points in each direction
-    
-    # 2D slice
-    #origin = [0.1, 0.1, 0.5]               # origin of slice
-    #vectors = [[1, 0, 0], [0, 1, 0]]    # directional tangent directions (scaled in StructuredGrid)
-    #dL = [0.5, 0.8]                      # extent of slice in both directions
-    #N  = [5, 5]                           # number of points in each direction
-   
-    # Test scalar first
-    sl = StructuredGrid(V, N, origin, vectors, dL)
-    sl(s0)     # probe once
-    sl(s0)     # probe once more
-    sl.surf(0) # check first probe
-    sl.tovtk(0, filename="dump_scalar.vtk")
-    sl.toh5(0, 1, 'dump_scalar.h5')
-   # sl.toh5(0, 2, 'dump_scalar.h5')
-   # sl.toh5(0, 3, 'dump_scalar.h5')
-    
-    # then vector
-    sl2 = StructuredGrid(Vv, N, origin, vectors, dL)
-    for i in range(5): 
-        sl2(v0)     # probe a few times
-    sl2.surf(3)     # Check the fourth probe instance
-    sl2.tovtk(3, filename="dump_vector.vtk")
-    sl2.toh5(0, 1, 'dump_vector.h5')
-    #sl2.toh5(0, 2, 'dump_vector.h5')
-    #sl2.toh5(0, 3, 'dump_vector.h5')
-    
-    # Test statistics
     x0.update()
     y0.update()
     z0.update()
+    s0.update()
     v0.update()
     w0.update()
-    sl3 = StructuredGrid(V, N, origin, vectors, dL, True)
-    for i in range(10): 
-        sl3(x0, y0, z0)     # probe a few times
-        #sl3(v0)
-    sl3.surf(0)     # Check 
-    sl3.tovtk(0, filename="dump_mean_vector.vtk")
-    sl3.tovtk(1, filename="dump_latest_snapshot_vector.vtk")
-    sl3.toh5(0, 1, 'reslowmem.h5')    
+    
+    #x = array([[1.5, 0.5, 0.5], [0.2, 0.3, 0.4], [0.8, 0.9, 1.0]])
+    #p = Probes(x.flatten(), W)
+    #x = x*0.9 
+    #p.add_positions(x.flatten(), W)
+    #for i in range(6):
+        #p(w0)
         
-    # Restart probes from sl3
-    sl4 = StructuredGrid(V, restart='reslowmem.h5')
-    for i in range(10): 
-        sl4(x0, y0, z0)     # probe a few more times    
-    sl4.tovtk(0, filename="dump_mean_vector_restart_h5.vtk")
-    sl4.toh5(0, 0, 'restart_reslowmem.h5')
+    #print p.array(2, "testarray")         # dump snapshot 2
+    #print p.array(filename="testarray")   # dump all snapshots
+    #print p.dump("testarray")
+
+    ## Test StructuredGrid
+    ## 3D box
+    #origin = [0.25, 0.25, 0.25]               # origin of box
+    #vectors = [[1, 0, 0], [0, 1, 0], [0, 0, 1]] # coordinate vectors (scaled in StructuredGrid)
+    #dL = [0.5, 0.5, 0.5]                      # extent of slice in both directions
+    #N  = [3, 3, 6]                           # number of points in each direction
     
-    # Try mixed space
-    sl5 = StructuredGrid(W, N, origin, vectors, dL)
-    sl5(w0)     # probe once
-    sl5(w0)     # probe once more
-    sl5.toh5(0, 1, 'dump_mixed.h5')
-    sl6 = StructuredGrid(W, restart='dump_mixed.h5')
-    sl6.toh5(0, 1, 'dump_mixed_again.h5')
+    ## 2D slice
+    ##origin = [0.1, 0.1, 0.5]               # origin of slice
+    ##vectors = [[1, 0, 0], [0, 1, 0]]    # directional tangent directions (scaled in StructuredGrid)
+    ##dL = [0.5, 0.8]                      # extent of slice in both directions
+    ##N  = [5, 5]                           # number of points in each direction
+   
+    ## Test scalar first
+    #sl = StructuredGrid(V, N, origin, vectors, dL)
+    #sl(s0)     # probe once
+    #sl(s0)     # probe once more
+    #sl.surf(0) # check first probe
+    #sl.tovtk(0, filename="dump_scalar.vtk")
+    #sl.toh5(0, 1, 'dump_scalar.h5')
+   ## sl.toh5(0, 2, 'dump_scalar.h5')
+   ## sl.toh5(0, 3, 'dump_scalar.h5')
     
-    # 3D box
-    tol = 1e-8
-    origin = [0.+tol, -1.+tol, -1.+tol]                     # origin of box
-    vectors = [[1, 0, 0], [0, 1, 0], [0, 0, 1]] # coordinate vectors (scaled in StructuredGrid)
-    dL = [4.-2*tol, 2.-2*tol, 2.-2*tol]                           # extent of slice in both directions
-    N  = [10, 10, 10]                           # number of points in each direction
-    mesh = BoxMesh(0., -1., -1., 4., 1., 1., 10, 10, 10)
-    V = FunctionSpace(mesh, 'CG', 1)
-    x0 = interpolate(Expression('x[0]'), V)
-    y0 = interpolate(Expression('x[1]'), V)
-    z0 = interpolate(Expression('x[2]'), V)
-    slc = ChannelGrid(V, N, origin, vectors, dL, True)
-    slc(x0, y0, z0)
-    slc.tovtk(0, 'testing_dump.vtk')
-    slc.toh5(0, 1, 'testing_dump.h5')
+    ## then vector
+    #sl2 = StructuredGrid(Vv, N, origin, vectors, dL)
+    #for i in range(5): 
+        #sl2(v0)     # probe a few times
+    #sl2.surf(3)     # Check the fourth probe instance
+    #sl2.tovtk(3, filename="dump_vector.vtk")
+    #sl2.toh5(0, 1, 'dump_vector.h5')
+    ##sl2.toh5(0, 2, 'dump_vector.h5')
+    ##sl2.toh5(0, 3, 'dump_vector.h5')
+    
+    # Test statistics
+    #sl3 = StructuredGrid(V, N, origin, vectors, dL, True)
+    #for i in range(10): 
+        #sl3(x0, y0, z0)     # probe a few times
+        ##sl3(v0)
+    #sl3.surf(0)     # Check 
+    #sl3.tovtk(0, filename="dump_mean_vector.vtk")
+    #sl3.tovtk(1, filename="dump_latest_snapshot_vector.vtk")
+    #sl3.toh5(0, 1, 'reslowmem.h5')    
+        
+    ## Restart probes from sl3
+    #sl4 = StructuredGrid(V, restart='reslowmem.h5')
+    #for i in range(10): 
+        #sl4(x0, y0, z0)     # probe a few more times    
+    #sl4.tovtk(0, filename="dump_mean_vector_restart_h5.vtk")
+    #sl4.toh5(0, 0, 'restart_reslowmem.h5')
+    
+    ## Try mixed space
+    #sl5 = StructuredGrid(W, N, origin, vectors, dL)
+    #sl5(w0)     # probe once
+    #sl5(w0)     # probe once more
+    #sl5.toh5(0, 1, 'dump_mixed.h5')
+    #sl6 = StructuredGrid(W, restart='dump_mixed.h5')
+    #sl6.toh5(0, 1, 'dump_mixed_again.h5')
+    
+    ## 3D box
+    #tol = 1e-8
+    #origin = [0.+tol, -1.+tol, -1.+tol]                     # origin of box
+    #vectors = [[1, 0, 0], [0, 1, 0], [0, 0, 1]] # coordinate vectors (scaled in StructuredGrid)
+    #dL = [4.-2*tol, 2.-2*tol, 2.-2*tol]                           # extent of slice in both directions
+    #N  = [10, 10, 10]                           # number of points in each direction
+    #mesh = BoxMesh(0., -1., -1., 4., 1., 1., 10, 10, 10)
+    #V = FunctionSpace(mesh, 'CG', 1)
+    #x0 = interpolate(Expression('x[0]'), V)
+    #y0 = interpolate(Expression('x[1]'), V)
+    #z0 = interpolate(Expression('x[2]'), V)
+    #slc = ChannelGrid(V, N, origin, vectors, dL, True)
+    #slc(x0, y0, z0)
+    #slc.tovtk(0, 'testing_dump.vtk')
+    #slc.toh5(0, 1, 'testing_dump.h5')
     
     # Test for nonmatching mesh and FunctionSpace
     mesh2 = UnitCubeMesh(16, 16, 16)
     x = mesh2.coordinates()
-    x[:, :] = x[:, :] * 0.5 + 0.25
+    x[:, :] = x[:, :] * 0.5 + 0.55
     V2 = FunctionSpace(mesh2, 'CG', 1)
     VV2 = VectorFunctionSpace(mesh2, 'CG', 1)
     u = interpolate_nonmatching_mesh(x0, V2)
     
     t0 = time.time()
-    vv1 = interpolate_nonmatching_mesh(v0, VV2)
+    vv1 = interpolate_nonmatching_mesh_python(v0, VV2)
     print 'Python ', time.time()-t0
     
     t0 = time.time()
-    vv2 = nonmatching_interpolation(v0, VV2)
+    vv2 = interpolate_nonmatching_mesh(v0, VV2)
     print 'C++ ', time.time()-t0
         
-    print all(abs(vv1.vector().array()-vv2.vector().array())<1e-15)
-    
+    print all(abs(vv1.vector().array()-vv2.vector().array())<1e-12)
+    list_timings(True)
+
     plot(vv1[0])
     plot(vv2[0])
-    interactive()
-    #W2 = V2 * VV2
-    #ww = interpolate_nonmatching_mesh(w0, W2)
     
-    #WS = W * W
+    W2 = V2 * VV2
+    ww = interpolate_nonmatching_mesh(w0, W2)
+    
+    WS = W * W
     #w11 = interpolate(Expression(('x[0]', 'x[1]', 'x[2]', 'x[1]*x[2]', 'x[0]', 'x[1]', 'x[2]', 'x[1]*x[2]')), WS)
-    #WS2 = W2 * W2
-    #w11.update()
+    w11 = interpolate_nonmatching_mesh(Expression(('x[0]', 'x[1]', 'x[2]', 'x[1]*x[2]', 'x[0]', 'x[1]', 'x[2]', 'x[1]*x[2]')), WS)
+    WS2 = W2 * W2
+    w11.update()
     #x1 = interpolate_nonmatching_mesh(w11, WS2)
 
     #ff = File('test_project_nonmatching.pvd')
     #ff << u
     #plot(u)
-    #plot(vv[0], title='vector')
-    #plot(ww[0], title='mixed')
-    #interactive()
+    plot(w11[0], title='mixed')
+    interactive()
     

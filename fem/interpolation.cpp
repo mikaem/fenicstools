@@ -28,11 +28,13 @@ namespace dolfin
     }
   }
     
-  void interpolate_nonmatching_mesh(const Function& u0, Function& u) 
+  void interpolate_nonmatching_mesh(const GenericFunction& u0, Function& u) 
   {
-    // Interpolate from Function u0 to FunctionSpace of Function u
+    // Interpolate from GenericFunction u0 to FunctionSpace of Function u
+    // The FunctionSpace of u can have a different mesh than that of u0 
+    
     boost::shared_ptr<const FunctionSpace> V = u.function_space();
-
+    
     // Get mesh and dimension
     const Mesh& mesh1 = *V->mesh();
     const std::size_t gdim = mesh1.geometry().dim();
@@ -42,12 +44,12 @@ namespace dolfin
     Array<double> x(gdim);
     
     // Create vector to hold all local values of u 
-    std::vector<double> local_u_vector(u.vector()->local_size());    
+    std::vector<double> local_u_vector(u.vector()->local_size());
     
     // Get coordinates of all dofs on mesh of this processor
     std::vector<double> coords = V->dofmap()->tabulate_all_coordinates(mesh1);
     
-    // Get local dof ownership range
+    // Get dof ownership range
     std::pair<std::size_t, std::size_t> owner_range = V->dofmap()->ownership_range();
         
     // Get a map from global dofs to component number in mixed space
@@ -55,58 +57,101 @@ namespace dolfin
     int component = -1;
     extract_dof_component_map(dof_component_map, *V, &component);
         
-    // Run over meshes on all processors, one mesh at the time
-    for (unsigned int i=0; i<MPI::num_processes(); i++)
-    {
-      // Assign mesh from processor i and broadcast to all processors
-      std::vector<double> coords_all;    
-      if (MPI::process_number() == i)
-        coords_all.assign(coords.begin(), coords.end());        
-      
-      MPI::broadcast(coords_all, int(i));
-      
-      // Perform safe eval on all processes to get Function values for all coords
-      std::vector<unsigned int> ids;
-      std::vector<std::vector<double> > data;
-      for (unsigned int j=0; j<coords_all.size()/gdim; j++)
-      {
-      
+    // Search this process first for all coordinates in new mesh
+    std::vector<unsigned int> ids;
+    std::vector<std::vector<double> > data;
+    std::vector<unsigned int> ids_not_found;
+    std::vector<double> coords_not_found;
+    for (unsigned int j=0; j<coords.size()/gdim; j++)
+    {    
+      for (unsigned int jj=0; jj<gdim; jj++)
+        x[jj] = coords[j*gdim+jj];
+    
+      try
+      { // push back when point is found
+        u0.eval(values, x);
+        std::vector<double> vals;
+        for (unsigned int k=0; k<values.size(); k++)
+          vals.push_back(values[k]);
+        data.push_back(vals);
+        ids.push_back(j);
+      } 
+      catch (std::exception &e)
+      { // If not found then it must be seached on the other processes
+        ids_not_found.push_back(j+owner_range.first);
         for (unsigned int jj=0; jj<gdim; jj++)
-          x[jj] = coords_all[j*gdim+jj];
-        
+          coords_not_found.push_back(x[jj]);
+      }
+    }
+    
+    // Store the points found on local_u_vector
+    for (unsigned int k=0; k<ids.size(); k++)
+    {
+      unsigned int m = ids[k];
+      local_u_vector[m] = data[k][dof_component_map[m+owner_range.first]];
+    }
+    
+    // Send all points not found to processor with one higher rank
+    // Search there and then send found points back and not found to 
+    // next processor in line. By the end of this loop all processors 
+    // will have been searched and thus if not found the point is not
+    // in the mesh of Function u0. In that case the point will take
+    // the value of zero.
+    for (unsigned int k = 1; k < MPI::num_processes(); ++k)
+    {
+      std::vector<double> coords_not_found_recv;
+      std::vector<unsigned int> ids_not_found_recv;
+           
+      int src = (MPI::process_number()-1+MPI::num_processes()) % MPI::num_processes();
+      int dest =  (MPI::process_number()+1) % MPI::num_processes();
+      
+      MPI::send_recv(ids_not_found, dest, ids_not_found_recv, src);      
+      MPI::send_recv(coords_not_found, dest, coords_not_found_recv, src);
+      
+      ids_not_found.clear();
+      coords_not_found.clear();
+      
+      // Search this processor for points
+      std::vector<unsigned int> found_ids;
+      std::vector<std::vector<double> > found_data;
+      for (unsigned int j=0; j<coords_not_found_recv.size()/gdim; j++)
+      {        
+        unsigned int m = ids_not_found_recv[j];
+        for (unsigned int jj=0; jj<gdim; jj++)
+          x[jj] = coords_not_found_recv[j*gdim+jj];
+
         try
         { // push back when point is found
           u0.eval(values, x);
           std::vector<double> vals;
-          for (unsigned int k=0; k<values.size(); k++)
-            vals.push_back(values[k]);
-          data.push_back(vals);
-          ids.push_back(j);
+          for (unsigned int jj=0; jj<values.size(); jj++)
+            vals.push_back(values[jj]);
+          found_data.push_back(vals);
+          found_ids.push_back(m);
         } 
         catch (std::exception &e)
-        { // do-nothing if not found
+        { // If not found then it will be sent to next rank
+          ids_not_found.push_back(m);
+          for (unsigned int jj=0; jj<gdim; jj++)
+            coords_not_found.push_back(x[jj]);
         }
       }     
-      // Gather all found data on process i
-      std::vector<std::vector<unsigned int> > all_ids;
-      std::vector<std::vector<std::vector<double> > > all_data;
-      MPI::gather(ids, all_ids, i);
-      MPI::gather(data, all_data, i);
-      
-      // Move all_data onto the local_u_vector (local on proc i)
+      // Send found data back to owner (MPI::process_number()-k)        
+      std::vector<unsigned int> found_ids_recv;
+      std::vector<std::vector<double> > found_data_recv;
+      dest = (MPI::process_number()-k+MPI::num_processes()) % MPI::num_processes();
+      src  = (MPI::process_number()+k) % MPI::num_processes();
+      MPI::send_recv(found_ids, dest, found_ids_recv, src);
+      MPI::send_recv(found_data, dest, found_data_recv, src);
+
+      // Move all_data onto the local_u_vector
       // Choose the correct component using dof_component_map  
-      if (MPI::process_number() == i)
-      { 
-        for (unsigned int j=0; j<MPI::num_processes(); j++)
-        {
-          for (unsigned int k=0; k<all_ids[j].size(); k++)
-          {
-            unsigned int m = all_ids[j][k];
-            local_u_vector[m] = all_data[j][k][dof_component_map[m+owner_range.first]];
-          }
-        }
-        u.vector()->set_local(local_u_vector);
+      for (unsigned int kk=0; kk<found_ids_recv.size(); kk++)
+      {
+        unsigned int m = found_ids_recv[kk]-owner_range.first;
+        local_u_vector[m] = found_data_recv[kk][dof_component_map[m+owner_range.first]];
       }
     }
+    u.vector()->set_local(local_u_vector);
   }
 }
