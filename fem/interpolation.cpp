@@ -53,8 +53,10 @@ namespace dolfin
     const std::size_t gdim = mesh.geometry().dim();
 
     // Create arrays used to evaluate one point
-    Array<double> values(u.value_size());
-    Array<double> x(gdim);
+    std::vector<double> x(gdim);
+    std::vector<double> values(u.value_size());
+    Array<double> _x(gdim, x.data());
+    Array<double> _values(u.value_size(), values.data());
     
     // Create vector to hold all local values of u 
     std::vector<double> local_u_vector(u.vector()->local_size());
@@ -71,23 +73,16 @@ namespace dolfin
     extract_dof_component_map(dof_component_map, *V, &component);
         
     // Search this process first for all coordinates in u's local mesh
-    std::vector<std::size_t> local_dofs;
-    std::vector<std::vector<double> > coefficients;
     std::vector<std::size_t> global_dofs_not_found;
     std::vector<double> coords_not_found;
     for (std::size_t j=0; j<coords.size()/gdim; j++)
     {    
-      for (std::size_t jj=0; jj<gdim; jj++)
-        x[jj] = coords[j*gdim+jj];
+      std::copy(coords.begin()+j*gdim, coords.begin()+(j+1)*gdim, x.begin());
     
       try
-      { // push back when point is found
-        u0.eval(values, x);
-        std::vector<double> vals;
-        for (std::size_t k=0; k<values.size(); k++)
-          vals.push_back(values[k]);
-        coefficients.push_back(vals);
-        local_dofs.push_back(j);
+      { // store when point is found
+        u0.eval(_values, _x);
+        local_u_vector[j] = values[dof_component_map[j+owner_range.first]];
       } 
       catch (std::exception &e)
       { // If not found then it must be seached on the other processes
@@ -95,14 +90,6 @@ namespace dolfin
         for (std::size_t jj=0; jj<gdim; jj++)
           coords_not_found.push_back(x[jj]);
       }
-    }
-    
-    // Store the points found on local_u_vector
-    for (std::size_t k=0; k<local_dofs.size(); k++)
-    {
-      std::size_t m = local_dofs[k];
-      std::size_t n = dof_component_map[m+owner_range.first];
-      local_u_vector[m] = coefficients[k][n];
     }
     
     // Send all points not found to processor with one higher rank.
@@ -131,16 +118,12 @@ namespace dolfin
       for (std::size_t j=0; j<coords_recv.size()/gdim; j++)
       {        
         std::size_t m = global_dofs_recv[j];
-        for (std::size_t jj=0; jj<gdim; jj++)
-          x[jj] = coords_recv[j*gdim+jj];
+        std::copy(coords_recv.begin()+j*gdim, coords_recv.begin()+(j+1)*gdim, x.begin());
 
         try
         { // push back when point is found
-          u0.eval(values, x);
-          std::vector<double> vals;
-          for (std::size_t jj=0; jj<values.size(); jj++)
-            vals.push_back(values[jj]);
-          coefficients_found.push_back(vals);
+          u0.eval(_values, _x);
+          coefficients_found.push_back(values);
           global_dofs_found.push_back(m);
         } 
         catch (std::exception &e)
@@ -151,7 +134,7 @@ namespace dolfin
         }
       }     
       
-      // Send found coefficients back to owner (MPI::process_number()-k)
+      // Send found coefficients back to owner (dest)
       std::vector<std::size_t> global_dofs_found_recv;
       std::vector<std::vector<double> > coefficients_found_recv;
       dest = (MPI::process_number()-k+MPI::num_processes()) % MPI::num_processes();
@@ -167,6 +150,12 @@ namespace dolfin
         std::size_t n = dof_component_map[m+owner_range.first];
         local_u_vector[m] = coefficients_found_recv[j][n];
       }
+      
+      // Note that this algorithm computes and sends back all values, 
+      // i.e., coefficients_found pushes back the entire vector for all 
+      // components in mixed space. An alternative algorithm is to send 
+      // around the correct component number in addition to global dof number 
+      // and coordinates and then just send back the correct value.
     }
     u.vector()->set_local(local_u_vector);
   }

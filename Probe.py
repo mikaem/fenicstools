@@ -34,10 +34,16 @@ code = strip_essential_code(headers)
 compiled_module = compile_extension_module(code=code, source_directory=os.path.abspath(dolfin_folder),
                                            sources=sources, include_dirs=[".", os.path.abspath(dolfin_folder)])
 
-fem_code = open('fem/interpolation.cpp', 'r').read()
+fem_folder = os.path.abspath(os.path.join(inspect.getfile(inspect.currentframe()), "../fem"))
+fem_code = open(os.path.join(fem_folder, 'interpolation.cpp'), 'r').read()
 compiled_fem_module = compile_extension_module(code=fem_code)
                                            
 # Give the compiled classes some additional pythonic functionality
+def interpolate_nonmatching_mesh(u0, V):
+    u = Function(V)
+    compiled_fem_module.interpolate_nonmatching_mesh(u0, u)
+    return u
+
 class Probe(compiled_module.Probe):
     
     def __call__(self, *args):
@@ -178,11 +184,6 @@ class StatisticsProbes(compiled_module.StatisticsProbes):
                 z.dump(filename+"_statistics.probes")
             return squeeze(z)
 
-def interpolate_nonmatching_mesh(u0, V):
-    u = Function(V)
-    compiled_fem_module.interpolate_nonmatching_mesh(u0, u)
-    return u
-
 class StructuredGrid:
     """A Structured grid of probe points. A slice of a 3D (possibly 2D if needed) 
     domain can be created with any orientation using two tangent vectors to span 
@@ -219,6 +220,8 @@ class StructuredGrid:
 
         if len(self.dims) == 2:
             x = self.create_dense_grid()
+            if V.element().geometric_dimension()==2:
+                x = x[:, :2]
             self.probes = Probes(x.flatten(), V)
         else:
             # Add plane by plane to avoid excessive memory use
@@ -755,8 +758,8 @@ def interpolate_nonmatching_mesh_python(u0, V):
 # Test the probe functions:
 if __name__=='__main__':
     import time
-    #set_log_active(False)
-    set_log_level(20)
+    set_log_active(False)
+    #set_log_level(20)
 
     mesh = UnitCubeMesh(16, 16, 16)
     #mesh = UnitSquareMesh(10, 10)
@@ -867,7 +870,7 @@ if __name__=='__main__':
     # Test for nonmatching mesh and FunctionSpace
     mesh2 = UnitCubeMesh(16, 16, 16)
     x = mesh2.coordinates()
-    x[:, :] = x[:, :] * 0.5 + 0.55
+    x[:, :] = x[:, :] * 0.5 + 0.25
     V2 = FunctionSpace(mesh2, 'CG', 1)
     VV2 = VectorFunctionSpace(mesh2, 'CG', 1)
     u = interpolate_nonmatching_mesh(x0, V2)
