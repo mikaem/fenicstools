@@ -150,6 +150,17 @@ std::vector<std::size_t> Probes::get_probe_ids()
   return ids;
 }
 
+std::vector<double> Probes::get_probes_component_and_snapshot(std::size_t comp, std::size_t i)
+{
+  std::vector<double> vals;  
+  for (std::size_t j = 0; j < local_size(); j++)
+  {
+    Probe* probe = (Probe*) _allprobes[j].second;
+    vals.push_back(probe->get_probe_component_and_snapshot(comp, i));
+  }
+  return vals;
+}
+
 void Probes::set_probes_from_ids(const Array<double>& u)
 {
   assert(u.size() == local_size() * value_size());

@@ -107,6 +107,11 @@ std::vector<double> Probe::get_probe_at_snapshot(std::size_t i)
     x[j] = _probes[j][i];
   return x;
 }
+// Return robe value for given component at given snapshot
+double Probe::get_probe_component_and_snapshot(std::size_t comp, std::size_t i)
+{
+  return _probes[comp][i];
+}
 // Return coordinates of probe
 std::vector<double> Probe::coordinates()
 {

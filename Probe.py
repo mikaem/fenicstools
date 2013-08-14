@@ -78,24 +78,33 @@ class Probes(compiled_module.Probes):
         self.i += 1
         return p    
 
-    def array(self, N=None, filename=None, root=0):
+    def array(self, N=None, filename=None, component=None, root=0):
         """Dump data to numpy format on root processor for all or one snapshot"""
         is_root = comm.Get_rank() == root
         size = self.get_total_number_probes() if is_root else len(self)
+        comp = self.value_size() if component is None else 1
         if not N is None:
-            z  = zeros((size, self.value_size()))
+            z  = zeros((size, comp))
         else:
-            z  = zeros((size, self.value_size(), self.number_of_evaluations()))
+            z  = zeros((size, comp, self.number_of_evaluations()))
         
         # Get all values
         if len(self) > 0: 
-            for i, (index, probe) in enumerate(self):
-                j = index if is_root else i
-                if not N is None:
-                    z[j, :] = probe.get_probe_at_snapshot(N)
-                else:
-                    for k in range(self.value_size()):
-                        z[j, k, :] = probe.get_probe_sub(k)
+            if not N is None:
+                for k in range(comp):
+                    if is_root:
+                        ids = self.get_probe_ids()
+                        z[ids, k] = self.get_probes_component_and_snapshot(k, N)
+                    else:
+                        z[:, k] = self.get_probes_component_and_snapshot(k, N)
+            else:                
+                for i, (index, probe) in enumerate(self):
+                    j = index if is_root else i
+                    if not N is None:
+                        z[j, :] = probe.get_probe_at_snapshot(N)
+                    else:
+                        for k in range(self.value_size()):
+                            z[j, k, :] = probe.get_probe_sub(k)
                         
         # Collect values on root
         recvfrom = comm.gather(len(self), root=root)
@@ -153,18 +162,22 @@ class StatisticsProbes(compiled_module.StatisticsProbes):
         self.i += 1
         return p   
         
-    def array(self, N=0, filename=None, root=0):
+    def array(self, N=0, filename=None, component=None, root=0):
         """Dump data to numpy format on root processor for all or one snapshot"""
         assert(N == 0 or N == 1)
         is_root = comm.Get_rank() == root
         size = self.get_total_number_probes() if is_root else len(self)
-        z  = zeros((size, self.value_size()))
+        comp = self.value_size() if component is None else 1        
+        z  = zeros((size, comp))
         
         # Retrieve all values
         if len(self) > 0: 
-            for i, (index, probe) in enumerate(self):
-                j = index if is_root else i
-                z[j, :] = probe.get_probe_at_snapshot(N)
+            for k in range(comp):
+                if is_root:
+                    ids = self.get_probe_ids()
+                    z[ids, k] = self.get_probes_component_and_snapshot(k, N)
+                else:
+                    z[:, k] = self.get_probes_component_and_snapshot(k, N)
                      
         # Collect on root
         recvfrom = comm.gather(len(self), root=root)
@@ -782,49 +795,49 @@ if __name__=='__main__':
     v0.update()
     w0.update()
     
-    #x = array([[1.5, 0.5, 0.5], [0.2, 0.3, 0.4], [0.8, 0.9, 1.0]])
-    #p = Probes(x.flatten(), W)
-    #x = x*0.9 
-    #p.add_positions(x.flatten(), W)
-    #for i in range(6):
-        #p(w0)
+    x = array([[1.5, 0.5, 0.5], [0.2, 0.3, 0.4], [0.8, 0.9, 1.0]])
+    p = Probes(x.flatten(), W)
+    x = x*0.9 
+    p.add_positions(x.flatten(), W)
+    for i in range(6):
+        p(w0)
         
-    #print p.array(2, "testarray")         # dump snapshot 2
-    #print p.array(filename="testarray")   # dump all snapshots
-    #print p.dump("testarray")
+    print p.array(2, "testarray")         # dump snapshot 2
+    print p.array(filename="testarray")   # dump all snapshots
+    print p.dump("testarray")
 
-    ## Test StructuredGrid
-    ## 3D box
-    #origin = [0.25, 0.25, 0.25]               # origin of box
-    #vectors = [[1, 0, 0], [0, 1, 0], [0, 0, 1]] # coordinate vectors (scaled in StructuredGrid)
-    #dL = [0.5, 0.5, 0.5]                      # extent of slice in both directions
-    #N  = [3, 3, 6]                           # number of points in each direction
+    # Test StructuredGrid
+    # 3D box
+    origin = [0.25, 0.25, 0.25]               # origin of box
+    vectors = [[1, 0, 0], [0, 1, 0], [0, 0, 1]] # coordinate vectors (scaled in StructuredGrid)
+    dL = [0.5, 0.5, 0.5]                      # extent of slice in both directions
+    N  = [3, 3, 6]                           # number of points in each direction
     
-    ## 2D slice
-    ##origin = [0.1, 0.1, 0.5]               # origin of slice
-    ##vectors = [[1, 0, 0], [0, 1, 0]]    # directional tangent directions (scaled in StructuredGrid)
-    ##dL = [0.5, 0.8]                      # extent of slice in both directions
-    ##N  = [5, 5]                           # number of points in each direction
+    # 2D slice
+    #origin = [0.1, 0.1, 0.5]               # origin of slice
+    #vectors = [[1, 0, 0], [0, 1, 0]]    # directional tangent directions (scaled in StructuredGrid)
+    #dL = [0.5, 0.8]                      # extent of slice in both directions
+    #N  = [5, 5]                           # number of points in each direction
    
-    ## Test scalar first
-    #sl = StructuredGrid(V, N, origin, vectors, dL)
-    #sl(s0)     # probe once
-    #sl(s0)     # probe once more
-    #sl.surf(0) # check first probe
-    #sl.tovtk(0, filename="dump_scalar.vtk")
-    #sl.toh5(0, 1, 'dump_scalar.h5')
-   ## sl.toh5(0, 2, 'dump_scalar.h5')
-   ## sl.toh5(0, 3, 'dump_scalar.h5')
+    # Test scalar first
+    sl = StructuredGrid(V, N, origin, vectors, dL)
+    sl(s0)     # probe once
+    sl(s0)     # probe once more
+    sl.surf(0) # check first probe
+    sl.tovtk(0, filename="dump_scalar.vtk")
+    sl.toh5(0, 1, 'dump_scalar.h5')
+   # sl.toh5(0, 2, 'dump_scalar.h5')
+   # sl.toh5(0, 3, 'dump_scalar.h5')
     
-    ## then vector
-    #sl2 = StructuredGrid(Vv, N, origin, vectors, dL)
-    #for i in range(5): 
-        #sl2(v0)     # probe a few times
-    #sl2.surf(3)     # Check the fourth probe instance
-    #sl2.tovtk(3, filename="dump_vector.vtk")
-    #sl2.toh5(0, 1, 'dump_vector.h5')
-    ##sl2.toh5(0, 2, 'dump_vector.h5')
-    ##sl2.toh5(0, 3, 'dump_vector.h5')
+    # then vector
+    sl2 = StructuredGrid(Vv, N, origin, vectors, dL)
+    for i in range(5): 
+        sl2(v0)     # probe a few times
+    sl2.surf(3)     # Check the fourth probe instance
+    sl2.tovtk(3, filename="dump_vector.vtk")
+    sl2.toh5(0, 1, 'dump_vector.h5')
+    #sl2.toh5(0, 2, 'dump_vector.h5')
+    #sl2.toh5(0, 3, 'dump_vector.h5')
     
     # Test statistics
     #sl3 = StructuredGrid(V, N, origin, vectors, dL, True)
