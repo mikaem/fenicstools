@@ -355,7 +355,7 @@ class StructuredGrid:
         
     def read_grid_from_hdf5(self, filename="restart.h5"):
         """Read grid data from filename"""
-        f = h5py.File(filename, 'r')
+        f = h5py.File(filename, 'r', driver='mpio', comm=comm)
         self.origin = f.attrs['origin']
         self.dL = f.attrs['dL']
         self._num_eval = f.attrs['num_evals']
@@ -375,7 +375,7 @@ class StructuredGrid:
         If no specific tstep is provided for regular probe, then choose 
         the tstep with the highest number.
         """
-        f = h5py.File(filename, 'r')
+        f = h5py.File(filename, 'r', driver='mpio', comm=comm)
         ids = self.probes.get_probe_ids()        
         nn = len(ids)
         

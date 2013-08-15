@@ -46,9 +46,10 @@ namespace dolfin
     //        passed around and searched on all ranks until found.
     //   4) Set all values in u using the dof to component map
     
+    // Get the function space interpolated to
     boost::shared_ptr<const FunctionSpace> V = u.function_space();
     
-    // Get mesh and dimension of FunctionSpace interpolating to
+    // Get mesh and dimension of the FunctionSpace interpolated to
     const Mesh& mesh = *V->mesh();
     const std::size_t gdim = mesh.geometry().dim();
 
@@ -78,7 +79,6 @@ namespace dolfin
     for (std::size_t j=0; j<coords.size()/gdim; j++)
     {    
       std::copy(coords.begin()+j*gdim, coords.begin()+(j+1)*gdim, x.begin());
-    
       try
       { // store when point is found
         u0.eval(_values, _x);
