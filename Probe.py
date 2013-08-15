@@ -8,7 +8,6 @@ This module contains functionality for efficiently probing a Function many times
 #from cbc.cfd.oasis import *
 from dolfin import *
 from numpy import alltrue, cos, zeros, array, repeat, squeeze, argmax, cumsum, reshape, resize, linspace, abs, sign, all, float32
-from pylab import find
 from numpy.linalg import norm as numpy_norm
 try:
     from scitools.std import surfc
