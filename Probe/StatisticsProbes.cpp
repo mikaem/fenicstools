@@ -36,7 +36,7 @@ StatisticsProbes::StatisticsProbes(const Array<double>& x, const FunctionSpace& 
     { // do-nothing
     }
   }
-  cout << local_size() << " of " << N  << " probes found on processor " << MPI::process_number() << endl;
+  //cout << local_size() << " of " << N  << " probes found on processor " << MPI::process_number() << endl;
 }
 //
 void StatisticsProbes::add_positions(const Array<double>& x, const FunctionSpace& V, bool segregated)
@@ -62,7 +62,7 @@ void StatisticsProbes::add_positions(const Array<double>& x, const FunctionSpace
     { // do-nothing
     }
   }
-  cout << local_size() - old_local_size << " of " << N  << " probes found on processor " << MPI::process_number() << endl;
+  //cout << local_size() - old_local_size << " of " << N  << " probes found on processor " << MPI::process_number() << endl;
 }
 //
 StatisticsProbe* StatisticsProbes::get_probe(std::size_t i)

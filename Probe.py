@@ -7,7 +7,7 @@ This module contains functionality for efficiently probing a Function many times
 """
 #from cbc.cfd.oasis import *
 from dolfin import *
-from numpy import alltrue, cos, zeros, array, repeat, squeeze, argmax, cumsum, reshape, resize, linspace, abs, sign, all, float32
+from numpy import alltrue, cos, zeros, array, repeat, squeeze, argmax, cumsum, sum, count_nonzero, reshape, resize, linspace, abs, sign, all, float32
 from numpy.linalg import norm as numpy_norm
 try:
     from scitools.std import surfc
@@ -78,7 +78,7 @@ class Probes(compiled_module.Probes):
         return p    
 
     def array(self, N=None, filename=None, component=None, root=0):
-        """Dump data to numpy format on root processor for all or one snapshot"""
+        """Dump data to numpy format on root processor for all or one snapshot."""
         is_root = comm.Get_rank() == root
         size = self.get_total_number_probes() if is_root else len(self)
         comp = self.value_size() if component is None else 1
@@ -162,7 +162,7 @@ class StatisticsProbes(compiled_module.StatisticsProbes):
         return p   
         
     def array(self, N=0, filename=None, component=None, root=0):
-        """Dump data to numpy format on root processor for all or one snapshot"""
+        """Dump data to numpy format on root processor."""
         assert(N == 0 or N == 1)
         is_root = comm.Get_rank() == root
         size = self.get_total_number_probes() if is_root else len(self)
@@ -197,10 +197,11 @@ class StatisticsProbes(compiled_module.StatisticsProbes):
             return squeeze(z)
 
 class StructuredGrid:
-    """A Structured grid of probe points. A slice of a 3D (possibly 2D if needed) 
-    domain can be created with any orientation using two tangent vectors to span 
-    a local coordinatesystem. Likewise, a Box in 3D is created by supplying three
-    basis vectors.
+    """A Structured grid of probe points. 
+    
+    A slice of a 3D (possibly 2D if needed) domain can be created with any 
+    orientation using two tangent vectors to span a local coordinatesystem. 
+    Likewise, a Box in 3D is created by supplying three basis vectors.
     
           dims = [N1, N2 (, N3)] number of points in each direction
           origin = (x, y, z) origin of slice 
@@ -212,6 +213,7 @@ class StructuredGrid:
                        False => Store instantaneous snapshots of probepoints. 
           
           restart = hdf5-file => Restart probe from previous computations.
+          
     """
     def __init__(self, V, dims=None, origin=None, dX=None, dL=None, statistics=False, restart=False, tstep=None):
         if restart:
@@ -232,7 +234,7 @@ class StructuredGrid:
 
         if len(self.dims) == 2:
             x = self.create_dense_grid()
-            if V.element().geometric_dimension()==2:
+            if V.element().geometric_dimension() == 2:
                 x = x[:, :2]
             self.probes = Probes(x.flatten(), V)
         else:
@@ -278,6 +280,7 @@ class StructuredGrid:
 
     def create_coordinate_vectors(self):
         """Create the vectors that span the entire computational box.
+        
         dx, dy, dz are lists of length dim (2 for 2D, 3 for 3D)
         Each item of the list is an array spanning the box/slice in
         that direction. For example, a 3D UnitCube of size 5 x 4 x 3
@@ -298,6 +301,7 @@ class StructuredGrid:
         
         We store the entire vector in each direction because each
         vector can be modified and need not be uniform (like here).
+        
         """
         dX, dL = self.dX, self.dL
         dims = array(self.dims)
@@ -315,12 +319,14 @@ class StructuredGrid:
 
     def modify_mesh(self, dx, dy, dz):
         """Use this function to for example skew a grid towards a wall.
+        
         If you are looking at a channel flow with -1 < y < 1 and 
         walls located at +-1, then you can skew the mesh using e.g.
         
             dy[1][:] = arctan(pi*(dy[1][:]+origin[1]))/arctan(pi)-origin[1]
             
         Note: origin[1] will be -1 and 0 <= dy <= 2
+        
         """
         return dx, dy, dz
     
@@ -560,48 +566,18 @@ class StructuredGrid:
         if len(self.dims) == 3:
             print "No surf for 3D cube"
             return
-        z = zeros((self.dims[0], self.dims[1]))
-        for j in range(self.dims[1]):
-            for i in range(self.dims[0]):
-                val = self.probes[j*self.dims[0] + i][1].get_probe_sub(component)
-                z[i, j] = val[N]
-        # Use local coordinates
-        yy, xx = meshgrid(linspace(0, self.dL[1], self.dims[1]),
-                          linspace(0, self.dL[0], self.dims[0]))
-        surfc(yy, xx, z, indexing='xy')
+        z = self.array(N=N, component=component).reshape(*self.dims[::-1])
+        x = self.create_dense_grid()
+        surfc(x[:, 0].reshape(*self.dims[::-1]), x[:, 1].reshape(*self.dims[::-1]), z, indexing='xy')
 
-    def array(self, N=None, filename=None, root=0):
+    def array(self, N=None, filename=None, component=None, root=0):
         """Dump data to numpy format on root processor for all or one snapshot"""
-        return self.probes.array(N=N, filename=filename, root=root)
+        return self.probes.array(N=N, filename=filename, component=component, root=root)
     
     def tovtk(self, N, filename):
-        """Dump probes to VTK file.
-        ## FIXME
-        This function is quite memory demanding since dense matrix of
-        solution and position is created on root.
-        """
+        """Dump probes to VTK file."""
         is_root = comm.Get_rank() == 0
-        size = self.probes.get_total_number_probes() if is_root else len(self.probes)
-        z  = zeros((size, self.probes.value_size()))
-        
-        if len(self.probes) > 0:
-            for i, (index, probe) in enumerate(self.probes):
-                j = index if is_root else i
-                z[j, :] = probe.get_probe_at_snapshot(N)
-                
-        # Collect all data on root and store to vtk format
-        recvfrom = comm.gather(len(self.probes), root=0)
-        if is_root:
-            for j, k in enumerate(recvfrom[1:], 1):  
-                ids = comm.recv(source=j, tag=101)
-                z0 = comm.recv(source=j, tag=102)
-                z[ids, :] = z0[:, :]
-        else:
-            ids = self.probes.get_probe_ids()
-            comm.send(ids, dest=0, tag=101)
-            comm.send(z, dest=0, tag=102)
-        
-        # Store probes in vtk-format
+        z = self.array(N=N)
         if is_root:
             d = self.dims
             d = (d[0], d[1], d[2]) if len(d) > 2 else (d[0], d[1], 1)
@@ -709,6 +685,14 @@ class StructuredGrid:
                 i += 1
                 
         self.probes.restart_probes(data.flatten(), self._num_eval)
+
+    def arithmetic_mean(self, N=0, component=None):
+        z = self.array(N=0, component=component)
+        a = 0.0
+        if comm.Get_rank() == 0:
+            a = sum(z) / count_nonzero(z)
+        a = comm.bcast(a, root=0)
+        return a
                     
 # Create a class for a skewed channel mesh 
 class ChannelGrid(StructuredGrid):
@@ -810,13 +794,13 @@ if __name__=='__main__':
     origin = [0.25, 0.25, 0.25]               # origin of box
     vectors = [[1, 0, 0], [0, 1, 0], [0, 0, 1]] # coordinate vectors (scaled in StructuredGrid)
     dL = [0.5, 0.5, 0.5]                      # extent of slice in both directions
-    N  = [3, 3, 6]                           # number of points in each direction
+    N  = [9, 9, 3]                           # number of points in each direction
     
-    # 2D slice
-    #origin = [0.1, 0.1, 0.5]               # origin of slice
+    ## 2D slice
+    #origin = [-0.5, -0.5, 0.5]               # origin of slice
     #vectors = [[1, 0, 0], [0, 1, 0]]    # directional tangent directions (scaled in StructuredGrid)
-    #dL = [0.5, 0.8]                      # extent of slice in both directions
-    #N  = [5, 5]                           # number of points in each direction
+    #dL = [2., 2.]                      # extent of slice in both directions
+    #N  = [50, 50]                           # number of points in each direction
    
     # Test scalar first
     sl = StructuredGrid(V, N, origin, vectors, dL)
@@ -827,6 +811,7 @@ if __name__=='__main__':
     sl.toh5(0, 1, 'dump_scalar.h5')
    # sl.toh5(0, 2, 'dump_scalar.h5')
    # sl.toh5(0, 3, 'dump_scalar.h5')
+    print sl.arithmetic_mean()
     
     # then vector
     sl2 = StructuredGrid(Vv, N, origin, vectors, dL)
@@ -839,29 +824,29 @@ if __name__=='__main__':
     #sl2.toh5(0, 3, 'dump_vector.h5')
     
     # Test statistics
-    #sl3 = StructuredGrid(V, N, origin, vectors, dL, True)
-    #for i in range(10): 
-        #sl3(x0, y0, z0)     # probe a few times
-        ##sl3(v0)
-    #sl3.surf(0)     # Check 
-    #sl3.tovtk(0, filename="dump_mean_vector.vtk")
-    #sl3.tovtk(1, filename="dump_latest_snapshot_vector.vtk")
-    #sl3.toh5(0, 1, 'reslowmem.h5')    
+    sl3 = StructuredGrid(V, N, origin, vectors, dL, True)
+    for i in range(10): 
+        sl3(x0, y0, z0)     # probe a few times
+        #sl3(v0)
+    sl3.surf(0)     # Check 
+    sl3.tovtk(0, filename="dump_mean_vector.vtk")
+    sl3.tovtk(1, filename="dump_latest_snapshot_vector.vtk")
+    sl3.toh5(0, 1, 'reslowmem.h5')    
         
-    ## Restart probes from sl3
-    #sl4 = StructuredGrid(V, restart='reslowmem.h5')
-    #for i in range(10): 
-        #sl4(x0, y0, z0)     # probe a few more times    
-    #sl4.tovtk(0, filename="dump_mean_vector_restart_h5.vtk")
-    #sl4.toh5(0, 0, 'restart_reslowmem.h5')
+    # Restart probes from sl3
+    sl4 = StructuredGrid(V, restart='reslowmem.h5')
+    for i in range(10): 
+        sl4(x0, y0, z0)     # probe a few more times    
+    sl4.tovtk(0, filename="dump_mean_vector_restart_h5.vtk")
+    sl4.toh5(0, 0, 'restart_reslowmem.h5')
     
-    ## Try mixed space
-    #sl5 = StructuredGrid(W, N, origin, vectors, dL)
-    #sl5(w0)     # probe once
-    #sl5(w0)     # probe once more
-    #sl5.toh5(0, 1, 'dump_mixed.h5')
-    #sl6 = StructuredGrid(W, restart='dump_mixed.h5')
-    #sl6.toh5(0, 1, 'dump_mixed_again.h5')
+    # Try mixed space
+    sl5 = StructuredGrid(W, N, origin, vectors, dL)
+    sl5(w0)     # probe once
+    sl5(w0)     # probe once more
+    sl5.toh5(0, 1, 'dump_mixed.h5')
+    sl6 = StructuredGrid(W, restart='dump_mixed.h5')
+    sl6.toh5(0, 1, 'dump_mixed_again.h5')
     
     ## 3D box
     #tol = 1e-8
@@ -880,9 +865,9 @@ if __name__=='__main__':
     #slc.toh5(0, 1, 'testing_dump.h5')
     
     # Test for nonmatching mesh and FunctionSpace
-    mesh2 = UnitCubeMesh(16, 16, 16)
-    x = mesh2.coordinates()
-    x[:, :] = x[:, :] * 0.5 + 0.25
+    mesh2 = UnitCubeMesh(32, 32, 32)
+    #x = mesh2.coordinates()
+    #x[:, :] = x[:, :] * 0.5 + 0.25
     V2 = FunctionSpace(mesh2, 'CG', 1)
     VV2 = VectorFunctionSpace(mesh2, 'CG', 1)
     u = interpolate_nonmatching_mesh(x0, V2)
@@ -904,16 +889,18 @@ if __name__=='__main__':
     W2 = V2 * VV2
     ww = interpolate_nonmatching_mesh(w0, W2)
     
-    WS = W * W
-    #w11 = interpolate(Expression(('x[0]', 'x[1]', 'x[2]', 'x[1]*x[2]', 'x[0]', 'x[1]', 'x[2]', 'x[1]*x[2]')), WS)
-    w11 = interpolate_nonmatching_mesh(Expression(('x[0]', 'x[1]', 'x[2]', 'x[1]*x[2]', 'x[0]', 'x[1]', 'x[2]', 'x[1]*x[2]')), WS)
-    WS2 = W2 * W2
-    w11.update()
-    #x1 = interpolate_nonmatching_mesh(w11, WS2)
+    #WS = W * W
+    ##w11 = interpolate(Expression(('x[0]', 'x[1]', 'x[2]', 'x[1]*x[2]', 'x[0]', 'x[1]', 'x[2]', 'x[1]*x[2]')), WS)
+    #w11 = interpolate_nonmatching_mesh(Expression(('x[0]', 'x[1]', 'x[2]', 'x[1]*x[2]', 'x[0]', 'x[1]', 'x[2]', 'x[1]*x[2]')), WS)
+    #WS2 = W2 * W2
+    #w11.update()
+    ##x1 = interpolate_nonmatching_mesh(w11, WS2)
 
-    #ff = File('test_project_nonmatching.pvd')
-    #ff << u
-    #plot(u)
-    plot(w11[0], title='mixed')
+    ##ff = File('test_project_nonmatching.pvd')
+    ##ff << u
+    ##plot(u)
+    #plot(w11[0], title='mixed')
+    #list_timings()
+    
     interactive()
     

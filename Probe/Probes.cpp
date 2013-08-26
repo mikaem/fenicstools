@@ -62,7 +62,7 @@ void Probes::add_positions(const Array<double>& x, const FunctionSpace& V)
     { // do-nothing
     }
   }
-  cout << local_size() - old_local_size << " of " << N  << " probes found on processor " << MPI::process_number() << endl;
+  //cout << local_size() - old_local_size << " of " << N  << " probes found on processor " << MPI::process_number() << endl;
 }
 //
 void Probes::eval(const Function& u)

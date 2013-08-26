@@ -112,7 +112,7 @@ namespace dolfin
       global_dofs_not_found.clear();
       coords_not_found.clear();
       
-      // Search this processor for points
+      // Search this processor for received points
       std::vector<std::size_t> global_dofs_found;
       std::vector<std::vector<double> > coefficients_found;
       for (std::size_t j=0; j<coords_recv.size()/gdim; j++)
