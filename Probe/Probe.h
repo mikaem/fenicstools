@@ -23,16 +23,16 @@ namespace dolfin
     virtual void eval(const Function& u);   
       
     // Return all probe values for one component
-    std::vector<double> get_probe_sub(std::size_t i);
+    std::vector<double> get_probe_sub(std::size_t i);  
     
     // Return one snapshot of the probe values for all components
     std::vector<double> get_probe_at_snapshot(std::size_t i);
 
     // Return one probe values for given component at given snapshot
-    double get_probe_component_and_snapshot(std::size_t comp, std::size_t i);
+    double get_probe_component_and_snapshot(std::size_t comp, std::size_t i);  
 
     // dump component i to filename. id is optional probe identifier
-    void dump(std::size_t i, std::string filename, std::size_t id=0);
+    void dump(std::size_t i, std::string filename, std::size_t id=0);  
     
     // dump all components to filename. id is optional probe identifier
     void dump(std::string filename, std::size_t id=0);
