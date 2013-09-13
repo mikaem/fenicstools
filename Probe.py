@@ -229,7 +229,7 @@ class StructuredGrid:
             self.set_data_from_file(filename=restart, tstep=tstep)
                  
     def initialize_probes(self, statistics, V):
-        if len(self.dims) == 2 and statistics:
+        if V.element().geometric_dimension() == 2 and statistics:
             raise TypeError("No sampling of turbulence statistics in 2D")
 
         if len(self.dims) == 2:
@@ -584,9 +584,9 @@ class StructuredGrid:
             grid = pyvtk.StructuredGrid(d, self.create_dense_grid())
             v = pyvtk.VtkData(grid, "Probe data. Evaluations = {}".format(self.probes.number_of_evaluations()))
             if self.probes.value_size() == 1:
-                v.point_data.append(pyvtk.Scalars(z))
+                v.point_data.append(pyvtk.Scalars(z, name="Scalar"))
             elif self.probes.value_size() == 3:
-                v.point_data.append(pyvtk.Vectors(z))
+                v.point_data.append(pyvtk.Vectors(z, name="Vector"))
             elif self.probes.value_size() == 9: # StatisticsProbes
                 if N == 0:
                     num_evals = self.probes.number_of_evaluations()
@@ -687,7 +687,7 @@ class StructuredGrid:
         self.probes.restart_probes(data.flatten(), self._num_eval)
 
     def arithmetic_mean(self, N=0, component=None):
-        z = self.array(N=0, component=component)
+        z = self.array(N=N, component=component)
         a = 0.0
         if comm.Get_rank() == 0:
             a = sum(z) / count_nonzero(z)

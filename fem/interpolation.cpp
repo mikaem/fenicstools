@@ -13,7 +13,7 @@ namespace dolfin
     
     if (VV.element()->num_sub_elements() == 0)
     {
-      boost::shared_ptr<GenericDofMap> dummy = VV.dofmap()->collapse(collapsed_map, *VV.mesh());        
+      boost::shared_ptr<GenericDofMap> dummy = VV.dofmap()->collapse(collapsed_map, *VV.mesh());
       (*component)++;
       for (map_it =collapsed_map.begin(); map_it!=collapsed_map.end(); ++map_it)
         dof_component_map[map_it->second] = (*component);  
@@ -44,7 +44,7 @@ namespace dolfin
     //        and as such a vertex in u will not necessarily be found 
     //        on the same processor for u0. Hence the vertex will be 
     //        passed around and searched on all ranks until found.
-    //   4) Set all values in u using the dof to component map
+    //   4) Set all values in local u using the dof to component map
     
     // Get the function space interpolated to
     boost::shared_ptr<const FunctionSpace> V = u.function_space();

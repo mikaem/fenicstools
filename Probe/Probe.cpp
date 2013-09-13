@@ -165,4 +165,3 @@ void Probe::restart_probe(const Array<double>& u)
   for (std::size_t j = 0; j < _value_size_loc; j++)
     _probes[j].push_back(u[j]);
 }
-
