@@ -81,7 +81,7 @@ namespace dolfin
       std::copy(coords.begin()+j*gdim, coords.begin()+(j+1)*gdim, x.begin());
       try
       { // store when point is found
-        u0.eval(_values, _x);
+        u0.eval(_values, _x);  // This evaluates all dofs, but need only one component. Possible fix?
         local_u_vector[j] = values[dof_component_map[j+owner_range.first]];
       } 
       catch (std::exception &e)
