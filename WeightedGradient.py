@@ -16,14 +16,14 @@ def weighted_gradient_matrix(mesh, i, degree=1, constrained_domain=None):
     through a simple matrix vector product
     
       p_ is the pressure solution on CG1
-      dPdX = weighted_gradient_matrix(mesh, 0)
-      dpdx = Function(V) # The space you want the gradient on
+      dPdX = weighted_gradient_matrix(mesh, 0, degree)
+      V = FunctionSpace(mesh, 'CG', degree)
+      dpdx = Function(V)
       dpdx.vector()[:] = dPdX * p_.vector()
       
-      The space for dpdx must be linear or quadratic
+      The space for dpdx must be Lagrange of some order
       
     """
-    assert(degree < 3)
     DG = FunctionSpace(mesh, 'DG', 0)
     CG = FunctionSpace(mesh, 'CG', degree, constrained_domain=constrained_domain)
     CG1 = FunctionSpace(mesh, 'CG', 1, constrained_domain=constrained_domain)
@@ -34,10 +34,11 @@ def weighted_gradient_matrix(mesh, i, degree=1, constrained_domain=None):
         CC = []
         for ii in i:
             dP = assemble(TrialFunction(CG1).dx(ii)*TestFunction(DG)*dx)
-            compiled_gradient_module.compute_weighted_gradient_matrix(G, dP, C, dg)
+            A = Matrix(G)
+            compiled_gradient_module.compute_weighted_gradient_matrix(A, dP, C, dg)
             CC.append(C.copy())
         return CC
     else:
         dP = assemble(TrialFunction(CG).dx(i)*TestFunction(DG)*dx)
-        compiled_gradient_module.compute_weighted_gradient_matrix(G, dP, C, dg)      
+        compiled_gradient_module.compute_weighted_gradient_matrix(G, dP, C, dg)
         return C
