@@ -5,7 +5,6 @@ __license__  = "GNU Lesser GPL version 3 or any later version"
 """
 This module contains functionality for efficiently probing a Function many times. 
 """
-#from cbc.cfd.oasis import *
 from dolfin import *
 from numpy import alltrue, cos, zeros, array, repeat, squeeze, argmax, cumsum, sum, count_nonzero, reshape, resize, linspace, abs, sign, all, float32
 from numpy.linalg import norm as numpy_norm
@@ -33,16 +32,7 @@ code = strip_essential_code(headers)
 compiled_module = compile_extension_module(code=code, source_directory=os.path.abspath(dolfin_folder),
                                            sources=sources, include_dirs=[".", os.path.abspath(dolfin_folder)])
 
-fem_folder = os.path.abspath(os.path.join(inspect.getfile(inspect.currentframe()), "../fem"))
-fem_code = open(os.path.join(fem_folder, 'interpolation.cpp'), 'r').read()
-compiled_fem_module = compile_extension_module(code=fem_code)
-                                           
 # Give the compiled classes some additional pythonic functionality
-def interpolate_nonmatching_mesh(u0, V):
-    u = Function(V)
-    compiled_fem_module.interpolate_nonmatching_mesh(u0, u)
-    return u
-
 class Probe(compiled_module.Probe):
     
     def __call__(self, *args):
@@ -236,7 +226,8 @@ class StructuredGrid:
             x = self.create_dense_grid()
             if V.element().geometric_dimension() == 2:
                 x = x[:, :2]
-            self.probes = Probes(x.flatten(), V)
+            self.probes = (StatisticsProbes(x.flatten(), V, V.num_sub_spaces()==0) if statistics else
+                           Probes(x.flatten(), V))
         else:
             # Add plane by plane to avoid excessive memory use
             x = self.create_xy_slice(0)
@@ -754,8 +745,8 @@ def interpolate_nonmatching_mesh_python(u0, V):
 # Test the probe functions:
 if __name__=='__main__':
     import time
-    set_log_active(False)
-    #set_log_level(20)
+    #set_log_active(False)
+    set_log_level(20)
 
     mesh = UnitCubeMesh(16, 16, 16)
     #mesh = UnitSquareMesh(10, 10)
@@ -886,8 +877,15 @@ if __name__=='__main__':
     plot(vv1[0])
     plot(vv2[0])
     
-    W2 = V2 * VV2
-    ww = interpolate_nonmatching_mesh(w0, W2)
+    R = FunctionSpace(mesh, 'R', 0)
+    VVR = Vv * R
+    
+    vr0 = interpolate(Expression(('x[0]', 'x[1]', 'x[2]', '2')), VVR)
+    
+    VVR2 = VV2 * R
+    
+    vr1 = interpolate_nonmatching_mesh(vr0, VVR2)
+    plot(vr1[3])
     
     #WS = W * W
     ##w11 = interpolate(Expression(('x[0]', 'x[1]', 'x[2]', 'x[1]*x[2]', 'x[0]', 'x[1]', 'x[2]', 'x[1]*x[2]')), WS)

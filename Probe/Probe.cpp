@@ -19,8 +19,8 @@ Probe::Probe(const Array<double>& x, const FunctionSpace& V) :
   // Find the cell that contains probe
   const Point point(gdim, x.data());
   //unsigned int id = mesh.bounding_box_tree()->compute_first_collision(point);
-  unsigned int id = mesh.bounding_box_tree()->compute_first_entity_collision(point, mesh);
-  
+  unsigned int id = mesh.bounding_box_tree()->compute_first_entity_collision(point);
+
   // If the cell is on this process, then create an instance 
   // of the Probe class. Otherwise raise a dolfin_error.
   if (id != std::numeric_limits<unsigned int>::max())

@@ -20,7 +20,7 @@ namespace dolfin
     virtual ~Probe(); 
 
     // evaluate the probe.
-    virtual void eval(const Function& u);   
+    virtual void eval(const Function& u);     
       
     // Return all probe values for one component
     std::vector<double> get_probe_sub(std::size_t i);  
