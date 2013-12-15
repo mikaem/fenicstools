@@ -122,7 +122,7 @@ namespace dolfin
       A.getrow(global_row, columns, values);
       for (std::size_t i = 0; i < values.size(); i++)
       {
-        std::size_t dof = columns[i];
+       std::size_t dof = columns[i];
         if (dof < weight_range.first || dof >= weight_range.second)
         {
           values[i] = received_weights[dof];
@@ -131,12 +131,13 @@ namespace dolfin
         {
           values[i] = weight[columns[i]];  
         }
+//        values[i] = 1./values[i];
       }
       
       double s = std::accumulate(values.begin(), values.end(), 0.0);
       std::transform(values.begin(), values.end(), values.begin(),
-                     std::bind2nd(std::multiplies<double>(), 1./s));      
-      
+                std::bind2nd(std::multiplies<double>(), 1./s));      
+
       for (std::size_t i=0; i<values.size(); i++)
       {
         double w;
@@ -150,7 +151,9 @@ namespace dolfin
           w = weight[dof];  
         }        
         values[i] = values[i]*w;
-      }
+//        values[i] = values[i]*values[i];
+        
+      }     
       
       allvalues.push_back(values);
       allcolumns.push_back(columns);
@@ -167,7 +170,9 @@ namespace dolfin
   
   void compute_weighted_gradient_matrix(GenericMatrix& A, GenericMatrix& dP, GenericMatrix& C, Function& DG)
   {
+    //cout << "Before " << A.str(true)<< endl;
     compute_DG0_to_CG_weight_matrix(A, DG);
+    //cout << "After " << A.str(true)<< endl;
     const dolfin::PETScMatrix* Ap = &as_type<const dolfin::PETScMatrix>(A);
     const dolfin::PETScMatrix* Pp = &as_type<const dolfin::PETScMatrix>(dP);
     dolfin::PETScMatrix* Cp = &as_type<dolfin::PETScMatrix>(C);  
