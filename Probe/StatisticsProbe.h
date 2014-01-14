@@ -27,7 +27,7 @@ namespace dolfin
     std::vector<double> mean();
     
     // Return the covariance of all components in Function 
-    std::vector<double> variance();
+    std::vector<double> variance();  
     
     // Reset probe values for entire tensor
     void restart_probe(const Array<double>& u, std::size_t num_evals);

@@ -6,7 +6,6 @@ Probe::~Probe()
 {
   clear(); 
   delete dolfin_cell; 
-  delete ufc_cell; 
 }
 
 Probe::Probe(const Array<double>& x, const FunctionSpace& V) :
@@ -38,9 +37,13 @@ Probe::Probe(const Array<double>& x, const FunctionSpace& V) :
 
     // Create cell that contains point
     dolfin_cell = new Cell(mesh, id);
-    ufc_cell = new UFCCell(*dolfin_cell);
+    ufc_cell = new ufc::cell();
+    dolfin_cell->get_cell_data(*ufc_cell);
     
     coefficients.resize(_element->space_dimension());
+    
+    // Cell vertices
+    dolfin_cell->get_vertex_coordinates(vertex_coordinates);
         
     // Create work vector for basis
     basis_matrix.resize(_value_size_loc);
@@ -48,9 +51,12 @@ Probe::Probe(const Array<double>& x, const FunctionSpace& V) :
       basis_matrix[i].resize(_element->space_dimension());
         
     std::vector<double> basis(_value_size_loc);
+    const int cell_orientation = 0;
     for (std::size_t i = 0; i < _element->space_dimension(); ++i)
     {
-      _element->evaluate_basis(i, &basis[0], &x[0], *ufc_cell);
+      _element->evaluate_basis(i, &basis[0], &x[0], 
+                               vertex_coordinates.data(), 
+                               cell_orientation);
       for (std::size_t j = 0; j < _value_size_loc; ++j)
         basis_matrix[j][i] = basis[j];
     }
@@ -64,7 +70,8 @@ Probe::Probe(const Array<double>& x, const FunctionSpace& V) :
 void Probe::eval(const Function& u)
 {
   // Restrict function to cell
-  u.restrict(&coefficients[0], *_element, *dolfin_cell, *ufc_cell);
+  u.restrict(&coefficients[0], *_element, *dolfin_cell,
+             vertex_coordinates.data(), *ufc_cell);
 
   // Make room for one more evaluation
   for (std::size_t j = 0; j < _value_size_loc; j++)

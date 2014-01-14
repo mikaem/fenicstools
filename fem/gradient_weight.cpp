@@ -168,14 +168,17 @@ namespace dolfin
     A.apply("insert");
   }  
   
+  void MatMatMult(GenericMatrix& A, GenericMatrix& B, GenericMatrix& C)
+  {
+    const dolfin::PETScMatrix* Ap = &as_type<const dolfin::PETScMatrix>(A);
+    const dolfin::PETScMatrix* Bp = &as_type<const dolfin::PETScMatrix>(B);
+    dolfin::PETScMatrix* Cp = &as_type<dolfin::PETScMatrix>(C);  
+    PetscErrorCode ierr = MatMatMult(*Ap->mat(), *Bp->mat(), MAT_INITIAL_MATRIX, PETSC_DEFAULT, &(*Cp->mat()));
+  }  
+
   void compute_weighted_gradient_matrix(GenericMatrix& A, GenericMatrix& dP, GenericMatrix& C, Function& DG)
   {
-    //cout << "Before " << A.str(true)<< endl;
     compute_DG0_to_CG_weight_matrix(A, DG);
-    //cout << "After " << A.str(true)<< endl;
-    const dolfin::PETScMatrix* Ap = &as_type<const dolfin::PETScMatrix>(A);
-    const dolfin::PETScMatrix* Pp = &as_type<const dolfin::PETScMatrix>(dP);
-    dolfin::PETScMatrix* Cp = &as_type<dolfin::PETScMatrix>(C);  
-    PetscErrorCode ierr = MatMatMult(*Ap->mat(), *Pp->mat(), MAT_INITIAL_MATRIX, PETSC_DEFAULT, &(*Cp->mat()));
+    MatMatMult(A, dP, C);
   }  
 }        
