@@ -31,7 +31,8 @@ void StatisticsProbe::eval(const Function& u)
   assert(u.value_size() == value_size_loc_function);
   
   // Restrict function to cell
-  u.restrict(&coefficients[0], *_element, *dolfin_cell, *ufc_cell);
+  u.restrict(&coefficients[0], *_element, *dolfin_cell, 
+             vertex_coordinates.data(), *ufc_cell);
   
   std::vector<double> tmp(value_size_loc_function);
   // Compute linear combination
@@ -66,14 +67,17 @@ void StatisticsProbe::eval(const Function& u, const Function& v, const Function&
     
   std::vector<double> tmp(3);
   // Restrict function to cell
-  u.restrict(&coefficients[0], *_element, *dolfin_cell, *ufc_cell);
+  u.restrict(&coefficients[0], *_element, *dolfin_cell, 
+             vertex_coordinates.data(), *ufc_cell);
   // Compute linear combination
   for (std::size_t i = 0; i < _element->space_dimension(); i++)
     tmp[0] += coefficients[i]*basis_matrix[0][i];    
-  v.restrict(&coefficients[0], *_element, *dolfin_cell, *ufc_cell);
+  v.restrict(&coefficients[0], *_element, *dolfin_cell,
+             vertex_coordinates.data(), *ufc_cell);
   for (std::size_t i = 0; i < _element->space_dimension(); i++)
     tmp[1] += coefficients[i]*basis_matrix[0][i];    
-  w.restrict(&coefficients[0], *_element, *dolfin_cell, *ufc_cell);
+  w.restrict(&coefficients[0], *_element, *dolfin_cell, 
+             vertex_coordinates.data(), *ufc_cell);
   for (std::size_t i = 0; i < _element->space_dimension(); i++)
     tmp[2] += coefficients[i]*basis_matrix[0][i];    
 
@@ -98,10 +102,12 @@ void StatisticsProbe::eval(const Function& u, const Function& v)
     
   std::vector<double> tmp(2);
   // Restrict function to cell
-  u.restrict(&coefficients[0], *_element, *dolfin_cell, *ufc_cell);
+  u.restrict(&coefficients[0], *_element, *dolfin_cell, 
+             vertex_coordinates.data(), *ufc_cell);
   for (std::size_t i = 0; i < _element->space_dimension(); i++)
     tmp[0] += coefficients[i]*basis_matrix[0][i];    
-  v.restrict(&coefficients[0], *_element, *dolfin_cell, *ufc_cell);
+  v.restrict(&coefficients[0], *_element, *dolfin_cell,
+             vertex_coordinates.data(), *ufc_cell);
   for (std::size_t i = 0; i < _element->space_dimension(); i++)
     tmp[1] += coefficients[i]*basis_matrix[0][i];    
 

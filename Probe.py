@@ -855,37 +855,6 @@ if __name__=='__main__':
     #slc.tovtk(0, 'testing_dump.vtk')
     #slc.toh5(0, 1, 'testing_dump.h5')
     
-    # Test for nonmatching mesh and FunctionSpace
-    mesh2 = UnitCubeMesh(32, 32, 32)
-    #x = mesh2.coordinates()
-    #x[:, :] = x[:, :] * 0.5 + 0.25
-    V2 = FunctionSpace(mesh2, 'CG', 1)
-    VV2 = VectorFunctionSpace(mesh2, 'CG', 1)
-    u = interpolate_nonmatching_mesh(x0, V2)
-    
-    t0 = time.time()
-    vv1 = interpolate_nonmatching_mesh_python(v0, VV2)
-    print 'Python ', time.time()-t0
-    
-    t0 = time.time()
-    vv2 = interpolate_nonmatching_mesh(v0, VV2)
-    print 'C++ ', time.time()-t0
-        
-    print all(abs(vv1.vector().array()-vv2.vector().array())<1e-12)
-    list_timings(True)
-
-    plot(vv1[0])
-    plot(vv2[0])
-    
-    R = FunctionSpace(mesh, 'R', 0)
-    VVR = Vv * R
-    
-    vr0 = interpolate(Expression(('x[0]', 'x[1]', 'x[2]', '2')), VVR)
-    
-    VVR2 = VV2 * R
-    
-    vr1 = interpolate_nonmatching_mesh(vr0, VVR2)
-    plot(vr1[3])
     
     #WS = W * W
     ##w11 = interpolate(Expression(('x[0]', 'x[1]', 'x[2]', 'x[1]*x[2]', 'x[0]', 'x[1]', 'x[2]', 'x[1]*x[2]')), WS)

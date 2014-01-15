@@ -21,7 +21,7 @@ def weighted_gradient_matrix(mesh, i, degree=1, constrained_domain=None):
       dpdx = Function(V)
       dpdx.vector()[:] = dPdX * p_.vector()
       
-      The space for dpdx must be Lagrange of some order
+      The space for dpdx must be continuous Lagrange of some order
       
     """
     DG = FunctionSpace(mesh, 'DG', 0)
@@ -39,6 +39,6 @@ def weighted_gradient_matrix(mesh, i, degree=1, constrained_domain=None):
             CC.append(C.copy())
         return CC
     else:
-        dP = assemble(TrialFunction(CG).dx(i)*TestFunction(DG)*dx)
+        dP = assemble(TrialFunction(CG1).dx(i)*TestFunction(DG)*dx)
         compiled_gradient_module.compute_weighted_gradient_matrix(G, dP, C, dg)
         return C

@@ -64,15 +64,17 @@ namespace dolfin
     
     std::vector<double> coefficients;
     
+    std::vector<double> vertex_coordinates;
+    
     double _x[3];
     
     boost::shared_ptr<const FiniteElement> _element;
     
-    Cell* dolfin_cell;
+    Cell* dolfin_cell; 
     
-    UFCCell* ufc_cell;
+    ufc::cell* ufc_cell;  
     
-    std::size_t _value_size_loc, _num_evals;    
+    std::size_t _value_size_loc, _num_evals;     
     
     std::vector<std::vector<double> > _probes;
     
