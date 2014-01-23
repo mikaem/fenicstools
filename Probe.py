@@ -476,7 +476,7 @@ class StructuredGrid:
         # between the processors starting with the highest rank and then 
         # gradually lower
         
-        MPI.barrier()
+        comm.barrier()
         Nc = comm.Get_size()
         myrank = comm.Get_rank()
         Np = self.probes.get_total_number_probes()
@@ -526,7 +526,7 @@ class StructuredGrid:
         z0 = z0.transpose((2,1,0,3))
         # Write owned data to hdf5 file
         owned = slice(owned_planes[myrank], owned_planes[myrank+1])
-        MPI.barrier()
+        comm.barrier()
         if owned.stop > owned.start:
             if self.probes.value_size() == 1:
                 f[loc+"/Scalar"][owned, :, :] = z0[:, :, :, 0]
@@ -546,7 +546,7 @@ class StructuredGrid:
                     f[loc+"/U"][owned, :, :] = z0[:, :, :, 0]
                     f[loc+"/V"][owned, :, :] = z0[:, :, :, 1]
                     f[loc+"/W"][owned, :, :] = z0[:, :, :, 2]
-        MPI.barrier()
+        comm.barrier()
         f.close()
 
     def surf(self, N, component=0):

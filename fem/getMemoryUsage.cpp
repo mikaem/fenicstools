@@ -31,6 +31,6 @@ namespace dolfin
     const std::size_t num_mb = num_pages*page_size / (1024*1024);
 //     if (verbose)
 //       std::cout << "Memory usage: " << num_mb << " MB" << std::endl;
-    return num_kb;
+    return num_mb;
   }
 }

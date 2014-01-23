@@ -9,5 +9,5 @@ fem_folder = os.path.abspath(os.path.join(inspect.getfile(inspect.currentframe()
 memory_code = open(os.path.join(fem_folder, 'getMemoryUsage.cpp'), 'r').read()
 compiled_module = compile_extension_module(code=memory_code)
 
-def getMemoryUsage():
-    return compiled_module.getMemoryUsage()
+def getMemoryUsage(rss=True):
+    return compiled_module.getMemoryUsage(rss)
