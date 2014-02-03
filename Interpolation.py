@@ -7,8 +7,9 @@ from dolfin import Function, compile_extension_module
 
 fem_folder = os.path.abspath(os.path.join(inspect.getfile(inspect.currentframe()), "../fem"))
 fem_code = open(os.path.join(fem_folder, 'interpolation.cpp'), 'r').read()
+#fem_code = open(os.path.join(fem_folder, 'interpolation_nonmatching2.cpp'), 'r').read()
 compiled_fem_module = compile_extension_module(code=fem_code)
-                                           
+
 def interpolate_nonmatching_mesh(u0, V):
     """Interpolate from GenericFunction u0 to FunctionSpace V.
     
@@ -22,6 +23,9 @@ def interpolate_nonmatching_mesh(u0, V):
 
 if __name__ == "__main__":
     from dolfin import *
+    from numpy import arange
+    import time
+
     # Test for nonmatching mesh and FunctionSpace
     mesh = UnitCubeMesh(16, 16, 16)
     mesh2 = UnitCubeMesh(32, 32, 32)
@@ -29,10 +33,17 @@ if __name__ == "__main__":
     V2 = FunctionSpace(mesh2, 'CG', 1)
     # Just create some random data to be used for probing
     x0 = interpolate(Expression('x[0]'), V)
+    x0.update()
     u = interpolate_nonmatching_mesh(x0, V2)
     
     VV = VectorFunctionSpace(mesh, 'CG', 1)
     VV2 = VectorFunctionSpace(mesh2, 'CG', 1)
     v0 = interpolate(Expression(('x[0]', '2*x[1]', '3*x[2]')), VV)    
+    v0.update()
     v = interpolate_nonmatching_mesh(v0, VV2)
+    
+    plot(u)
+    plot(v, interactive=True)
+    
+
     

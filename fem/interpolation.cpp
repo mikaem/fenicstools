@@ -52,7 +52,7 @@ namespace dolfin
     // Get mesh and dimension of the FunctionSpace interpolated to
     const Mesh& mesh = *V->mesh();
     const std::size_t gdim = mesh.geometry().dim();
-
+    
     // Create arrays used to evaluate one point
     std::vector<double> x(gdim);
     std::vector<double> values(u.value_size());
@@ -98,13 +98,15 @@ namespace dolfin
     // will have been searched and thus if not found the point is not
     // in the mesh of Function u0. In that case the point will take
     // the value of zero.
-    for (std::size_t k = 1; k < MPI::num_processes(); ++k)
+    std::size_t num_processes = MPI::num_processes();
+    std::size_t rank = MPI::process_number();
+    for (std::size_t k = 1; k < num_processes; ++k)
     {
       std::vector<double> coords_recv;
       std::vector<std::size_t> global_dofs_recv;
            
-      std::size_t src = (MPI::process_number()-1+MPI::num_processes()) % MPI::num_processes();
-      std::size_t dest =  (MPI::process_number()+1) % MPI::num_processes();
+      std::size_t src = (rank-1+num_processes) % num_processes;
+      std::size_t dest =  (rank+1) % num_processes;
       
       MPI::send_recv(global_dofs_not_found, dest, global_dofs_recv, src);
       MPI::send_recv(coords_not_found, dest, coords_recv, src);
@@ -137,8 +139,8 @@ namespace dolfin
       // Send found coefficients back to owner (dest)
       std::vector<std::size_t> global_dofs_found_recv;
       std::vector<std::vector<double> > coefficients_found_recv;
-      dest = (MPI::process_number()-k+MPI::num_processes()) % MPI::num_processes();
-      src  = (MPI::process_number()+k) % MPI::num_processes();
+      dest = (rank-k+num_processes) % num_processes;
+      src  = (rank+k) % num_processes;
       MPI::send_recv(global_dofs_found, dest, global_dofs_found_recv, src);
       MPI::send_recv(coefficients_found, dest, coefficients_found_recv, src);
 
