@@ -1,5 +1,6 @@
 
-#include "dolfin.h"
+#include <dolfin/la/GenericVector.h>
+#include <dolfin/fem/GenericDofMap.h>
 
 namespace dolfin
 {
