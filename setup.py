@@ -1,11 +1,6 @@
 #!/usr/bin/env python
 
 from distutils.core import setup
-from distutils import sysconfig
-from os.path import join as pjoin, split as psplit
-from glob import glob
-import sys
-import platform
 
 # Version number
 major = 1
