@@ -24,6 +24,6 @@ setup(name = "fenicstools",
       packages = ["fenicstools"],
       package_dir = {"fenicstools": "fenicstools"},
       package_data = {"fenicstools": ["Probe/*.h",
-			    "Probe/*.cpp",
-                            "fem/*.cpp"]},
+                                      "Probe/*.cpp",
+                                      "fem/*.cpp"]},
     )

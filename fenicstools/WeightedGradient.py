@@ -3,7 +3,7 @@ __date__ = "2013-12-13"
 __copyright__ = "Copyright (C) 2013 " + __author__
 __license__  = "GNU Lesser GPL version 3 or any later version"
 import os, inspect
-from dolfin import compile_extension_module, Function, FunctionSpace, assemble, TrialFunction, TestFunction, dx, Matrix, 
+from dolfin import compile_extension_module, Function, FunctionSpace, assemble, TrialFunction, TestFunction, dx, Matrix
 
 fem_folder = os.path.abspath(os.path.join(inspect.getfile(inspect.currentframe()), "../fem"))
 gradient_code = open(os.path.join(fem_folder, 'gradient_weight.cpp'), 'r').read()

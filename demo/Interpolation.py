@@ -19,5 +19,6 @@ v0.update()
 v = interpolate_nonmatching_mesh(v0, VV2)
 
 plot(u)
-plot(v, interactive=True)
+plot(v)
+interactive()
 
