@@ -82,21 +82,26 @@ def StreamFunction3D(u, constrained_domain=None):
     q = TestFunction(V)
     psi = TrialFunction(V)
     n = FacetNormal(mesh)
+    psi_ = Function(V)
 
     a = inner(grad(q), grad(psi))*dx - inner(q, dot(n, grad(psi)))*ds
-    L = inner(q, curl(u_))*dx - dot(q, cross(n, u_))*ds
+    L = inner(q, curl(u))*dx - dot(q, cross(n, u))*ds
     
     # Compute solution
+    A0 = assemble(inner(grad(q), grad(psi))*dx)
+    L0 = inner(q, curl(u))*dx - dot(q, cross(n, u))*ds + inner(q, dot(n, grad(psi_)))*ds
     A = assemble(a)
     b = assemble(L)
 
-    solver = KrylovSolver('gmres', 'petsc_amg')
+    solver = KrylovSolver('bicgstab', 'jacobi')
     solver.parameters['monitor_convergence'] = True
     solver.parameters['maximum_iterations'] = 1000
     solver.parameters['nonzero_initial_guess'] = True
+    solver.parameters['preconditioner']['structure'] = "same"
+    solver.parameters['error_on_nonconvergence'] = False
     #solver.parameters['absolute_tolerance'] = 1e-8
     #solver.parameters['relative_tolerance'] = 1e-8
-    solver.set_operator(A)
+    #solver.set_operator(A0)
     dim = V.dim()
     n_comp = V.num_sub_spaces() 
     null_vectors = []
@@ -108,11 +113,26 @@ def StreamFunction3D(u, constrained_domain=None):
         null_vectors.append(null_vec_i)
 
     null_space = VectorSpaceBasis(null_vectors)
+    
+    #error = 1.
+    #i = 0
+    #d_psi = Vector(psi_.vector())
+    #while error > 1e-6 and i < 50:
+        #i += 1
+        #b = assemble(L0, tensor=b)
+        #solver.set_nullspace(null_space)
+        #null_space.orthogonalize(b)
+        #d_psi[:] = psi_.vector()
+        #solver.solve(psi_.vector(), b)  
+        #d_psi.axpy(-1., psi_.vector())
+        #error = norm(d_psi)
+        #print i, " Error = ", error, norm(b)
+
+    b = assemble(L, tensor=b)
+    solver.set_operator(A)
     solver.set_nullspace(null_space)
     null_space.orthogonalize(b)
-
-    psi = Function(V)
-    solver.solve(psi.vector(), b)
-
-    return psi
+    solver.solve(psi_.vector(), b)
+    
+    return psi_
     
