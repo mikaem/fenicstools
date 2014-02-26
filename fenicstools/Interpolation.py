@@ -18,5 +18,5 @@ def interpolate_nonmatching_mesh(u0, V):
     
     """
     u = Function(V)
-    compiled_fem_module.interpolate_nonmatching_mesh(u0, u)
+    compiled_fem_module.interpolate(u0, u)
     return u

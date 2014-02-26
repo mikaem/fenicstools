@@ -1,5 +1,13 @@
 
-#include "dolfin.h"
+//#include "dolfin.h"
+#include <dolfin/function/FunctionSpace.h>
+#include <dolfin/function/Function.h>
+#include <dolfin/fem/FiniteElement.h>
+#include <dolfin/fem/GenericDofMap.h>
+#include <dolfin/la/GenericVector.h>
+#include <dolfin/la/GenericMatrix.h>
+#include <dolfin/la/PETScMatrix.h>
+#include <dolfin/common/MPI.h>
 
 namespace dolfin
 {
@@ -7,10 +15,10 @@ namespace dolfin
   { // Compute weights for averaging with neighboring cells
       
     // Get the mesh, element and dofmap
-    boost::shared_ptr<const FunctionSpace> V = DG.function_space(); 
-    boost::shared_ptr<const Mesh> mesh = V->mesh();
-    boost::shared_ptr<const FiniteElement> element = V->element();
-    boost::shared_ptr<const GenericDofMap> dofmap_u = V->dofmap();
+    std::shared_ptr<const FunctionSpace> V = DG.function_space(); 
+    std::shared_ptr<const Mesh> mesh = V->mesh();
+    std::shared_ptr<const FiniteElement> element = V->element();
+    std::shared_ptr<const GenericDofMap> dofmap_u = V->dofmap();
     
     // Allocate storage for weights on one cell
     std::vector<double> ws(element->space_dimension()); 
@@ -29,12 +37,12 @@ namespace dolfin
     dg_vector.apply("insert");  
   }
   
-  std::size_t dof_owner(std::vector<std::pair<std::size_t, std::size_t> > all_ranges,
+  std::size_t dof_owner(std::vector<std::vector<std::size_t> > all_ranges,
                         std::size_t dof)
   {
     for (std::size_t i=0; i < all_ranges.size(); i++)
     {
-      if (dof >= all_ranges[i].first && dof < all_ranges[i].second)
+      if (dof >= all_ranges[i][0] && dof < all_ranges[i][1])
         return i;
     }
   }
@@ -52,14 +60,19 @@ namespace dolfin
     const std::size_t m = row_range.second - row_range.first;
     GenericVector& weight = *DG.vector();
     const std::pair<std::size_t, std::size_t> weight_range = weight.local_range();
+    std::vector<std::size_t> weight_range_vec(2);
+    weight_range_vec[0] = weight_range.first;
+    weight_range_vec[1] = weight_range.second;
     int dm = weight_range.second-weight_range.first;
     
+    const MPI_Comm mpi_comm = DG.function_space()->mesh()->mpi_comm();
+    
     // Communicate local_ranges of weights
-    std::vector<std::pair<std::size_t, std::size_t> > all_ranges;
-    MPI::all_gather(weight_range, all_ranges);
+    std::vector<std::vector<std::size_t> > all_ranges;
+    MPI::all_gather(mpi_comm, weight_range_vec, all_ranges);
     
     // Number of MPI processes
-    std::size_t num_processes = MPI::num_processes();
+    std::size_t num_processes = MPI::size(mpi_comm);
 
     // Some weights live on other processes and need to be communicated
     // Create list of off-process weights
@@ -84,13 +97,13 @@ namespace dolfin
     
     // Communicate to all which weights are needed by the process
     std::vector<std::vector<std::size_t> > dofs_needed_recv;
-    MPI::all_to_all(dofs_needed, dofs_needed_recv);
+    MPI::all_to_all(mpi_comm, dofs_needed, dofs_needed_recv);
     
     // Fetch the weights that must be communicated
     std::vector<std::vector<double> > weights_to_send(num_processes);    
     for (std::size_t p = 0; p < num_processes; p++)
     {
-      if (p == MPI::process_number())
+      if (p == MPI::rank(mpi_comm))
         continue;
       
       std::vector<std::size_t> dofs = dofs_needed_recv[p];
@@ -101,13 +114,13 @@ namespace dolfin
       }
     }
     std::vector<std::vector<double> > weights_to_send_recv;
-    MPI::all_to_all(weights_to_send, weights_to_send_recv);
+    MPI::all_to_all(mpi_comm, weights_to_send, weights_to_send_recv);
     
     // Create a map for looking up received weights
     std::map<std::size_t, double> received_weights;
     for (std::size_t p = 0; p < num_processes; p++)
     {
-      if (p == MPI::process_number())
+      if (p == MPI::rank(mpi_comm))
         continue;
       
       for (std::size_t k = 0; k < dofs_needed[p].size(); k++)
@@ -136,7 +149,7 @@ namespace dolfin
       
       double s = std::accumulate(values.begin(), values.end(), 0.0);
       std::transform(values.begin(), values.end(), values.begin(),
-                std::bind2nd(std::multiplies<double>(), 1./s));      
+                     std::bind2nd(std::multiplies<double>(), 1./s));      
 
       for (std::size_t i=0; i<values.size(); i++)
       {
@@ -174,10 +187,10 @@ namespace dolfin
     const dolfin::PETScMatrix* Bp = &as_type<const dolfin::PETScMatrix>(B);
     dolfin::PETScMatrix* Cp = &as_type<dolfin::PETScMatrix>(C);  
     // This used to work with MatMatMult modifying C in place.
-    //Mat CC = Cp->mat();
-    //PetscErrorCode ierr = MatMatMult(Ap->mat(), Bp->mat(), MAT_INITIAL_MATRIX, PETSC_DEFAULT, &CC);
-    //C = PETScMatrix(CC);
-    PetscErrorCode ierr = MatMatMult(*Ap->mat(), *Bp->mat(), MAT_INITIAL_MATRIX, PETSC_DEFAULT, &(*Cp->mat()));    
+    Mat CC = Cp->mat();
+    PetscErrorCode ierr = MatMatMult(Ap->mat(), Bp->mat(), MAT_INITIAL_MATRIX, PETSC_DEFAULT, &CC);
+    C = PETScMatrix(CC);
+//     PetscErrorCode ierr = MatMatMult(*Ap->mat(), *Bp->mat(), MAT_INITIAL_MATRIX, PETSC_DEFAULT, &(*Cp->mat()));    
   }  
 
   void compute_weighted_gradient_matrix(GenericMatrix& A, GenericMatrix& dP, GenericMatrix& C, Function& DG)

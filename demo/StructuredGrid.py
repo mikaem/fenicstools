@@ -73,33 +73,3 @@ sl5.toh5(0, 1, 'dump_mixed.h5')
 sl6 = StructuredGrid(W, restart='dump_mixed.h5')
 sl6.toh5(0, 1, 'dump_mixed_again.h5')
 
-## 3D box
-#tol = 1e-8
-#origin = [0.+tol, -1.+tol, -1.+tol]                     # origin of box
-#vectors = [[1, 0, 0], [0, 1, 0], [0, 0, 1]] # coordinate vectors (scaled in StructuredGrid)
-#dL = [4.-2*tol, 2.-2*tol, 2.-2*tol]                           # extent of slice in both directions
-#N  = [10, 10, 10]                           # number of points in each direction
-#mesh = BoxMesh(0., -1., -1., 4., 1., 1., 10, 10, 10)
-#V = FunctionSpace(mesh, 'CG', 1)
-#x0 = interpolate(Expression('x[0]'), V)
-#y0 = interpolate(Expression('x[1]'), V)
-#z0 = interpolate(Expression('x[2]'), V)
-#slc = ChannelGrid(V, N, origin, vectors, dL, True)
-#slc(x0, y0, z0)
-#slc.tovtk(0, 'testing_dump.vtk')
-#slc.toh5(0, 1, 'testing_dump.h5')
-
-
-#WS = W * W
-##w11 = interpolate(Expression(('x[0]', 'x[1]', 'x[2]', 'x[1]*x[2]', 'x[0]', 'x[1]', 'x[2]', 'x[1]*x[2]')), WS)
-#w11 = interpolate_nonmatching_mesh(Expression(('x[0]', 'x[1]', 'x[2]', 'x[1]*x[2]', 'x[0]', 'x[1]', 'x[2]', 'x[1]*x[2]')), WS)
-#WS2 = W2 * W2
-#w11.update()
-##x1 = interpolate_nonmatching_mesh(w11, WS2)
-
-##ff = File('test_project_nonmatching.pvd')
-##ff << u
-##plot(u)
-#plot(w11[0], title='mixed')
-#list_timings()
-
