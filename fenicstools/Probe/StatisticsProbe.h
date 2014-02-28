@@ -11,8 +11,10 @@ namespace dolfin
   // Create a probe that computes mean and variance of the Function in a point
   public:
       
-    StatisticsProbe(const Array<double>& x, const FunctionSpace& V, bool segregated=false); 
+    StatisticsProbe(const Array<double>& x, const FunctionSpace& V, bool segregated=false);
         
+    StatisticsProbe(const StatisticsProbe& p); 
+    
     // For segregated velocity components 
     void eval(const Function& u); 
     void eval(const Function& u, const Function& v); // 2D
@@ -26,7 +28,7 @@ namespace dolfin
     // Return mean of Function probed for
     std::vector<double> mean();
     
-    // Return the covariance of all components in Function 
+    // Return the covariance of all components in Function  
     std::vector<double> variance();  
     
     // Reset probe values for entire tensor
@@ -38,7 +40,7 @@ namespace dolfin
     std::size_t value_size_loc_function;
     
     // True for segregated solvers
-    std::size_t segregated;
+    std::size_t segregated;   
     
   };
 }

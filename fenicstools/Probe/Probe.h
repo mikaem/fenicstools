@@ -17,7 +17,9 @@ namespace dolfin
       
     Probe(const Array<double>& x, const FunctionSpace& V);
     
-    virtual ~Probe(); 
+    Probe(const Probe& p);  
+    
+    virtual ~Probe();   
 
     // evaluate the probe.
     virtual void eval(const Function& u);     
@@ -66,18 +68,20 @@ namespace dolfin
     
     std::vector<double> vertex_coordinates;
     
-    double _x[3];
+    double _x[3];     
     
-    std::shared_ptr<const FiniteElement> _element;
+    std::shared_ptr<const FiniteElement> _element;   
+        
+    unsigned int cell_id;
     
-    Cell* dolfin_cell; 
-    
-    ufc::cell* ufc_cell;  
-    
-    std::size_t _value_size_loc, _num_evals;     
+    std::size_t _value_size_loc, _num_evals;    
     
     std::vector<std::vector<double> > _probes;
     
+    Cell* dolfin_cell;  
+    
+    ufc::cell ufc_cell;  
+
   };
   
 }

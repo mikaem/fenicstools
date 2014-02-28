@@ -103,7 +103,7 @@ namespace dolfin
     std::vector<std::vector<double> > weights_to_send(num_processes);    
     for (std::size_t p = 0; p < num_processes; p++)
     {
-      if (p == MPI::rank(mpi_comm))
+      if (p == MPI::rank(mpi_comm))  
         continue;
       
       std::vector<std::size_t> dofs = dofs_needed_recv[p];
@@ -181,21 +181,22 @@ namespace dolfin
     A.apply("insert");
   }  
   
-  void MatMatMult(GenericMatrix& A, GenericMatrix& B, GenericMatrix& C)
+  std::shared_ptr<GenericMatrix> MatMatMult(GenericMatrix& A, GenericMatrix& B, GenericMatrix& C)
   {
     const dolfin::PETScMatrix* Ap = &as_type<const dolfin::PETScMatrix>(A);
     const dolfin::PETScMatrix* Bp = &as_type<const dolfin::PETScMatrix>(B);
     dolfin::PETScMatrix* Cp = &as_type<dolfin::PETScMatrix>(C);  
-    // This used to work with MatMatMult modifying C in place.
+    // FIXME Not sure this is optimal
     Mat CC = Cp->mat();
     PetscErrorCode ierr = MatMatMult(Ap->mat(), Bp->mat(), MAT_INITIAL_MATRIX, PETSC_DEFAULT, &CC);
-    C = PETScMatrix(CC);
-//     PetscErrorCode ierr = MatMatMult(*Ap->mat(), *Bp->mat(), MAT_INITIAL_MATRIX, PETSC_DEFAULT, &(*Cp->mat()));    
-  }  
+    dolfin::PETScMatrix CCC = PETScMatrix(CC);
+    return CCC.copy();  
+  }
 
-  void compute_weighted_gradient_matrix(GenericMatrix& A, GenericMatrix& dP, GenericMatrix& C, Function& DG)
+  std::shared_ptr<GenericMatrix> compute_weighted_gradient_matrix(GenericMatrix& A, GenericMatrix& dP, GenericMatrix& C, Function& DG)
   {
     compute_DG0_to_CG_weight_matrix(A, DG);
-    MatMatMult(A, dP, C);
+    std::shared_ptr<GenericMatrix> Cp = MatMatMult(A, dP, C);
+    return Cp;
   }  
 }        

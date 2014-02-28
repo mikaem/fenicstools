@@ -50,7 +50,7 @@ class Probes(compiled_module.Probes):
         return self
 
     def __getitem__(self, i):
-        return self.get_probe_id(i), self.get_probe(i)
+        return self.get_probe_id(i), Probe(self.get_probe(i))
 
     def next(self):
         try:
@@ -134,7 +134,7 @@ class StatisticsProbes(compiled_module.StatisticsProbes):
         return self
 
     def __getitem__(self, i):
-        return self.get_probe_id(i), self.get_probe(i)
+        return self.get_probe_id(i), StatisticsProbe(self.get_probe(i))
 
     def next(self):
         try:

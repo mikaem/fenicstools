@@ -40,5 +40,5 @@ def weighted_gradient_matrix(mesh, i, degree=1, constrained_domain=None):
         return CC
     else:
         dP = assemble(TrialFunction(CG1).dx(i)*TestFunction(DG)*dx)
-        compiled_gradient_module.compute_weighted_gradient_matrix(G, dP, C, dg)
-        return C
+        Cp = compiled_gradient_module.compute_weighted_gradient_matrix(G, dP, C, dg)
+        return Cp

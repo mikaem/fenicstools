@@ -186,10 +186,16 @@ class StructuredGrid:
         self._num_eval = f.attrs['num_evals']
         dx0 = f.attrs['dx0']
         dx1 = f.attrs['dx1']
-        dx2 = f.attrs['dx2']
-        self.dx = [dx0[0], dx1[0], dx2[0]]
-        self.dy = [dx0[1], dx1[1], dx2[1]]
-        self.dz = [dx0[2], dx1[2], dx2[2]]
+        try:
+            dx2 = f.attrs['dx2']        
+            self.dx = [dx0[0], dx1[0], dx2[0]]
+            self.dy = [dx0[1], dx1[1], dx2[1]]
+            self.dz = [dx0[2], dx1[2], dx2[2]]
+        except:
+            self.dx = [dx0[0], dx1[0]]
+            self.dy = [dx0[1], dx1[1]]
+            self.dz = [dx0[2], dx1[2]]
+            
         self.dims = map(len , self.dx)
         statistics = "stats" in f["FEniCS"]
         f.close()
@@ -235,7 +241,7 @@ class StructuredGrid:
                (global_index % (d[0]*d[1])) / d[0], 
                 global_index / (d[0]*d[1]))
         
-    def toh5(self, N, tstep, filename="restart.h5"):
+    def toh5(self, N, tstep, filename="restart.h5", dtype='f'):
         """Dump probes to HDF5 file. The data can be used for 3D visualization
         using voluviz or to restart the probe. 
         """
@@ -244,7 +250,9 @@ class StructuredGrid:
         if not 'origin' in f.attrs:
             f.attrs.create('origin', self.origin)
             for i in range(len(self.dx)):
-                f.attrs.create('dx'+str(i), array([self.dx[i], self.dy[i], self.dz[i]]))
+                f.attrs.create('dx'+str(i), array([self.dx[i], 
+                                                   self.dy[i], 
+                                                   self.dz[i]], dtype=dtype))
             f.attrs.create('dL', self.dL)
         if not 'num_evals' in f.attrs:
             f.attrs.create('num_evals', self.probes.number_of_evaluations())
@@ -270,13 +278,13 @@ class StructuredGrid:
         dimT = (d[2], d[1], d[0])
         if self.probes.value_size() == 1:
             try:
-                f.create_dataset(loc+"/Scalar", shape=dimT, dtype='f')
+                f.create_dataset(loc+"/Scalar", shape=dimT, dtype=dtype)
             except RuntimeError:
                 print 'RuntimeError'
         elif type(self.probes) != StatisticsProbes:
             try:
                 for ii in range(self.probes.value_size()):
-                    f.create_dataset(loc+"/Comp-{}".format(ii), shape=dimT, dtype='f')
+                    f.create_dataset(loc+"/Comp-{}".format(ii), shape=dimT, dtype=dtype)
             except:
                 pass
             
@@ -284,19 +292,19 @@ class StructuredGrid:
             if N == 0:
                 try:
                     num_evals = self.probes.number_of_evaluations()
-                    f.create_dataset(loc+"/UMEAN", shape=dimT, dtype='f')
-                    f.create_dataset(loc+"/VMEAN", shape=dimT, dtype='f')
-                    f.create_dataset(loc+"/WMEAN", shape=dimT, dtype='f')
+                    f.create_dataset(loc+"/UMEAN", shape=dimT, dtype=dtype)
+                    f.create_dataset(loc+"/VMEAN", shape=dimT, dtype=dtype)
+                    f.create_dataset(loc+"/WMEAN", shape=dimT, dtype=dtype)
                     rs = ["uu", "vv", "ww", "uv", "uw", "vw"]
                     for i in range(3, 9):
-                        f.create_dataset(loc+"/"+rs[i-3], shape=dimT, dtype='f')
+                        f.create_dataset(loc+"/"+rs[i-3], shape=dimT, dtype=dtype)
                 except RuntimeError:
                     pass                    
             else: # Just dump latest snapshot
                 try:                        
-                    f.create_dataset(loc+"/U", shape=dimT, dtype='f')
-                    f.create_dataset(loc+"/V", shape=dimT, dtype='f')
-                    f.create_dataset(loc+"/W", shape=dimT, dtype='f')
+                    f.create_dataset(loc+"/U", shape=dimT, dtype=dtype)
+                    f.create_dataset(loc+"/V", shape=dimT, dtype=dtype)
+                    f.create_dataset(loc+"/W", shape=dimT, dtype=dtype)
                 except RuntimeError:
                     pass
                 
@@ -304,7 +312,6 @@ class StructuredGrid:
         # In case d[2] % Nc is not zero the last planes are distributed
         # between the processors starting with the highest rank and then 
         # gradually lower
-        
         comm.barrier()
         Nc = comm.Get_size()
         myrank = comm.Get_rank()
@@ -321,9 +328,9 @@ class StructuredGrid:
         owned_planes[1:] = cum_last_id[:]
                             
         # Store owned data in z0
-        z0 = zeros((d[0], d[1], planes_per_proc, self.probes.value_size()), dtype=float32)
-        zhere = zeros(self.probes.value_size(), dtype=float32)
-        zrecv = zeros(self.probes.value_size(), dtype=float32)
+        z0 = zeros((d[0], d[1], planes_per_proc, self.probes.value_size()), dtype=dtype)
+        zhere = zeros(self.probes.value_size(), dtype=dtype)
+        zrecv = zeros(self.probes.value_size(), dtype=dtype)
         sendto = zeros(Nc, 'I')
         # Run through all probes and send them to the processes 
         # that owns the plane its at
@@ -350,7 +357,6 @@ class StructuredGrid:
                 i, j, k = self.get_ijk(global_index)
                 comm.Recv(zrecv, source=ii, tag=102)
                 z0[i, j, k-owned_planes[myrank], :] = zrecv[:]
-                
         # Voluviz has weird ordering so transpose some axes
         z0 = z0.transpose((2,1,0,3))
         # Write owned data to hdf5 file

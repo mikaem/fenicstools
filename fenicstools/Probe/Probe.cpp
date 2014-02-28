@@ -5,7 +5,7 @@ using namespace dolfin;
 Probe::~Probe() 
 {
   clear(); 
-  delete dolfin_cell; 
+  delete dolfin_cell;
 }
 
 Probe::Probe(const Array<double>& x, const FunctionSpace& V) :
@@ -17,12 +17,11 @@ Probe::Probe(const Array<double>& x, const FunctionSpace& V) :
     
   // Find the cell that contains probe
   const Point point(gdim, x.data());
-  //unsigned int id = mesh.bounding_box_tree()->compute_first_collision(point);
-  unsigned int id = mesh.bounding_box_tree()->compute_first_entity_collision(point);
+  cell_id = mesh.bounding_box_tree()->compute_first_entity_collision(point);
 
   // If the cell is on this process, then create an instance 
   // of the Probe class. Otherwise raise a dolfin_error.
-  if (id != std::numeric_limits<unsigned int>::max())
+  if (cell_id != std::numeric_limits<unsigned int>::max())
   {
     // Store position of probe
     for (std::size_t i = 0; i < 3; i++) 
@@ -36,9 +35,8 @@ Probe::Probe(const Array<double>& x, const FunctionSpace& V) :
     _probes.resize(_value_size_loc);
 
     // Create cell that contains point
-    dolfin_cell = new Cell(mesh, id);
-    ufc_cell = new ufc::cell();
-    dolfin_cell->get_cell_data(*ufc_cell);
+    dolfin_cell = new Cell(mesh, cell_id);
+    dolfin_cell->get_cell_data(ufc_cell);
     
     coefficients.resize(_element->space_dimension());
     
@@ -67,11 +65,24 @@ Probe::Probe(const Array<double>& x, const FunctionSpace& V) :
   }
 }
 //
+Probe::Probe(const Probe& p)
+{
+  basis_matrix = p.basis_matrix;
+  coefficients = p.coefficients;
+  vertex_coordinates = p.vertex_coordinates;
+  _element = p._element;
+  dolfin_cell = new Cell(p.dolfin_cell->mesh(), p.dolfin_cell->index());
+  ufc_cell = p.ufc_cell;
+  _value_size_loc = p._value_size_loc;
+  _num_evals = p._num_evals;
+  _probes = p._probes;
+}
+//
 void Probe::eval(const Function& u)
 {
   // Restrict function to cell
   u.restrict(&coefficients[0], *_element, *dolfin_cell,
-             vertex_coordinates.data(), *ufc_cell);
+              vertex_coordinates.data(), ufc_cell);
 
   // Make room for one more evaluation
   for (std::size_t j = 0; j < _value_size_loc; j++)
