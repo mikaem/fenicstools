@@ -12,7 +12,7 @@ compiled_gradient_module = compile_extension_module(code=gradient_code)
 def weighted_gradient_matrix(mesh, i, degree=1, constrained_domain=None):
     """Compute weighted gradient matrix
     
-    The matrix allows us to compute the gradient of a P1 Function 
+    The matrix allows you to compute the gradient of a P1 Function 
     through a simple matrix vector product
     
       p_ is the pressure solution on CG1
@@ -21,7 +21,7 @@ def weighted_gradient_matrix(mesh, i, degree=1, constrained_domain=None):
       dpdx = Function(V)
       dpdx.vector()[:] = dPdX * p_.vector()
       
-      The space for dpdx must be continuous Lagrange of some order
+    The space for dpdx must be continuous Lagrange of some order
       
     """
     DG = FunctionSpace(mesh, 'DG', 0)
@@ -35,8 +35,8 @@ def weighted_gradient_matrix(mesh, i, degree=1, constrained_domain=None):
         for ii in i:
             dP = assemble(TrialFunction(CG1).dx(ii)*TestFunction(DG)*dx)
             A = Matrix(G)
-            compiled_gradient_module.compute_weighted_gradient_matrix(A, dP, C, dg)
-            CC.append(C.copy())
+            Cp = compiled_gradient_module.compute_weighted_gradient_matrix(A, dP, C, dg)
+            CC.append(Cp)
         return CC
     else:
         dP = assemble(TrialFunction(CG1).dx(i)*TestFunction(DG)*dx)

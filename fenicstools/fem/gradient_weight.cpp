@@ -186,7 +186,7 @@ namespace dolfin
     const dolfin::PETScMatrix* Ap = &as_type<const dolfin::PETScMatrix>(A);
     const dolfin::PETScMatrix* Bp = &as_type<const dolfin::PETScMatrix>(B);
     dolfin::PETScMatrix* Cp = &as_type<dolfin::PETScMatrix>(C);  
-    // FIXME Not sure this is optimal
+    // FIXME Not sure this is optimal. Having trouble with Matrix only allowed one initialization
     Mat CC = Cp->mat();
     PetscErrorCode ierr = MatMatMult(Ap->mat(), Bp->mat(), MAT_INITIAL_MATRIX, PETSC_DEFAULT, &CC);
     dolfin::PETScMatrix CCC = PETScMatrix(CC);

@@ -49,7 +49,7 @@ namespace dolfin
     std::vector<double> coordinates();
     
     // Erase one snapshot of probe
-    virtual void erase_snapshot(std::size_t i);
+    virtual void erase_snapshot(std::size_t i);  
     
     // Reset probe by deleting all previous evaluations
     virtual void clear();  
@@ -70,15 +70,13 @@ namespace dolfin
     
     double _x[3];     
     
-    std::shared_ptr<const FiniteElement> _element;   
+    std::shared_ptr<const FiniteElement> _element; 
         
-    unsigned int cell_id;
-    
     std::size_t _value_size_loc, _num_evals;    
     
     std::vector<std::vector<double> > _probes;
     
-    Cell* dolfin_cell;  
+    std::unique_ptr<Cell> dolfin_cell;  
     
     ufc::cell ufc_cell;  
 

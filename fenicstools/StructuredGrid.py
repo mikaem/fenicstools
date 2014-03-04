@@ -410,7 +410,7 @@ class StructuredGrid:
             grid = pyvtk.StructuredGrid(d, self.create_dense_grid())
             v = pyvtk.VtkData(grid, "Probe data. Evaluations = {}".format(self.probes.number_of_evaluations()))
             if self.probes.value_size() == 1:
-                v.point_data.append(pyvtk.Scalars(z, name="Scalar"))
+                v.point_data.append(pyvtk.Scalars(z, name="Scalar", lookup_table='default'))
             elif self.probes.value_size() == 3:
                 v.point_data.append(pyvtk.Vectors(z, name="Vector"))
             elif self.probes.value_size() == 9: # StatisticsProbes
@@ -419,7 +419,7 @@ class StructuredGrid:
                     v.point_data.append(pyvtk.Vectors(z[:, :3]/num_evals, name="UMEAN"))
                     rs = ["uu", "vv", "ww", "uv", "uw", "vw"]
                     for i in range(3, 9):
-                        v.point_data.append(pyvtk.Scalars(z[:, i]/num_evals, name=rs[i-3]))
+                        v.point_data.append(pyvtk.Scalars(z[:, i]/num_evals, name=rs[i-3], lookup_table='default'))
                 else: # Just dump latest snapshot
                     v.point_data.append(pyvtk.Vectors(z[:, :3], name="U"))
             else:
