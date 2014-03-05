@@ -5,6 +5,37 @@
 
 namespace dolfin
 {
+  // Comparison operator for hashing coordinates. Note that two
+  // coordinates are considered equal if equal to within specified
+  // tolerance.
+  struct lt_coordinate
+  {
+    lt_coordinate(double tolerance) : TOL(tolerance) {}
+
+    bool operator() (const std::vector<double>& x,
+                     const std::vector<double>& y) const
+    {
+      std::size_t n = std::max(x.size(), y.size());
+      for (std::size_t i = 0; i < n; ++i)
+      {
+        double xx = 0.0;
+        double yy = 0.0;
+        if (i < x.size())
+          xx = x[i];
+        if (i < y.size())
+          yy = y[i];
+
+        if (xx < (yy - TOL))
+          return true;
+        else if (xx > (yy + TOL))
+          return false;
+      }
+      return false;
+    }
+
+    // Tolerance
+    const double TOL;                  
+  };
   
   void extract_dof_component_map(boost::unordered_map<std::size_t, 
                                                       std::size_t>& dof_component_map, 
