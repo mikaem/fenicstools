@@ -180,23 +180,33 @@ namespace dolfin
     }
     A.apply("insert");
   }  
-  
-  std::shared_ptr<GenericMatrix> MatMatMult(GenericMatrix& A, GenericMatrix& B, GenericMatrix& C)
+
+  std::shared_ptr<GenericMatrix> MatMatTransposeMult(GenericMatrix& A, GenericMatrix& B)
   {
     const dolfin::PETScMatrix* Ap = &as_type<const dolfin::PETScMatrix>(A);
     const dolfin::PETScMatrix* Bp = &as_type<const dolfin::PETScMatrix>(B);
-    dolfin::PETScMatrix* Cp = &as_type<dolfin::PETScMatrix>(C);  
     // FIXME Not sure this is optimal. Having trouble with Matrix only allowed one initialization
-    Mat CC = Cp->mat();
+    Mat CC;
+    PetscErrorCode ierr = MatMatTransposeMult(Ap->mat(), Bp->mat(), MAT_INITIAL_MATRIX, PETSC_DEFAULT, &CC);
+    dolfin::PETScMatrix CCC = PETScMatrix(CC);
+    return CCC.copy();  
+  }
+
+  std::shared_ptr<GenericMatrix> MatMatMult(GenericMatrix& A, GenericMatrix& B)
+  {
+    const dolfin::PETScMatrix* Ap = &as_type<const dolfin::PETScMatrix>(A);
+    const dolfin::PETScMatrix* Bp = &as_type<const dolfin::PETScMatrix>(B);
+    // FIXME Not sure this is optimal. Having trouble with Matrix only allowed one initialization
+    Mat CC;
     PetscErrorCode ierr = MatMatMult(Ap->mat(), Bp->mat(), MAT_INITIAL_MATRIX, PETSC_DEFAULT, &CC);
     dolfin::PETScMatrix CCC = PETScMatrix(CC);
     return CCC.copy();  
   }
 
-  std::shared_ptr<GenericMatrix> compute_weighted_gradient_matrix(GenericMatrix& A, GenericMatrix& dP, GenericMatrix& C, Function& DG)
+  std::shared_ptr<GenericMatrix> compute_weighted_gradient_matrix(GenericMatrix& A, GenericMatrix& dP, Function& DG)
   {
     compute_DG0_to_CG_weight_matrix(A, DG);
-    std::shared_ptr<GenericMatrix> Cp = MatMatMult(A, dP, C);
+    std::shared_ptr<GenericMatrix> Cp = MatMatMult(A, dP);
     return Cp;
   }  
 }        

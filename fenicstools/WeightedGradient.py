@@ -35,10 +35,10 @@ def weighted_gradient_matrix(mesh, i, degree=1, constrained_domain=None):
         for ii in i:
             dP = assemble(TrialFunction(CG1).dx(ii)*TestFunction(DG)*dx)
             A = Matrix(G)
-            Cp = compiled_gradient_module.compute_weighted_gradient_matrix(A, dP, C, dg)
+            Cp = compiled_gradient_module.compute_weighted_gradient_matrix(A, dP, dg)
             CC.append(Cp)
         return CC
     else:
         dP = assemble(TrialFunction(CG1).dx(i)*TestFunction(DG)*dx)
-        Cp = compiled_gradient_module.compute_weighted_gradient_matrix(G, dP, C, dg)
+        Cp = compiled_gradient_module.compute_weighted_gradient_matrix(G, dP, dg)
         return Cp
