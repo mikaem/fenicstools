@@ -185,7 +185,16 @@ namespace dolfin
   {
     const dolfin::PETScMatrix* Ap = &as_type<const dolfin::PETScMatrix>(A);
     const dolfin::PETScMatrix* Bp = &as_type<const dolfin::PETScMatrix>(B);
-    // FIXME Not sure this is optimal. Having trouble with Matrix only allowed one initialization
+    Mat CC;
+    PetscErrorCode ierr = MatTransposeMatMult(Ap->mat(), Bp->mat(), MAT_INITIAL_MATRIX, PETSC_DEFAULT, &CC);
+    dolfin::PETScMatrix CCC = PETScMatrix(CC);
+    return CCC.copy();  
+  }
+
+  std::shared_ptr<GenericMatrix> MatMatTransposeMult(GenericMatrix& A, GenericMatrix& B)
+  {
+    const dolfin::PETScMatrix* Ap = &as_type<const dolfin::PETScMatrix>(A);
+    const dolfin::PETScMatrix* Bp = &as_type<const dolfin::PETScMatrix>(B);
     Mat CC;
     PetscErrorCode ierr = MatMatTransposeMult(Ap->mat(), Bp->mat(), MAT_INITIAL_MATRIX, PETSC_DEFAULT, &CC);
     dolfin::PETScMatrix CCC = PETScMatrix(CC);
@@ -196,7 +205,6 @@ namespace dolfin
   {
     const dolfin::PETScMatrix* Ap = &as_type<const dolfin::PETScMatrix>(A);
     const dolfin::PETScMatrix* Bp = &as_type<const dolfin::PETScMatrix>(B);
-    // FIXME Not sure this is optimal. Having trouble with Matrix only allowed one initialization
     Mat CC;
     PetscErrorCode ierr = MatMatMult(Ap->mat(), Bp->mat(), MAT_INITIAL_MATRIX, PETSC_DEFAULT, &CC);
     dolfin::PETScMatrix CCC = PETScMatrix(CC);

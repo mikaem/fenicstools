@@ -27,7 +27,6 @@ def weighted_gradient_matrix(mesh, i, degree=1, constrained_domain=None):
     DG = FunctionSpace(mesh, 'DG', 0)
     CG = FunctionSpace(mesh, 'CG', degree, constrained_domain=constrained_domain)
     CG1 = FunctionSpace(mesh, 'CG', 1, constrained_domain=constrained_domain)
-    C = assemble(TrialFunction(CG)*TestFunction(CG)*dx)
     G = assemble(TrialFunction(DG)*TestFunction(CG)*dx)
     dg = Function(DG)
     if isinstance(i, (tuple, list)):
