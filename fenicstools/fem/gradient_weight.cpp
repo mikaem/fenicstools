@@ -181,7 +181,7 @@ namespace dolfin
     A.apply("insert");
   }  
 
-  std::shared_ptr<GenericMatrix> MatMatTransposeMult(GenericMatrix& A, GenericMatrix& B)
+  std::shared_ptr<GenericMatrix> MatTransposeMatMult(GenericMatrix& A, GenericMatrix& B)
   {
     const dolfin::PETScMatrix* Ap = &as_type<const dolfin::PETScMatrix>(A);
     const dolfin::PETScMatrix* Bp = &as_type<const dolfin::PETScMatrix>(B);
