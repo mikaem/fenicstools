@@ -17,7 +17,7 @@ def weighted_gradient_matrix(mesh, i, family='CG', degree=1, constrained_domain=
   
   CG family:
     p_ is the pressure solution on CG1
-    dPdX = weighted_gradient_matrix(mesh, 0, CG, degree)
+    dPdX = weighted_gradient_matrix(mesh, 0, 'CG', degree)
     V = FunctionSpace(mesh, 'CG', degree)
     dpdx = Function(V)
     dpdx.vector()[:] = dPdX * p_.vector()
@@ -26,7 +26,7 @@ def weighted_gradient_matrix(mesh, i, family='CG', degree=1, constrained_domain=
   
   CR family:
     p_ is the pressure solution on CR
-    dPdX = weighted_gradient_matrix(mesh, 0, CR, 1)
+    dPdX = weighted_gradient_matrix(mesh, 0, 'CR', 1)
     V = FunctionSpace(mesh, 'CR', 1)
     dpdx = Function(V)
     dpdx.vector()[:] = dPdX * p_.vector()
