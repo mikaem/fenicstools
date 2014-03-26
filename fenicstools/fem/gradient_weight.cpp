@@ -135,7 +135,7 @@ namespace dolfin
       A.getrow(global_row, columns, values);
       for (std::size_t i = 0; i < values.size(); i++)
       {
-       std::size_t dof = columns[i];
+        std::size_t dof = columns[i];
         if (dof < weight_range.first || dof >= weight_range.second)
         {
           values[i] = received_weights[dof];
