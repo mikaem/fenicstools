@@ -1,6 +1,8 @@
+from math import log as ln
+
 from dolfin import *
 from fenicstools import weighted_gradient_matrix
-from math import log as ln
+
 
 set_log_level(WARNING)
 
@@ -27,9 +29,11 @@ def divergence_test(mesh):
 
   return mesh.hmin(), e_p, e_w
 
-#-------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 if __name__ == '__main__':
+  print 'Hello'
+
   Ns = [2**i for i in range(3, 9)]
   meshes = [UnitSquareMesh(N, N) for N in Ns]
 
@@ -39,3 +43,6 @@ if __name__ == '__main__':
     ratep = ln(ep/ep_)/ln(h/h_)
     ratew = ln(ew/ew_)/ln(h/h_)
     print h, ratep, ratew
+
+    map
+
