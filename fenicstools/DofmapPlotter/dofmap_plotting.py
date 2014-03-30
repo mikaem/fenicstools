@@ -433,7 +433,7 @@ if __name__ == '__main__':
     from dolfin import Rectangle, Circle, FunctionSpace, Mesh
 
     domain = Rectangle(-1, -1, 1, 1) - Circle(0, 0, 0.4)
-    mesh = Mesh(domain, 5)
+    mesh = Mesh(domain, 2)
 
     V = FunctionSpace(mesh, 'DG', 1)
     dp = DofmapPlotter()
