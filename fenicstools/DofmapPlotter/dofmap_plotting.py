@@ -68,7 +68,7 @@ class DofmapPlotter(object):
         # Ordering describes whether labels will show local or global ordering
         self.options = {'colors': {-1: 'b', 0: 'k', 1: 'r', 2: 'g', 3: 'c'},
                         'xkcd': True,
-                        'ordering': 'global'}
+                        'ordering': 'local'}
 
         # Rewrite plotting options if they are provided by user
         if options is not None:
@@ -297,7 +297,10 @@ triggers warning. You might try to zoom in to help you hit something.
             x = entity.midpoint()
             x = [x[i] for i in range(self.gdim)]
             if self.options['ordering'] == 'global':
-                args = x + [str(entity.global_index())]
+                if self.mpi_size:
+                    args = x + [str(entity.global_index())]
+                else:
+                    args = x + [str(entity_index)]
             elif self.options['ordering'] == 'local':
                 args = x + [str(entity_index)]
             if not(entity_index in labels):
