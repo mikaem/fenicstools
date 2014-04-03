@@ -4,3 +4,4 @@ from WeightedGradient import weighted_gradient_matrix, compiled_gradient_module
 from Interpolation import interpolate_nonmatching_mesh
 from getMemoryUsage import getMemoryUsage
 from Streamfunctions import StreamFunction, StreamFunction3D
+from CRDivergence import cr_divergence
