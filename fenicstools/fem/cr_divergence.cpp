@@ -1,20 +1,23 @@
 #include <dolfin/function/Function.h>
 #include <dolfin/function/FunctionSpace.h>
+#include <dolfin/function/SubSpace.h>
 #include <dolfin/fem/GenericDofMap.h>
 #include <dolfin/la/GenericVector.h>
 #include <dolfin/geometry/Point.h>
 #include <dolfin/mesh/Facet.h>
 #include <dolfin/mesh/Edge.h>
 #include <dolfin/mesh/Face.h>
+#include <dolfin/plot/plot.h>
 
 namespace dolfin
 {
+  // Base case for all divergence computations. 
+  // Compute divergence of vector field u.
   void cr_divergence(Function& divu, const Function& u)
   {
-    // Get the dofmaps
     std::shared_ptr<const GenericDofMap>
-    CR1_dofmap = u.function_space()->dofmap(),
-    DG0_dofmap = divu.function_space()->dofmap();
+      CR1_dofmap = u.function_space()->dofmap(),
+      DG0_dofmap = divu.function_space()->dofmap();
 
     // Get u and divu as vectors
     std::shared_ptr<const GenericVector> U = u.vector();
@@ -64,7 +67,7 @@ namespace dolfin
             facet_measure = Edge(mesh, facet->index()).length();
           else if(tdim == 3)
             facet_measure = Face(mesh, facet->index()).area();
-          // Tdim will not happen because CR is not defined there
+          // Tdim 1 will not happen because CR is not defined there
           
           Point facet_normal = facet->normal();
 
@@ -93,4 +96,105 @@ namespace dolfin
     DIVU->set_local(DIVU_values);
     DIVU->apply("insert");
   }
-}
+  
+  //---------------------------------------------------------------------------
+
+  // Compute divergence of scalar/vector/tensor. Uses vector divergence with
+  // specialized vectors.
+  void cr_divergence(Function& divu, const Function& u,
+                  const FunctionSpace& DGscalar, const FunctionSpace& CRvector)
+  {
+    // Divu scalar from u vector 
+    if((divu.value_rank() == 0) and (u.value_rank() == 1))
+      cr_divergence(divu, u);
+    else if(divu.value_rank() == 1)
+    {
+      // Divu is a vector with components divu_i in DG that will be computed
+      Function divu_i(DGscalar);
+      std::shared_ptr<GenericVector> DIVU_i = divu_i.vector();
+
+      // The components are created from divergence of special vector in CR
+      Function u_i(CRvector);
+      std::shared_ptr<GenericVector> U_i = u_i.vector();
+
+      // Get vectors to divu and u
+      std::shared_ptr<const GenericVector> U = u.vector();
+      std::shared_ptr<GenericVector> DIVU = divu.vector();
+
+      // Get dofmaps of ...
+      std::shared_ptr<const FunctionSpace> DGvector = divu.function_space();
+      std::shared_ptr<const FunctionSpace> CRtensor = u.function_space();
+      
+      std::size_t len_divu = divu.value_dimension(0);
+      if(u.value_rank() == 0)
+      {
+        // U stays same, only builds U_I
+        std::vector<double> U_values;
+        U->get_local(U_values);
+
+        for(std::size_t i = 0; i < len_divu; i++)
+        {
+          // Build special vector, U ---> U_I
+          // Local dofs of CR component
+          std::vector<dolfin::la_index> CRi_rows = CRvector[i]->dofmap()->dofs();
+          std::size_t CRi_m = CRi_rows.size();
+          // Make U_i = U*e_i + 0
+          U_i->zero();
+          U_i->set(U_values.data(), CRi_m, CRi_rows.data()); 
+          U_i->apply("insert");
+
+          // Compute the component of divergence
+          u_i.update();
+          cr_divergence(divu_i, u_i);
+  
+          // Set the final divergence using new component, DIVU_I ---> DIVU
+          std::vector<dolfin::la_index>
+            DGi_rows = (*DGvector)[i]->dofmap()->dofs();
+          std::size_t DGi_m = DGi_rows.size();
+          std::vector<double> DIVU_i_values;
+          DIVU_i->get_local(DIVU_i_values);
+          DIVU->set(DIVU_i_values.data(), DGi_m, DGi_rows.data()); 
+          DIVU->apply("insert");
+        }
+      }
+      else if(u.value_rank() == 2)
+      {
+        for(std::size_t i = 0; i < len_divu; i++)
+        {
+          for(std::size_t j = 0; j < len_divu; j++)
+          {
+            // Build special vector, U ---> U_I
+            // Local dofs of CR component
+            //info("len %d, i=%d, j=%d--> %d", len_divu, i, j, i*len_divu + j);
+            std::vector<dolfin::la_index>
+              CRi_rows = (*CRtensor)[i*len_divu + j]->dofmap()->dofs();
+            std::vector<double> U_values;
+            U->gather(U_values, CRi_rows);
+
+            std::size_t CRi_m = CRi_rows.size();
+            std::vector<dolfin::la_index>
+              xxx = CRvector[j]->dofmap()->dofs();
+            // TODO, test clean up
+
+
+            U_i->set(U_values.data(), CRi_m, xxx.data()); 
+            U_i->apply("insert");
+          }
+
+          // Compute the component of divergence
+          u_i.update();
+          cr_divergence(divu_i, u_i);
+  
+          // Set the final divergence using new component, DIVU_I ---> DIVU
+          std::vector<dolfin::la_index>
+            DGi_rows = (*DGvector)[i]->dofmap()->dofs();
+          std::size_t DGi_m = DGi_rows.size();
+          std::vector<double> DIVU_i_values;
+          DIVU_i->get_local(DIVU_i_values);
+          DIVU->set(DIVU_i_values.data(), DGi_m, DGi_rows.data()); 
+          DIVU->apply("insert");
+        }
+      }
+    }
+  }
+} 
