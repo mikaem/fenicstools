@@ -1,3 +1,8 @@
+__author__ = "Miroslav Kuchta <mirokm@math.uio.no>"
+__date__ = "2014-04-05"
+__copyright__ = "Copyright (C) 2013 " + __author__
+__license__  = "GNU Lesser GPL version 3 or any later version"
+
 import inspect
 from dolfin import TensorFunctionSpace, VectorFunctionSpace, FunctionSpace,\
     Function, interpolate, compile_extension_module, GenericFunction
@@ -39,7 +44,8 @@ def gauss_divergence(u, mesh=None):
         assert u.value_dimension(i) == gdim
 
     # Based on rank choose the type of CR1 space where u should be interpolated
-    # to get the midpoint values + choose the type of DG0 space for divergence
+    # to to get the midpoint values + choose the type of DG0 space for
+    # divergence
     if rank == 1:
         DG = FunctionSpace(_mesh, 'DG', 0)
         CR = VectorFunctionSpace(_mesh, 'CR', 1)
@@ -52,12 +58,13 @@ def gauss_divergence(u, mesh=None):
 
     divu = Function(DG)
     _u = interpolate(u, CR)
+    _u.update()
 
     # Use Gauss theorem cell by cell to get the divergence. The implementation
     # is based on divergence(vector) = scalar and so the spaces for these
     # two need to be provided
     if rank == 1:
-        pass  # V, U are correct already
+        pass  # CR, DG are correct already
     else:
         DG = FunctionSpace(_mesh, 'DG', 0)
         CR = VectorFunctionSpace(_mesh, 'CR', 1)
