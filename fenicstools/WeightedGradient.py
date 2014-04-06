@@ -1,7 +1,7 @@
 __author__ = "Mikael Mortensen <mikaem@math.uio.no>"
 __date__ = "2013-12-13"
 __copyright__ = "Copyright (C) 2013 " + __author__
-__license__  = "GNU Lesser GPL version 3 or any later version"
+__license__ = "GNU Lesser GPL version 3 or any later version"
 import os, inspect
 from dolfin import compile_extension_module, Function, FunctionSpace, assemble, TrialFunction, TestFunction, dx, Matrix
 
@@ -12,7 +12,7 @@ compiled_gradient_module = compile_extension_module(code=gradient_code)
 def weighted_gradient_matrix(mesh, i, family='CG', degree=1, constrained_domain=None):
     """Compute weighted gradient matrix
 
-    The matrix allows you to compute the gradient of a P1 Function 
+    The matrix allows you to compute the gradient of a P1 Function
     through a simple matrix vector product
 
     CG family:
@@ -21,7 +21,7 @@ def weighted_gradient_matrix(mesh, i, family='CG', degree=1, constrained_domain=
         V = FunctionSpace(mesh, 'CG', degree)
         dpdx = Function(V)
         dpdx.vector()[:] = dPdX * p_.vector()
-        
+
         The space for dpdx must be continuous Lagrange of some order
 
     CR family:
@@ -30,7 +30,7 @@ def weighted_gradient_matrix(mesh, i, family='CG', degree=1, constrained_domain=
         V = FunctionSpace(mesh, 'CR', 1)
         dpdx = Function(V)
         dpdx.vector()[:] = dPdX * p_.vector()
-        
+
     """
 
     DG = FunctionSpace(mesh, 'DG', 0)
@@ -48,7 +48,7 @@ def weighted_gradient_matrix(mesh, i, family='CG', degree=1, constrained_domain=
         T = S
     else:
         raise ValueError('Only CG and CR families are allowed.')
-        
+
     G = assemble(TrialFunction(DG)*TestFunction(T)*dx)
     dg = Function(DG)
     if isinstance(i, (tuple, list)):
