@@ -5,7 +5,9 @@ __license__  = "GNU Lesser GPL version 3 or any later version"
 
 import inspect
 from dolfin import TensorFunctionSpace, VectorFunctionSpace, FunctionSpace,\
-    Function, interpolate, compile_extension_module, GenericFunction
+    Function, interpolate, compile_extension_module, GenericFunction, assemble, \
+    TrialFunction, TestFunction, dx, Matrix, dot, div
+from fenicstools import SetMatrixValue
 from os.path import abspath, join
 
 folder = abspath(join(inspect.getfile(inspect.currentframe()), '../fem'))
@@ -71,3 +73,25 @@ def gauss_divergence(u, mesh=None):
     compiled_cr_module.cr_divergence(divu, _u, DG, CR)
 
     return divu
+
+from CRInterpolation import cg1_cr_interpolation_matrix
+def divergence_matrix(u):
+    CG = u.function_space()
+    mesh = CG.mesh()
+    CR = VectorFunctionSpace(mesh, 'CR', 1)
+    DG = FunctionSpace(mesh, 'DG', 0)
+    A = cg1_cr_interpolation_matrix(mesh)    
+    M  = assemble(dot(div(TrialFunction(CR)), TestFunction(DG))*dx())
+    C = compiled_cr_module.cr_divergence_matrix(M, A, u, DG, CR)
+    return C
+
+from dolfin import *
+mesh = UnitSquareMesh(100, 100)
+CG = VectorFunctionSpace(mesh, 'CG', 1)
+u = interpolate(Expression(("sin(2*pi*x[0])", "cos(3*pi*x[1])")), CG)
+C = divergence_matrix(u)
+DG = FunctionSpace(mesh, 'DG', 0)
+cc = Function(DG)
+cc.vector()[:] = C * u.vector()
+plot(cc, title='Gauss div')
+plot(div(u), title="Projection")
