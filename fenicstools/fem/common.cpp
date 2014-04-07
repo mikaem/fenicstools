@@ -33,4 +33,26 @@ namespace dolfin
 //       std::cout << "Memory usage: " << num_mb << " MB" << std::endl;
     return num_mb;
   }
+  
+  void SetMatrixValue(GenericMatrix& A, double val)
+  {
+    std::vector<std::size_t> columns;
+    std::vector<double> values;
+    
+    const std::pair<std::size_t, std::size_t> row_range = A.local_range(0);
+    const std::size_t m = row_range.second - row_range.first;
+
+    for (std::size_t row = 0; row < m; row++)
+    {
+      // Get global row number
+      const std::size_t global_row = row + row_range.first;
+      
+      A.getrow(global_row, columns, values);
+      for (std::size_t i = 0; i < values.size(); i++)
+        values[i] = val;
+      
+      A.setrow(global_row, columns, values);
+      A.apply("insert");
+    }
+  }  
 }

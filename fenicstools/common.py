@@ -6,8 +6,12 @@ import os, inspect
 from dolfin import compile_extension_module
 
 fem_folder = os.path.abspath(os.path.join(inspect.getfile(inspect.currentframe()), "../fem"))
-memory_code = open(os.path.join(fem_folder, 'getMemoryUsage.cpp'), 'r').read()
+memory_code = open(os.path.join(fem_folder, 'common.cpp'), 'r').read()
 compiled_module = compile_extension_module(code=memory_code)
 
 def getMemoryUsage(rss=True):
     return compiled_module.getMemoryUsage(rss)
+
+def SetMatrixValue(A, val):
+    compiled_module.SetMatrixValue(A, val)
+
