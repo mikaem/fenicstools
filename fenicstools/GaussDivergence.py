@@ -84,14 +84,3 @@ def divergence_matrix(u):
     M  = assemble(dot(div(TrialFunction(CR)), TestFunction(DG))*dx())
     C = compiled_cr_module.cr_divergence_matrix(M, A, u, DG, CR)
     return C
-
-from dolfin import *
-mesh = UnitSquareMesh(100, 100)
-CG = VectorFunctionSpace(mesh, 'CG', 1)
-u = interpolate(Expression(("sin(2*pi*x[0])", "cos(3*pi*x[1])")), CG)
-C = divergence_matrix(u)
-DG = FunctionSpace(mesh, 'DG', 0)
-cc = Function(DG)
-cc.vector()[:] = C * u.vector()
-plot(cc, title='Gauss div')
-plot(div(u), title="Projection")
