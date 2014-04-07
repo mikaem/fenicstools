@@ -1,4 +1,5 @@
 from dolfin import *
+from fenicstools import divergence_matrix
 
 mesh = UnitSquareMesh(100, 100)
 CG = VectorFunctionSpace(mesh, 'CG', 1)
