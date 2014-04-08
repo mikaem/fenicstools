@@ -16,6 +16,7 @@ Authors
 fenicstools is developed by
 
   * Mikael Mortensen
+  * Miroslav Kuchta
 
 Licence
 -------
