@@ -75,12 +75,10 @@ def gauss_divergence(u, mesh=None):
     return divu
 
 from CRInterpolation import cg1_cr_interpolation_matrix
-def divergence_matrix(u):
-    CG = u.function_space()
-    mesh = CG.mesh()
+def divergence_matrix(mesh):
     CR = VectorFunctionSpace(mesh, 'CR', 1)
     DG = FunctionSpace(mesh, 'DG', 0)
     A = cg1_cr_interpolation_matrix(mesh)    
     M  = assemble(dot(div(TrialFunction(CR)), TestFunction(DG))*dx())
-    C = compiled_cr_module.cr_divergence_matrix(M, A, u, DG, CR)
+    C = compiled_cr_module.cr_divergence_matrix(M, A, DG, CR)
     return C

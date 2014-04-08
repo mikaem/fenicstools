@@ -206,7 +206,7 @@ namespace dolfin
   // Base case for all divergence computations. 
   // Compute divergence of vector field u.
   std::shared_ptr<GenericMatrix> 
-    cr_divergence_matrix(GenericMatrix& M, GenericMatrix& A, const Function& u,
+    cr_divergence_matrix(GenericMatrix& M, GenericMatrix& A,
                          const FunctionSpace& DGscalar, 
                          const FunctionSpace& CRvector)
   {
@@ -225,8 +225,6 @@ namespace dolfin
     const Mesh mesh = *DGscalar.mesh();
     std::size_t tdim = mesh.topology().dim(); 
     std::size_t gdim = mesh.geometry().dim();
-    std::size_t udim = u.value_dimension(0); // Rank 1!
-    std::size_t i_max = std::min(gdim, udim);
     
     std::vector<std::size_t> columns;
     std::vector<double> values;
