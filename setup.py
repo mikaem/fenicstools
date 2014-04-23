@@ -25,5 +25,7 @@ setup(name = "fenicstools",
       package_dir = {"fenicstools": "fenicstools"},
       package_data = {"fenicstools": ["Probe/*.h",
                                       "Probe/*.cpp",
-                                      "fem/*.cpp"]},
+                                      "fem/*.cpp",
+                                      "dofmapplotter/*.py",
+                                      "dofmapplotter/cpp/*.cpp"]},
     )
