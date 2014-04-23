@@ -1,3 +1,8 @@
+__author__ = 'Miroslav Kuchta <mirok@math.uio.no>'
+__date__ = '2014-04-23'
+__copyright__ = 'Copyright (C) 2013 ' + __author__
+__license__ = 'GNU Lesser GPL version 3 or any later version'
+
 import inspect
 from os.path import abspath, join
 from dolfin import compile_extension_module

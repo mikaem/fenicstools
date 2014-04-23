@@ -1,3 +1,8 @@
+__author__ = 'Miroslav Kuchta <mirok@math.uio.no>'
+__date__ = '2014-04-23'
+__copyright__ = 'Copyright (C) 2013 ' + __author__
+__license__ = 'GNU Lesser GPL version 3 or any later version'
+
 from common import dmt_number_entities
 from dofmaphandler import DofMapHandler
 from matplotlib.pyplot import get_cmap
