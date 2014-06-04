@@ -60,7 +60,6 @@ def gauss_divergence(u, mesh=None):
 
     divu = Function(DG)
     _u = interpolate(u, CR)
-    _u.update()
 
     # Use Gauss theorem cell by cell to get the divergence. The implementation
     # is based on divergence(vector) = scalar and so the spaces for these

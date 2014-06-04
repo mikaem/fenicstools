@@ -272,9 +272,6 @@ namespace dolfin
       }
     }  
 
-    // Update ghost values
-    u0.update();
-
     // Get mesh and dimension of FunctionSpace interpolating to/from
     const Mesh& mesh0 = *V0.mesh();
     const Mesh& mesh1 = *V1.mesh();

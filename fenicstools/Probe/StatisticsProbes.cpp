@@ -77,7 +77,6 @@ StatisticsProbe* StatisticsProbes::get_probe(std::size_t i)
 //
 void StatisticsProbes::eval(const Function& u)
 {
-  u.update();
   for (std::size_t i = 0; i < local_size(); i++)
   {
     StatisticsProbe* probe = (StatisticsProbe*) _allprobes[i].second;
@@ -87,8 +86,6 @@ void StatisticsProbes::eval(const Function& u)
 }
 void StatisticsProbes::eval(const Function& u, const Function& v)
 {
-  u.update();
-  v.update();
   for (std::size_t i = 0; i < local_size(); i++)
   {
     StatisticsProbe* probe = (StatisticsProbe*) _allprobes[i].second;
@@ -98,9 +95,6 @@ void StatisticsProbes::eval(const Function& u, const Function& v)
 }
 void StatisticsProbes::eval(const Function& u, const Function& v, const Function& w)
 {
-  u.update();
-  v.update();
-  w.update();
   for (std::size_t i = 0; i < local_size(); i++)
   {
     StatisticsProbe* probe = (StatisticsProbe*) _allprobes[i].second;

@@ -10,7 +10,6 @@ def test_Probe_functionspace_2D():
     V = FunctionSpace(mesh, 'CG', 1)
 
     u0 = interpolate(Expression('x[0]'), V)
-    u0.update()    
     x = array([0.5, 0.5])
 
     p = Probe(x, V)
@@ -24,7 +23,6 @@ def test_Probe_functionspace_3D():
     V = FunctionSpace(mesh, 'CG', 1)
 
     u0 = interpolate(Expression('x[0]'), V)
-    u0.update()    
     x = array([0.25, 0.5, 0.5])
     
     p = Probe(x, V)
@@ -38,7 +36,6 @@ def test_Probe_vectorfunctionspace_2D():
     V = VectorFunctionSpace(mesh, 'CG', 1)
 
     u0 = interpolate(Expression(('x[0]', 'x[1]')), V)
-    u0.update()    
     x = array([0.5, 0.75])
     
     p = Probe(x, V)
@@ -52,7 +49,6 @@ def test_Probe_vectorfunctionspace_3D():
     V = VectorFunctionSpace(mesh, 'CG', 1)
 
     u0 = interpolate(Expression(('x[0]', 'x[1]', 'x[2]')), V)
-    u0.update()    
     x = array([0.25, 0.5, 0.75])
     
     p = Probe(x, V)

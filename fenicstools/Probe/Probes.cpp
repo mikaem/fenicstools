@@ -67,7 +67,6 @@ void Probes::add_positions(const Array<double>& x, const FunctionSpace& V)
 //
 void Probes::eval(const Function& u)
 {
-  u.update();
   for (std::size_t i = 0; i < local_size(); i++)
   {
     _allprobes[i].second->eval(u);

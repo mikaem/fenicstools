@@ -22,8 +22,8 @@ n_dofmaps = dmp.num_dofmaps()
 # Create plot which will show all dofmaps. Use global ordering scheme for dofs
 # and mesh entities. plot(order='local') to switch to local ordering scheme
 dmp.plot()
-dmp.show()   # Comment out to
-exit()       # showcase other capabilities
+#dmp.show()   # Comment out to
+#exit()       # showcase other capabilities
 
 # Create plot which will show only dofs of single dofmap
 for i in range(n_dofmaps):

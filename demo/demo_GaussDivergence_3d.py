@@ -18,7 +18,6 @@ def demo_3d_divergence(mesh, u_exact, divu_exact):
     elif rank in [1, 2]:
         DG = VectorFunctionSpace(mesh, 'DG', 0)
     divu = interpolate(divu_exact, DG)
-    divu.update()
 
     # Compute the l^oo and l^1 norms
     divu.vector().axpy(-1, cr_divu.vector())

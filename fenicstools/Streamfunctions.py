@@ -8,7 +8,7 @@ from dolfin import *
 
 __all__ = ['StreamFunction', 'StreamFunction3D']
 
-def StreamFunction(u, bcs, use_strong_bc = False):
+def StreamFunction(u, bcs, mesh, use_strong_bc = False, degree=1):
     """Stream function for a given general 2D velocity field.
     The boundary conditions are weakly imposed through the term
     
@@ -19,16 +19,9 @@ def StreamFunction(u, bcs, use_strong_bc = False):
     walls, inlets, outlets etc.    
     """
     # Check dimension
-    if isinstance(u, ufl.tensors.ListTensor):
-        mesh = u[0].function_space().mesh()
-    else:
-        mesh = u.function_space().mesh()
-    if not mesh.topology().dim() == 2:
+    if not mesh.geometry().dim() == 2:
         error("Stream-function can only be computed in 2D.")
 
-    #V   = u.function_space().sub(0)
-    degree = u[0].ufl_element().degree() if isinstance(u, ufl.tensors.ListTensor) else \
-             u.ufl_element().degree()
     V   = FunctionSpace(mesh, 'CG', degree)
     q   = TestFunction(V)
     psi = TrialFunction(V)

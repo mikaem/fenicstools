@@ -11,8 +11,6 @@ def test_StatisticsProbe_segregated_2D():
 
     u0 = interpolate(Expression('x[0]'), V)
     v0 = interpolate(Expression('x[1]'), V)
-    u0.update()
-    v0.update()
     x = array([0.5, 0.25])
 
     p = StatisticsProbe(x, V, True)    
@@ -41,9 +39,6 @@ def test_StatisticsProbe_segregated_3D():
     u0 = interpolate(Expression('x[0]'), V)
     v0 = interpolate(Expression('x[1]'), V)
     w0 = interpolate(Expression('x[2]'), V)
-    u0.update()
-    v0.update()
-    w0.update()
     x = array([0.5, 0.25, 0.25])
 
     p = StatisticsProbe(x, V, True)    
@@ -74,7 +69,6 @@ def test_StatisticsProbe_vector_2D():
     V = VectorFunctionSpace(mesh, 'CG', 1)
 
     u0 = interpolate(Expression(('x[0]', 'x[1]')), V)
-    u0.update()
     x = array([0.5, 0.25])
 
     p = StatisticsProbe(x, V)    
@@ -101,7 +95,6 @@ def test_StatisticsProbe_vector_3D():
     V = VectorFunctionSpace(mesh, 'CG', 1)
 
     u0 = interpolate(Expression(('x[0]', 'x[1]', 'x[2]')), V)
-    u0.update()
     x = array([0.5, 0.25, 0.25])
 
     p = StatisticsProbe(x, V)

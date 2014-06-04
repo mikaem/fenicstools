@@ -178,7 +178,6 @@ namespace dolfin
         }
 
         // Compute the component of divergence from u_i
-        u_i.update();
         cr_divergence(divu_i, u_i);
 
         // Assemble divu_i into divu
