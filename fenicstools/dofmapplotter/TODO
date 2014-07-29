@@ -1,0 +1,6 @@
+0. Dofs of discontinuous spaces belonging to the cell with key-press event
+   should be highlited.
+1. Support for 1D (There should be vertical layers of dofs)
+2. DofMapPlotter([V, U]) could be useful for sparsity patterns
+3. Switch key for in-plot change of ordering scheme (Needs to be synced accross
+   processes with event that occured only on one of them)
