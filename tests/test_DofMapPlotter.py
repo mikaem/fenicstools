@@ -1,5 +1,5 @@
 import subprocess
-import dofmapplotter
+from fenicstools import DofMapPlotter
 import nose
 
 def test_DofMapPlotter():
@@ -30,7 +30,7 @@ M.print_dofmap()
     # Run the command here to create spaces etc.
     exec(command)
 
-    dmp = dofmapplotter.DofMapPlotter(M)
+    dmp = DofMapPlotter(M)
     dmp_out = dmp.__str__()
 
     # The string should match (can't make simple == for strings to work)

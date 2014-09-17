@@ -37,13 +37,13 @@ namespace dolfin
     const double TOL;                  
   };
   
-  void extract_dof_component_map(boost::unordered_map<std::size_t, 
-                                                      std::size_t>& dof_component_map, 
-                                                      const FunctionSpace& V, 
-                                                      int* component)
+  void extract_dof_component_map(std::unordered_map<std::size_t, 
+                                                   std::size_t>& dof_component_map, 
+                                                   const FunctionSpace& V, 
+                                                   int* component)
   { // Extract sub dofmaps recursively and store dof to component map
-    boost::unordered_map<std::size_t, std::size_t> collapsed_map;
-    boost::unordered_map<std::size_t, std::size_t>::iterator map_it;
+    std::unordered_map<std::size_t, std::size_t> collapsed_map;
+    std::unordered_map<std::size_t, std::size_t>::iterator map_it;
     std::vector<std::size_t> comp(1);
 
     if (V.element()->num_sub_elements() == 0)
@@ -202,7 +202,7 @@ namespace dolfin
       coords_to_dofs = tabulate_coordinates_to_dofs(dofmap, mesh);
 
     // Get a map from global dofs to component number in mixed space
-    boost::unordered_map<std::size_t, std::size_t> dof_component_map;
+    std::unordered_map<std::size_t, std::size_t> dof_component_map;
     int component = -1;
     extract_dof_component_map(dof_component_map, V, &component);
 
@@ -318,7 +318,7 @@ namespace dolfin
       coords_to_dofs = tabulate_coordinates_to_dofs(dofmap, mesh1);
 
     // Get a map from global dofs to component number in mixed space
-    boost::unordered_map<std::size_t, std::size_t> dof_component_map;
+    std::unordered_map<std::size_t, std::size_t> dof_component_map;
     int component = -1;
     extract_dof_component_map(dof_component_map, V1, &component);
 
