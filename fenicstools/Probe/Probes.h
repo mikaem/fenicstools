@@ -18,7 +18,7 @@ namespace dolfin
     virtual ~Probes();
     
     // evaluate all probes
-    void eval(const Function& u);
+    void eval(const Function& u);   
 
     // dump component i of probes to filename
     void dump(std::size_t i, std::string filename);

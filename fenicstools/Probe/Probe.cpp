@@ -140,7 +140,8 @@ std::vector<double> Probe::coordinates()
 //
 void Probe::dump(std::size_t i, std::string filename, std::size_t id)
 {
-  std::ofstream fp(filename.c_str(), std::ios_base::app);
+  //std::ofstream fp(filename.c_str(), std::ios_base::app);
+  std::ofstream fp(filename.c_str(), std::ios_base::out);
   std::ostringstream ss;
   ss << std::scientific;
   ss << "Probe id = " << id << std::endl;
@@ -156,7 +157,8 @@ void Probe::dump(std::size_t i, std::string filename, std::size_t id)
 }
 void Probe::dump(std::string filename, std::size_t id)
 {
-  std::ofstream fp(filename.c_str(), std::ios_base::app);
+  //std::ofstream fp(filename.c_str(), std::ios_base::app);
+  std::ofstream fp(filename.c_str(), std::ios_base::out);
   std::ostringstream ss;
   ss << std::scientific;
   ss << "Probe id = " << id << std::endl;

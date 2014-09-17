@@ -38,9 +38,15 @@ namespace dolfin
   };
   
   void extract_dof_component_map(std::unordered_map<std::size_t, 
+<<<<<<< HEAD
                                                    std::size_t>& dof_component_map, 
                                                    const FunctionSpace& V, 
                                                    int* component)
+=======
+                                                      std::size_t>& dof_component_map, 
+                                                      const FunctionSpace& V, 
+                                                      int* component)
+>>>>>>> 6b323df20bc1c25f8d59682393cf90dc7e50186c
   { // Extract sub dofmaps recursively and store dof to component map
     std::unordered_map<std::size_t, std::size_t> collapsed_map;
     std::unordered_map<std::size_t, std::size_t>::iterator map_it;
