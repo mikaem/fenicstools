@@ -3,7 +3,7 @@ __date__ = "2013-12-13"
 __copyright__ = "Copyright (C) 2013 " + __author__
 __license__ = "GNU Lesser GPL version 3 or any later version"
 import os, inspect
-from dolfin import compile_extension_module, Function, FunctionSpace, assemble, TrialFunction, TestFunction, dx, Matrix
+from dolfin import info, compile_extension_module, Function, FunctionSpace, assemble, TrialFunction, TestFunction, dx, Matrix
 
 fem_folder = os.path.abspath(os.path.join(inspect.getfile(inspect.currentframe()), "../fem"))
 gradient_code = open(os.path.join(fem_folder, 'gradient_weight.cpp'), 'r').read()
@@ -60,6 +60,8 @@ def weighted_gradient_matrix(mesh, i, family='CG', degree=1, constrained_domain=
             CC.append(Cp)
         return CC
     else:
-        dP = assemble(TrialFunction(S).dx(i)*TestFunction(DG)*dx)
+        dP = assemble(TrialFunction(S).dx(i)*TestFunction(DG)*dx)        
         Cp = compiled_gradient_module.compute_weighted_gradient_matrix(G, dP, dg)
+        #info(G, True)        
+        #info(dP, True)        
         return Cp

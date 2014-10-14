@@ -30,5 +30,5 @@ def test_WeightedGradient():
     du.vector()[:] = wx[2] * u.vector()
     nose.tools.assert_almost_equal(du.vector().min(), 3.)
         
-#if __name__ == '__main__':
-    #nose.run(defaultTest=__name__)
+if __name__ == '__main__':
+    nose.run(defaultTest=__name__)

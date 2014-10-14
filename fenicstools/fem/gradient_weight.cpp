@@ -26,15 +26,15 @@ namespace dolfin
     // Compute weights
     GenericVector& dg_vector = *DG.vector();  
     dg_vector.zero();
-    for (CellIterator cell(*mesh); !cell.end(); ++cell)
+    for (CellIterator cell(*mesh, "all"); !cell.end(); ++cell)
     {
       const std::vector<dolfin::la_index>& dofs
         = dofmap_u->cell_dofs(cell->index());
         
       std::fill(ws.begin(), ws.end(), 1./cell->volume());
-      dg_vector.add(ws.data(), dofs.size(), dofs.data());      
+      dg_vector.add_local(ws.data(), dofs.size(), dofs.data());    
     }  
-    dg_vector.apply("insert");  
+    dg_vector.apply("insert"); 
   }
   
   std::size_t dof_owner(std::vector<std::vector<std::size_t> > all_ranges,
@@ -55,7 +55,7 @@ namespace dolfin
     std::vector<double> values;
     std::vector<std::vector<std::size_t> > allcolumns;
     std::vector<std::vector<double> > allvalues;
-    
+        
     const std::pair<std::size_t, std::size_t> row_range = A.local_range(0);
     const std::size_t m = row_range.second - row_range.first;
     GenericVector& weight = *DG.vector();
@@ -66,7 +66,7 @@ namespace dolfin
     int dm = weight_range.second-weight_range.first;
     
     const MPI_Comm mpi_comm = DG.function_space()->mesh()->mpi_comm();
-    
+        
     // Communicate local_ranges of weights
     std::vector<std::vector<std::size_t> > all_ranges;
     MPI::all_gather(mpi_comm, weight_range_vec, all_ranges);
@@ -94,7 +94,7 @@ namespace dolfin
         }
       }
     }
-    
+
     // Communicate to all which weights are needed by the process
     std::vector<std::vector<std::size_t> > dofs_needed_recv;
     MPI::all_to_all(mpi_comm, dofs_needed, dofs_needed_recv);
@@ -110,7 +110,7 @@ namespace dolfin
       std::map<std::size_t, double> send_weights;
       for (std::size_t k = 0; k < dofs.size(); k++)
       {
-        weights_to_send[p].push_back(weight[dofs[k]]);
+        weights_to_send[p].push_back(weight[dofs[k]-weight_range.first]);
       }
     }
     std::vector<std::vector<double> > weights_to_send_recv;
@@ -124,7 +124,9 @@ namespace dolfin
         continue;
       
       for (std::size_t k = 0; k < dofs_needed[p].size(); k++)
-        received_weights[dofs_needed[p][k]] = weights_to_send_recv[p][k]; 
+      {
+        received_weights[dofs_needed[p][k]] = weights_to_send_recv[p][k];         
+      }
     }
     
     for (std::size_t row = 0; row < m; row++)
@@ -142,7 +144,7 @@ namespace dolfin
         }
         else
         {
-          values[i] = weight[columns[i]];  
+          values[i] = weight[columns[i]-weight_range.first];  
         }
 //        values[i] = 1./values[i];
       }
@@ -161,7 +163,7 @@ namespace dolfin
         }
         else
         {
-          w = weight[dof];  
+          w = weight[dof-weight_range.first];  
         }        
         values[i] = values[i]*w;
 //        values[i] = values[i]*values[i];
@@ -171,6 +173,7 @@ namespace dolfin
       allvalues.push_back(values);
       allcolumns.push_back(columns);
     }
+
     for (std::size_t row = 0; row < m; row++)
     {       
       // Get global row number
@@ -178,7 +181,7 @@ namespace dolfin
       
       A.setrow(global_row, allcolumns[row], allvalues[row]);
     }
-    A.apply("insert");
+    A.apply("insert");  
   }  
   
   std::shared_ptr<GenericMatrix> MatTransposeMatMult(GenericMatrix& A, GenericMatrix& B)
@@ -208,6 +211,7 @@ namespace dolfin
     Mat CC;
     PetscErrorCode ierr = MatMatMult(Ap->mat(), Bp->mat(), MAT_INITIAL_MATRIX, PETSC_DEFAULT, &CC);
     dolfin::PETScMatrix CCC = PETScMatrix(CC);
+    CCC.apply("insert");
     return CCC.copy();  
   }
 

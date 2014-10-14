@@ -17,11 +17,10 @@ x = array([[1.5, 0.5, 0.5], [0.2, 0.3, 0.4], [0.8, 0.9, 1.0]])
 p = Probes(x.flatten(), W)
 x = x*0.9 
 p.add_positions(x.flatten(), W)
-print 'hei'
 for i in range(6):
     p(w0)
-print 'hei'
 
 print p.array(2, "testarray")         # dump snapshot 2
 print p.array(filename="testarray")   # dump all snapshots
 print p.dump("testarray")
+
