@@ -2,7 +2,7 @@ fenicstools
 ===========
 
 <p align="center">
-  <img src="https://raw.github.com/wiki/mikaem/fenicstools/figs/csf_sliced2.png?dl=1" alt="CSF flow"/>
+  <img src="https://raw.github.com/wiki/mikaem/fenicstools/figs/csf_sliced2.png" alt="CSF flow"/>
 </p>
 
 Description
