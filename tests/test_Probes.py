@@ -30,7 +30,7 @@ def test_Probes_functionspace_2D(V2):
         assert round(p0[2] - 0.3, 7) == 0
 
 
-def test_Probes_functionspace_3D(V3):
+def test_Probes_functionspace_3D(V3, dirpath):
     u0 = interpolate(Expression('x[0]'), V3)
     x = array([[0.5, 0.5, 0.5], [0.4, 0.4, 0.4], [0.3, 0.3, 0.3]])
     
@@ -52,20 +52,20 @@ def test_Probes_functionspace_3D(V3):
         assert round(p0[1] - 0.4, 7) == 0
         assert round(p0[2] - 0.3, 7) == 0
         
-    p0 = p.array(filename='dump')
+    p0 = p.array(filename=dirpath+'dump')
     if MPI.rank(mpi_comm_world()) == 0:
         assert round(p0[0, 0] - 0.5, 7) == 0
         assert round(p0[1, 1] - 0.4, 7) == 0
         assert round(p0[2, 1] - 0.3, 7) == 0
         
-        f = open('dump_all.probes', 'r')
+        f = open(dirpath+'dump_all.probes', 'r')
         p1 = load(f)
         assert round(p1[0, 0, 0] - 0.5, 7) == 0
         assert round(p1[1, 0, 1] - 0.4, 7) == 0
         assert round(p1[2, 0, 1] - 0.3, 7) == 0
 
 
-def test_Probes_vectorfunctionspace_2D(VF2):
+def test_Probes_vectorfunctionspace_2D(VF2, dirpath):
     u0 = interpolate(Expression(('x[0]', 'x[1]')), VF2)
     x = array([[0.5, 0.5], [0.4, 0.4], [0.3, 0.3]])
     
@@ -87,20 +87,20 @@ def test_Probes_vectorfunctionspace_2D(VF2):
         assert round(p0[1, 0] - 0.4, 7) == 0
         assert round(p0[2, 1] - 0.3, 7) == 0
 
-    p0 = p.array(filename='dumpvector2D')
+    p0 = p.array(filename=dirpath+'dumpvector2D')
     if MPI.rank(mpi_comm_world()) == 0:
         assert round(p0[0, 0, 0] - 0.5, 7) == 0
         assert round(p0[1, 1, 1] - 0.4, 7) == 0
         assert round(p0[2, 0, 1] - 0.3, 7) == 0
         
-        f = open('dumpvector2D_all.probes', 'r')
+        f = open(dirpath+'dumpvector2D_all.probes', 'r')
         p1 = load(f)
         assert round(p1[0, 0, 0] - 0.5, 7) == 0
         assert round(p1[1, 1, 0] - 0.4, 7) == 0
         assert round(p1[2, 1, 1] - 0.3, 7) == 0
 
 
-def test_Probes_vectorfunctionspace_3D(VF3):
+def test_Probes_vectorfunctionspace_3D(VF3, dirpath):
     u0 = interpolate(Expression(('x[0]', 'x[1]', 'x[2]')), VF3)
     x = array([[0.5, 0.5, 0.5], [0.4, 0.4, 0.4], [0.3, 0.3, 0.3]])
     
@@ -121,13 +121,13 @@ def test_Probes_vectorfunctionspace_3D(VF3):
         assert round(p0[1, 1] - 0.4, 7) == 0
         assert round(p0[2, 2] - 0.3, 7) == 0
         
-    p0 = p.array(filename='dumpvector3D')
+    p0 = p.array(filename=dirpath+'dumpvector3D')
     if MPI.rank(mpi_comm_world()) == 0:
         assert round(p0[0, 0, 0] - 0.5, 7) == 0
         assert round(p0[1, 1, 0] - 0.4, 7) == 0
         assert round(p0[2, 1, 0] - 0.3, 7) == 0
         
-        f = open('dumpvector3D_all.probes', 'r')
+        f = open(dirpath+'dumpvector3D_all.probes', 'r')
         p1 = load(f)
         assert round(p1[0, 0, 0] - 0.5, 7) == 0
         assert round(p1[1, 1, 0] - 0.4, 7) == 0

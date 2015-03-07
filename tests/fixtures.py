@@ -1,7 +1,15 @@
 from dolfin import *
 import pytest
+from os import path, makedirs
 
 fixture = pytest.fixture(scope="module")
+
+@fixture
+def dirpath():
+    dirpath = path.join(path.dirname(path.abspath(__file__)), "tmp", "")
+    if not path.isdir(dirpath):
+        makedirs(dirpath)
+    return dirpath
 
 @fixture
 def mesh_2D():
