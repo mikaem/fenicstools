@@ -1,27 +1,22 @@
-import nose
+#!/usr/bin/env py.test
 
 from dolfin import VectorFunctionSpace, UnitSquareMesh, UnitCubeMesh,\
-    interpolate, Expression
+                   interpolate, Expression
+from fenicstools import gauss_divergence
+import pytest
 
-from fenicstools import *
+@pytest.fixture(scope="module", params=range(2))
+def mesh(request):
+    mesh = [UnitSquareMesh(4, 4), UnitCubeMesh(4, 4, 4)]
+    return mesh[request.param]
 
 
-def test_GaussDivergence():
-    mesh = UnitSquareMesh(4, 4)
+def test_GaussDivergence(mesh):
+    dim = mesh.topology().dim()
+    expr = ["%s*x[%s]" % (dim,i) for i in range(dim)]
     V = VectorFunctionSpace(mesh, 'CG', 1)
-    u = interpolate(Expression(('x[0]', 'x[1]')), V)
+    u = interpolate(Expression(tuple(expr)), V)
     divu = gauss_divergence(u)
     DIVU = divu.vector().array()
-    point_0 = all(abs(DIVU - 2.) < 1E-13)
-    nose.tools.assert_equal(point_0, True)
-
-    mesh = UnitCubeMesh(4, 4, 4)
-    V = VectorFunctionSpace(mesh, 'CG', 1)
-    u = interpolate(Expression(('2*x[0]', '2*x[1]', '2*x[2]')), V)
-    divu = gauss_divergence(u)
-    DIVU = divu.vector().array()
-    point_0 = all(abs(DIVU - 6.) < 1E-13)
-    nose.tools.assert_equal(point_0, True)
-
-if __name__ == '__main__':
-    nose.run(defaultTest=__name__)
+    point_0 = all(abs(DIVU - dim*dim) < 1E-13)
+    assert point_0

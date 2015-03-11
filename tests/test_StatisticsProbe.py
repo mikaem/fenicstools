@@ -1,19 +1,18 @@
-import nose
+#!/usr/bin/env py.test
 
+import pytest
 from dolfin import FunctionSpace, UnitCubeMesh, UnitSquareMesh, interpolate, \
-    Expression, mpi_comm_self, VectorFunctionSpace
+                   Expression, mpi_comm_self, VectorFunctionSpace
 from fenicstools import *
 from numpy import array
+from fixtures import *
 
-def test_StatisticsProbe_segregated_2D():
-    mesh = UnitSquareMesh(mpi_comm_self(), 4, 4)
-    V = FunctionSpace(mesh, 'CG', 1)
-
-    u0 = interpolate(Expression('x[0]'), V)
-    v0 = interpolate(Expression('x[1]'), V)
+def test_StatisticsProbe_segregated_2D(V2):
+    u0 = interpolate(Expression('x[0]'), V2)
+    v0 = interpolate(Expression('x[1]'), V2)
     x = array([0.5, 0.25])
 
-    p = StatisticsProbe(x, V, True)    
+    p = StatisticsProbe(x, V2, True)    
     for i in range(5):
         p(u0, v0)
         
@@ -22,26 +21,24 @@ def test_StatisticsProbe_segregated_2D():
 
     mean = p.mean()
     var = p.variance()
-    nose.tools.assert_almost_equal(p[0][0], 2.5)
-    nose.tools.assert_almost_equal(p[0][4], 0.625)
-    nose.tools.assert_almost_equal(p[1][0], 0.5)
-    nose.tools.assert_almost_equal(p[1][1], 0.25)
-    nose.tools.assert_almost_equal(mean[0], 0.5)
-    nose.tools.assert_almost_equal(mean[1], 0.25)
-    nose.tools.assert_almost_equal(var[0], 0.25)
-    nose.tools.assert_almost_equal(var[1], 0.0625)
-    nose.tools.assert_almost_equal(var[2], 0.125)
+    assert round(p[0][0] - 2.5, 7) == 0
+    assert round(p[0][4] - 0.625, 7) == 0
+    assert round(p[1][0] - 0.5, 7) == 0
+    assert round(p[1][1] - 0.25, 7) == 0
+    assert round(mean[0] - 0.5, 7) == 0
+    assert round(mean[1] - 0.25, 7) == 0
+    assert round(var[0] - 0.25, 7) == 0
+    assert round(var[1] - 0.0625, 7) == 0
+    assert round(var[2] - 0.125, 7) == 0
 
-def test_StatisticsProbe_segregated_3D():
-    mesh = UnitCubeMesh(mpi_comm_self(), 4, 4, 4)
-    V = FunctionSpace(mesh, 'CG', 1)
 
-    u0 = interpolate(Expression('x[0]'), V)
-    v0 = interpolate(Expression('x[1]'), V)
-    w0 = interpolate(Expression('x[2]'), V)
+def test_StatisticsProbe_segregated_3D(V3):
+    u0 = interpolate(Expression('x[0]'), V3)
+    v0 = interpolate(Expression('x[1]'), V3)
+    w0 = interpolate(Expression('x[2]'), V3)
     x = array([0.5, 0.25, 0.25])
 
-    p = StatisticsProbe(x, V, True)    
+    p = StatisticsProbe(x, V3, True)    
     for i in range(5):
         p(u0, v0, w0)
         
@@ -50,28 +47,26 @@ def test_StatisticsProbe_segregated_3D():
 
     mean = p.mean()
     var = p.variance()
-    nose.tools.assert_almost_equal(p[0][0], 2.5)
-    nose.tools.assert_almost_equal(p[0][4], 0.3125)
-    nose.tools.assert_almost_equal(p[1][0], 0.5)
-    nose.tools.assert_almost_equal(p[1][1], 0.25)
-    nose.tools.assert_almost_equal(p[1][2], 0.25)
-    nose.tools.assert_almost_equal(mean[0], 0.5)
-    nose.tools.assert_almost_equal(mean[1], 0.25)
-    nose.tools.assert_almost_equal(mean[2], 0.25)
-    nose.tools.assert_almost_equal(var[0], 0.25)
-    nose.tools.assert_almost_equal(var[1], 0.0625)
-    nose.tools.assert_almost_equal(var[2], 0.0625)
-    nose.tools.assert_almost_equal(var[3], 0.125)
-    nose.tools.assert_almost_equal(var[4], 0.125)
+    assert round(p[0][0] - 2.5, 7) == 0
+    assert round(p[0][4] - 0.3125, 7) == 0
+    assert round(p[1][0] - 0.5, 7) == 0
+    assert round(p[1][1] - 0.25, 7) == 0
+    assert round(p[1][2] - 0.25, 7) == 0
+    assert round(mean[0] - 0.5, 7) == 0
+    assert round(mean[1] - 0.25, 7) == 0
+    assert round(mean[2] - 0.25, 7) == 0
+    assert round(var[0] - 0.25, 7) == 0
+    assert round(var[1] - 0.0625, 7) == 0
+    assert round(var[2] - 0.0625, 7) == 0
+    assert round(var[3] - 0.125, 7) == 0
+    assert round(var[4] - 0.125, 7) == 0
 
-def test_StatisticsProbe_vector_2D():
-    mesh = UnitSquareMesh(mpi_comm_self(), 4, 4)
-    V = VectorFunctionSpace(mesh, 'CG', 1)
 
-    u0 = interpolate(Expression(('x[0]', 'x[1]')), V)
+def test_StatisticsProbe_vector_2D(VF2):
+    u0 = interpolate(Expression(('x[0]', 'x[1]')), VF2)
     x = array([0.5, 0.25])
 
-    p = StatisticsProbe(x, V)    
+    p = StatisticsProbe(x, VF2)    
     for i in range(5):
         p(u0)
         
@@ -80,44 +75,42 @@ def test_StatisticsProbe_vector_2D():
 
     mean = p.mean()
     var = p.variance()
-    nose.tools.assert_almost_equal(p[0][0], 2.5)
-    nose.tools.assert_almost_equal(p[0][4], 0.625)
-    nose.tools.assert_almost_equal(p[1][0], 0.5)
-    nose.tools.assert_almost_equal(p[1][1], 0.25)
-    nose.tools.assert_almost_equal(mean[0], 0.5)
-    nose.tools.assert_almost_equal(mean[1], 0.25)
-    nose.tools.assert_almost_equal(var[0], 0.25)
-    nose.tools.assert_almost_equal(var[1], 0.0625)
-    nose.tools.assert_almost_equal(var[2], 0.125)
 
-def test_StatisticsProbe_vector_3D():
-    mesh = UnitCubeMesh(mpi_comm_self(), 4, 4, 4)
-    V = VectorFunctionSpace(mesh, 'CG', 1)
+    assert round(p[0][0] - 2.5, 7) == 0
+    assert round(p[0][4] - 0.625, 7) == 0
+    assert round(p[1][0] - 0.5, 7) == 0
+    assert round(p[1][1] - 0.25, 7) == 0
+    assert round(mean[0] - 0.5, 7) == 0
+    assert round(mean[1] - 0.25, 7) == 0
+    assert round(var[0] - 0.25, 7) == 0
+    assert round(var[1] - 0.0625, 7) == 0
+    assert round(var[2] - 0.125, 7) == 0
 
-    u0 = interpolate(Expression(('x[0]', 'x[1]', 'x[2]')), V)
+
+def test_StatisticsProbe_vector_3D(VF3):
+    u0 = interpolate(Expression(('x[0]', 'x[1]', 'x[2]')), VF3)
     x = array([0.5, 0.25, 0.25])
 
-    p = StatisticsProbe(x, V)
+    p = StatisticsProbe(x, VF3)
     for i in range(5):
         p(u0)
 
     assert p.number_of_evaluations() == 5
     assert p.value_size() == 9
+
     mean = p.mean()
     var = p.variance()
-    nose.tools.assert_almost_equal(p[0][0], 2.5)
-    nose.tools.assert_almost_equal(p[0][4], 0.3125)
-    nose.tools.assert_almost_equal(p[1][0], 0.5)
-    nose.tools.assert_almost_equal(p[1][1], 0.25)
-    nose.tools.assert_almost_equal(p[1][2], 0.25)
-    nose.tools.assert_almost_equal(mean[0], 0.5)
-    nose.tools.assert_almost_equal(mean[1], 0.25)
-    nose.tools.assert_almost_equal(mean[2], 0.25)
-    nose.tools.assert_almost_equal(var[0], 0.25)
-    nose.tools.assert_almost_equal(var[1], 0.0625)
-    nose.tools.assert_almost_equal(var[2], 0.0625)
-    nose.tools.assert_almost_equal(var[3], 0.125)
-    nose.tools.assert_almost_equal(var[4], 0.125)
 
-if __name__ == '__main__':
-    nose.run(defaultTest=__name__)
+    assert round(p[0][0] - 2.5, 7) == 0
+    assert round(p[0][4] - 0.3125, 7) == 0
+    assert round(p[1][0] - 0.5, 7) == 0
+    assert round(p[1][1] - 0.25, 7) == 0
+    assert round(p[1][2] - 0.25, 7) == 0
+    assert round(mean[0] - 0.5, 7) == 0
+    assert round(mean[1] - 0.25, 7) == 0
+    assert round(mean[2] - 0.25, 7) == 0
+    assert round(var[0] - 0.25, 7) == 0
+    assert round(var[1] - 0.0625, 7) == 0
+    assert round(var[2] - 0.0625, 7) == 0
+    assert round(var[3] - 0.125, 7) == 0
+    assert round(var[4] - 0.125, 7) == 0
