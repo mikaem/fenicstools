@@ -69,9 +69,8 @@ def test_StatisticsProbes_vector_3D():
         
     p = probes.array()
     if MPI.rank(mpi_comm_world()) == 0:
-
         nose.tools.assert_almost_equal(p[0,0], 2.5)
         nose.tools.assert_almost_equal(p[0,4], 0.3125)
 
-#if __name__ == '__main__':
-    #nose.run(defaultTest=__name__)
+if __name__ == '__main__':
+    nose.run(defaultTest=__name__)

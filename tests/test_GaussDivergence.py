@@ -22,3 +22,6 @@ def test_GaussDivergence():
     DIVU = divu.vector().array()
     point_0 = all(abs(DIVU - 6.) < 1E-13)
     nose.tools.assert_equal(point_0, True)
+
+if __name__ == '__main__':
+    nose.run(defaultTest=__name__)

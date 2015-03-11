@@ -46,8 +46,8 @@ namespace dolfin
     // Fill the values
     for(CellIterator cell(mesh); !cell.end(); ++cell)
     {
-      std::vector<dolfin::la_index>
-      cell_dofs = DG0_dofmap->cell_dofs(cell->index());
+      const ArrayView<const dolfin::la_index>
+        cell_dofs = DG0_dofmap->cell_dofs(cell->index());
       // There is only one DG0 dof per cell
       dolfin::la_index cell_dof = cell_dofs[0];
 
@@ -57,8 +57,8 @@ namespace dolfin
         double cell_volume = cell->volume();
         
         // Dofs of CR on all facets of the cell, global order
-        std::vector<dolfin::la_index>
-        facets_dofs = CR1_dofmap->cell_dofs(cell->index());
+        const ArrayView<const dolfin::la_index>
+          facets_dofs = CR1_dofmap->cell_dofs(cell->index());
         
         double cell_integral = 0;
         std::size_t local_facet_index = 0;
@@ -231,7 +231,7 @@ namespace dolfin
     // Fill the values
     for(CellIterator cell(mesh); !cell.end(); ++cell)
     {
-      std::vector<dolfin::la_index>
+      const ArrayView<const dolfin::la_index>
         dg_dofs = DG0_dofmap->cell_dofs(cell->index());
       // There is only one DG0 dof per cell
       dolfin::la_index cell_dof = dg_dofs[0];
@@ -240,7 +240,7 @@ namespace dolfin
       double cell_volume = cell->volume();
       std::size_t local_facet_index = 0;      
       
-      std::vector<dolfin::la_index>
+      const ArrayView<const dolfin::la_index>
         cr_dofs = CR1_dofmap->cell_dofs(cell->index());
       
       for(FacetIterator facet(*cell); !facet.end(); ++facet)
