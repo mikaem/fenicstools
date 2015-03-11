@@ -1,6 +1,7 @@
+#!/usr/bin/env py.test
+
 import subprocess
 from fenicstools import DofMapPlotter
-import nose
 
 def test_DofMapPlotter():
     '''Test logic used in DofMapPlotter by comparing its string representation
@@ -42,4 +43,4 @@ M.print_dofmap()
     # for dmp_line, dolfin_line in zip(dmp_lines, dolfin_lines):
     #     print dmp_line, ' vs. ', dolfin_line
 
-    nose.tools.assert_true(maps_match)
+    assert maps_match
