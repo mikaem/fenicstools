@@ -13,7 +13,7 @@ setup(name = "fenicstools",
       author = "Mikael Mortensen",
       author_email = "mikaem@math.uio.no",
       url = 'https://github.com/mikaem/fenicstools.git',
-      zip_safe = False,
+      zip_safe = True,
       classifiers = [
           'Intended Audience :: Developers',
           'Intended Audience :: Science/Research',
