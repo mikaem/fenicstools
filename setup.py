@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 
-from distutils.core import setup
+from setuptools import setup
 
 # Version number
 major = 1
-minor = 3
+minor = 5
 maintenance = 0
 
 setup(name = "fenicstools",
@@ -13,6 +13,7 @@ setup(name = "fenicstools",
       author = "Mikael Mortensen",
       author_email = "mikaem@math.uio.no",
       url = 'https://github.com/mikaem/fenicstools.git',
+      zip_safe = False,
       classifiers = [
           'Intended Audience :: Developers',
           'Intended Audience :: Science/Research',
