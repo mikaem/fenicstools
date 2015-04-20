@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from setuptools import setup
+from distutils.core import setup
 
 # Version number
 major = 1
@@ -13,7 +13,7 @@ setup(name = "fenicstools",
       author = "Mikael Mortensen",
       author_email = "mikaem@math.uio.no",
       url = 'https://github.com/mikaem/fenicstools.git',
-      zip_safe = True,
+      zip_safe = False,
       classifiers = [
           'Intended Audience :: Developers',
           'Intended Audience :: Science/Research',
