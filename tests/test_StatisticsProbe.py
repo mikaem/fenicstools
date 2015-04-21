@@ -2,17 +2,17 @@
 
 import pytest
 from dolfin import FunctionSpace, UnitCubeMesh, UnitSquareMesh, interpolate, \
-                   Expression, mpi_comm_self, VectorFunctionSpace
+                   Expression, VectorFunctionSpace
 from fenicstools import *
 from numpy import array
 from fixtures import *
 
-def test_StatisticsProbe_segregated_2D(V2):
-    u0 = interpolate(Expression('x[0]'), V2)
-    v0 = interpolate(Expression('x[1]'), V2)
+def test_StatisticsProbe_segregated_2D(V2_self):
+    u0 = interpolate(Expression('x[0]'), V2_self)
+    v0 = interpolate(Expression('x[1]'), V2_self)
     x = array([0.5, 0.25])
 
-    p = StatisticsProbe(x, V2, True)    
+    p = StatisticsProbe(x, V2_self, True)    
     for i in range(5):
         p(u0, v0)
         
@@ -32,13 +32,13 @@ def test_StatisticsProbe_segregated_2D(V2):
     assert round(var[2] - 0.125, 7) == 0
 
 
-def test_StatisticsProbe_segregated_3D(V3):
-    u0 = interpolate(Expression('x[0]'), V3)
-    v0 = interpolate(Expression('x[1]'), V3)
-    w0 = interpolate(Expression('x[2]'), V3)
+def test_StatisticsProbe_segregated_3D(V3_self):
+    u0 = interpolate(Expression('x[0]'), V3_self)
+    v0 = interpolate(Expression('x[1]'), V3_self)
+    w0 = interpolate(Expression('x[2]'), V3_self)
     x = array([0.5, 0.25, 0.25])
 
-    p = StatisticsProbe(x, V3, True)    
+    p = StatisticsProbe(x, V3_self, True)    
     for i in range(5):
         p(u0, v0, w0)
         
@@ -62,11 +62,11 @@ def test_StatisticsProbe_segregated_3D(V3):
     assert round(var[4] - 0.125, 7) == 0
 
 
-def test_StatisticsProbe_vector_2D(VF2):
-    u0 = interpolate(Expression(('x[0]', 'x[1]')), VF2)
+def test_StatisticsProbe_vector_2D(VF2_self):
+    u0 = interpolate(Expression(('x[0]', 'x[1]')), VF2_self)
     x = array([0.5, 0.25])
 
-    p = StatisticsProbe(x, VF2)    
+    p = StatisticsProbe(x, VF2_self)    
     for i in range(5):
         p(u0)
         
@@ -87,11 +87,11 @@ def test_StatisticsProbe_vector_2D(VF2):
     assert round(var[2] - 0.125, 7) == 0
 
 
-def test_StatisticsProbe_vector_3D(VF3):
-    u0 = interpolate(Expression(('x[0]', 'x[1]', 'x[2]')), VF3)
+def test_StatisticsProbe_vector_3D(VF3_self):
+    u0 = interpolate(Expression(('x[0]', 'x[1]', 'x[2]')), VF3_self)
     x = array([0.5, 0.25, 0.25])
 
-    p = StatisticsProbe(x, VF3)
+    p = StatisticsProbe(x, VF3_self)
     for i in range(5):
         p(u0)
 

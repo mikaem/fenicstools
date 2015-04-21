@@ -38,10 +38,12 @@ namespace dolfin
   {
     std::vector<std::size_t> columns;
     std::vector<double> values;
+    std::vector<std::vector<std::size_t> > allcolumns;
+    std::vector<std::vector<double> > allvalues;
     
     const std::pair<std::size_t, std::size_t> row_range = A.local_range(0);
     const std::size_t m = row_range.second - row_range.first;
-
+    std::cout << m << std::endl;
     for (std::size_t row = 0; row < m; row++)
     {
       // Get global row number
@@ -51,8 +53,18 @@ namespace dolfin
       for (std::size_t i = 0; i < values.size(); i++)
         values[i] = val;
       
-      A.setrow(global_row, columns, values);
-      A.apply("insert");
+      allvalues.push_back(values);
+      allcolumns.push_back(columns);
     }
+    
+    for (std::size_t row = 0; row < m; row++)
+    {       
+      // Get global row number
+      const std::size_t global_row = row + row_range.first;
+      
+      A.setrow(global_row, allcolumns[row], allvalues[row]);
+    }
+    A.apply("insert"); 
+    
   }  
 }
