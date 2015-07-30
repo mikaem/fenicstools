@@ -1,7 +1,7 @@
 #!/usr/bin/env py.test
 
 from dolfin import VectorFunctionSpace, UnitSquareMesh, UnitCubeMesh,\
-                   interpolate, Expression
+                   interpolate, Expression, MPI, mpi_comm_world
 from fenicstools import gauss_divergence
 import pytest
 
@@ -19,4 +19,5 @@ def test_GaussDivergence(mesh):
     divu = gauss_divergence(u)
     DIVU = divu.vector().array()
     point_0 = all(abs(DIVU - dim*dim) < 1E-13)
-    assert point_0
+    if MPI.rank(mpi_comm_world()) == 0:
+        assert point_0

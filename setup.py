@@ -4,7 +4,7 @@ from distutils.core import setup
 
 # Version number
 major = 1
-minor = 5
+minor = 6
 maintenance = 0
 
 setup(name = "fenicstools",

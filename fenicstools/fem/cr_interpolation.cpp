@@ -1,4 +1,5 @@
 #include <dolfin/la/GenericMatrix.h>
+#include <algorithm>
 
 namespace dolfin
 {
