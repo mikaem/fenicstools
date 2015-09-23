@@ -65,3 +65,4 @@ def weighted_gradient_matrix(mesh, i, family='CG', degree=1, constrained_domain=
         #info(G, True)        
         #info(dP, True)        
         return Cp
+
