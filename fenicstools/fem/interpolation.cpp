@@ -153,7 +153,7 @@ namespace dolfin
     // Check that function ranks match
     if (element.value_rank() != u0.value_rank())
     {
-        dolfin_error("LagrangeInterpolator.cpp",
+        dolfin_error("interpolate.cpp",
                     "interpolate Expression into function space",
                     "Rank of Expression (%d) does not match rank of function space (%d)",
                     u0.value_rank(), element.value_rank());
@@ -164,7 +164,7 @@ namespace dolfin
     {
         if (element.value_dimension(i) != u0.value_dimension(i))
         {
-        dolfin_error("LagrangeInterpolator.cpp",
+        dolfin_error("interpolate.cpp",
                     "interpolate Expression into function space",
                     "Dimension %d of Expression (%d) does not match dimension %d of function space (%d)",
                     i, u0.value_dimension(i), i, element.value_dimension(i));
@@ -742,4 +742,95 @@ namespace dolfin
     u.vector()->set_local(local_u_vector);
     u.vector()->apply("insert");
   }    
+  void interpolate_any(const Expression& u0, Function& u)
+  {
+    // Interpolate from Expression u0 to Function u.
+    // This mesh of u0 may be different from that of u
+    //
+
+    // Get function spaces of Functions interpolating to
+    dolfin_assert(u.function_space());
+    const FunctionSpace& V1 =  *u.function_space();
+
+    // Get element interpolating to
+    dolfin_assert(V1.element());
+    const FiniteElement& element = *V1.element();
+
+    // Check that function ranks match
+    if (element.value_rank() != u0.value_rank())
+    {
+        dolfin_error("interpolate.cpp",
+                    "interpolate Expression into function space",
+                    "Rank of Expression (%d) does not match rank of function space (%d)",
+                    u0.value_rank(), element.value_rank());
+    }
+
+    // Check that function dims match
+    for (std::size_t i = 0; i < element.value_rank(); ++i)
+    {
+        if (element.value_dimension(i) != u0.value_dimension(i))
+        {
+        dolfin_error("interpolate.cpp",
+                    "interpolate Expression into function space",
+                    "Dimension %d of Expression (%d) does not match dimension %d of function space (%d)",
+                    i, u0.value_dimension(i), i, element.value_dimension(i));
+        }
+    }
+
+
+    // Get mesh and dimension of FunctionSpace interpolating to/from
+    dolfin_assert(V1.mesh());
+    const Mesh& mesh1 = *V1.mesh();
+    const std::size_t gdim1 = mesh1.geometry().dim();
+
+    // Create arrays used to evaluate one point
+    std::vector<double> x(gdim1);
+    std::vector<double> values(u0.value_size());
+    Array<double> _x(gdim1, x.data());
+    Array<double> _values(u0.value_size(), values.data());
+
+    // Create vector to hold all local values of u
+    std::vector<double> local_u_vector(u.vector()->local_size());
+
+    // Get dofmap of u
+    dolfin_assert(V1.dofmap());
+    const GenericDofMap& dofmap = *V1.dofmap();
+    
+    ufc::cell ufc_cell;
+    std::vector<double> vertex_coordinates;
+    std::vector<double> cell_coefficients(dofmap.max_element_dofs());  
+    const std::size_t local_size = dofmap.ownership_range().second
+                                - dofmap.ownership_range().first;
+
+
+    // Iterate over mesh and interpolate on each cell
+    for (CellIterator cell(mesh1); !cell.end(); ++cell)
+    {
+        // Update to current cell
+        cell->get_vertex_coordinates(vertex_coordinates);
+        cell->get_cell_data(ufc_cell);
+
+        // Call evaluate_dofs with wrapper function around the globally 
+        // computed interpolation points.
+        element.evaluate_dofs(cell_coefficients.data(), u0,
+                vertex_coordinates.data(), ufc_cell.orientation, ufc_cell);
+
+        // Tabulate dofs
+        const ArrayView<const dolfin::la_index> cell_dofs
+        = dofmap.cell_dofs(cell->index());
+
+        // Place result in local vector
+        for (uint i = 0; i < cell_dofs.size(); i++)
+        {
+            uint d = cell_dofs[i];
+            if (d < local_size)
+                local_u_vector[d] = cell_coefficients[i];
+        }
+    }
+    
+    // Set and finalize vector
+    u.vector()->set_local(local_u_vector);
+    u.vector()->apply("insert");
+  }      
+  
 }
