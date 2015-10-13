@@ -116,7 +116,7 @@ namespace dolfin
         = dofmap.cell_dofs(cell->index());
 
         // Tabulate dof coordinates on cell
-        dofmap.tabulate_coordinates(coordinates, coordinate_dofs, *cell);
+        element.tabulate_dof_coordinates(coordinates, coordinate_dofs, *cell);
 
         // Map dofs into coords_to_dofs
         for (std::size_t i = 0; i < dofs.size(); ++i)
