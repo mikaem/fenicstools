@@ -87,12 +87,19 @@ namespace dolfin
   }
       
   std::map<std::vector<double>, std::vector<std::size_t>, lt_coordinate> 
-    tabulate_coordinates_to_dofs(const GenericDofMap& dofmap, 
-                                                    const Mesh& mesh)
-  {
+  tabulate_coordinates_to_dofs(const FunctionSpace& V)
+  {      
     std::map<std::vector<double>, std::vector<std::size_t>, lt_coordinate>
         coords_to_dofs(lt_coordinate(1.0e-12));
 
+    // Extract mesh, dofmap and element
+    dolfin_assert(V.dofmap());
+    dolfin_assert(V.element());
+    dolfin_assert(V.mesh());
+    const GenericDofMap& dofmap = *V.dofmap();
+    const FiniteElement& element = *V.element();
+    const Mesh& mesh = *V.mesh();
+        
     // Geometric dimension
     const std::size_t gdim = mesh.geometry().dim();
 
@@ -100,7 +107,7 @@ namespace dolfin
     boost::multi_array<double, 2> coordinates;
     std::vector<double> coordinate_dofs;
     std::vector<double> coors(gdim);
-
+        
     // Speed up the computations by only visiting (most) dofs once
     const std::size_t local_size = dofmap.ownership_range().second
                                 - dofmap.ownership_range().first;
@@ -191,7 +198,7 @@ namespace dolfin
 
     // Create map from coordinates to dofs sharing that coordinate
     const std::map<std::vector<double>, std::vector<std::size_t>, lt_coordinate>
-        coords_to_dofs = tabulate_coordinates_to_dofs(dofmap, mesh);
+        coords_to_dofs = tabulate_coordinates_to_dofs(V);
 
     // Get a map from global dofs to component number in mixed space
     std::unordered_map<std::size_t, std::size_t> dof_component_map;
@@ -310,7 +317,7 @@ namespace dolfin
 
     // Create map from coordinates to dofs sharing that coordinate
     std::map<std::vector<double>, std::vector<std::size_t>, lt_coordinate>
-        coords_to_dofs = tabulate_coordinates_to_dofs(dofmap, mesh1);
+        coords_to_dofs = tabulate_coordinates_to_dofs(V1);
 
     // Get a map from global dofs to component number in mixed space
     std::unordered_map<std::size_t, std::size_t> dof_component_map;
