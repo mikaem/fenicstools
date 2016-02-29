@@ -10,7 +10,6 @@ def mesh(request):
     mesh = [UnitSquareMesh(4, 4), UnitCubeMesh(4, 4, 4)]
     return mesh[request.param]
 
-
 def test_GaussDivergence(mesh):
     dim = mesh.topology().dim()
     expr = ["%s*x[%s]" % (dim,i) for i in range(dim)]

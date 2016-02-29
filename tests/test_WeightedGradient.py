@@ -3,7 +3,7 @@
 import pytest
 from dolfin import FunctionSpace, UnitSquareMesh, UnitCubeMesh, \
                    interpolate, Function, Expression
-from fenicstools import *
+from fenicstools import weighted_gradient_matrix
 from fixtures import *
 
 def test_WeightedGradient(V2):

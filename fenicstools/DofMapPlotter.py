@@ -5,8 +5,11 @@ __license__ = 'GNU Lesser GPL version 3 or any later version'
 
 from dofmapplotter import *
 from dolfin import MPI
-from matplotlib.pyplot import show as plt_show
-
+try:
+    from matplotlib.pyplot import show as plt_show
+except:
+    import warnings
+    warnings.warn("matplotlib not installed")
 
 class DofMapPlotter(object):
 

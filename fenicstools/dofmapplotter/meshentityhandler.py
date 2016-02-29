@@ -5,9 +5,14 @@ __license__ = 'GNU Lesser GPL version 3 or any later version'
 
 from common import dmt_number_entities
 from dofmaphandler import DofMapHandler
-from matplotlib.pyplot import get_cmap
 from dolfin import Cell, MeshEntity
 import time
+try:
+    from matplotlib.pyplot import get_cmap
+
+except:
+    import warnings
+    warnings.warn("matplotlib not installed")
 
 
 class MeshEntityHandler(DofMapHandler):

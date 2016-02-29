@@ -2,7 +2,7 @@
 
 from dolfin import FunctionSpace, UnitCubeMesh, UnitSquareMesh, interpolate, \
                    Expression, mpi_comm_self, VectorFunctionSpace
-from fenicstools import *
+from fenicstools import Probe
 from numpy import array
 import pytest
 from fixtures import *
