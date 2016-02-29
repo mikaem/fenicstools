@@ -4,6 +4,8 @@ import pytest
 import subprocess
 from fenicstools import DofMapPlotter
 from dolfin import MPI, mpi_comm_world
+import logging
+logging.getLogger("UFL").setLevel(logging.WARNING)
 
 def test_DofMapPlotter():
     '''Test logic used in DofMapPlotter by comparing its string representation
@@ -17,7 +19,7 @@ mesh = UnitSquareMesh(4, 4);
 S = FunctionSpace(mesh, 'CG', 1);
 V = VectorFunctionSpace(mesh, 'CR', 1);
 T = TensorFunctionSpace(mesh, 'DG', 0);
-M = MixedFunctionSpace([S, V, T]);
+M = FunctionSpace(mesh, MixedElement([S.ufl_element(), V.ufl_element(), T.ufl_element()]));
 M.print_dofmap()
         '''
         # Get output of FunctionSpace.print_dofmap (only print to terminal)
@@ -29,6 +31,7 @@ M.print_dofmap()
             process = subprocess.Popen(['python', '-c', command],
                                     stdout=subprocess.PIPE)
             dolfin_out, _ = process.communicate()
+
             #print dolfin_out
 
         # Run the command here to create spaces etc.

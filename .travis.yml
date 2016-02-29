@@ -1,0 +1,19 @@
+language: python
+
+python:
+    - "2.7"
+
+before_install:
+    - sudo add-apt-repository ppa:fenics-packages/fenics -y
+    - sudo apt-get update -qq
+    - sudo apt-get install -qq fenics
+    
+virtualenv:
+    system_site_packages: true
+
+install:
+    - export PYTHONPATH="/usr/lib/python2.7/dist-packages/dolfin:$PYTHONPATH"
+    - python setup.py install
+        
+script:
+    - cd $PWD/tests; py.test

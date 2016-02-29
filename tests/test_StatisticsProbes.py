@@ -65,3 +65,6 @@ def test_StatisticsProbes_vector_3D(VF3):
     if MPI.rank(mpi_comm_world()) == 0:
         assert round(p[0,0] - 2.5, 7) == 0
         assert round(p[0,4] - 0.3125, 7) == 0
+
+if __name__=="__main__":
+    test_StatisticsProbes_segregated_2D(V2(mesh_2D()))

@@ -1,6 +1,5 @@
 #include <dolfin/function/Function.h>
 #include <dolfin/function/FunctionSpace.h>
-#include <dolfin/function/SubSpace.h>
 #include <dolfin/fem/GenericDofMap.h>
 #include <dolfin/la/GenericVector.h>
 #include <dolfin/la/GenericMatrix.h>
@@ -116,12 +115,12 @@ namespace dolfin
     else if(divu_rank == 1)
     {
       // Divu is a vector with components divu_i in space DGscalar
-      Function divu_i(DGscalar);
+      Function divu_i(std::make_shared<FunctionSpace>(DGscalar));
       std::shared_ptr<GenericVector> DIVU_i = divu_i.vector();
 
       // The components divu_i are created from divergence of special
       // vector in u_i which is space CRvector
-      Function u_i(CRvector);
+      Function u_i(std::make_shared<FunctionSpace>(CRvector));
       std::shared_ptr<GenericVector> U_i = u_i.vector();
 
       // Get vectors of divu and u
