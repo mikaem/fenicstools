@@ -20,6 +20,18 @@ install:
     - cd h5py-2.6.0 && python setup.py configure --mpi && python setup.py build && python setup.py install && cd ..
     - export PYTHONPATH="$HOME/lib/python2.7/site-packages:$PYTHONPATH";
     - python setup.py install
-        
+
+after_failure:
+    - cd $HOME/.instant/
+    - for f in *; do
+        if [ -d ${f} ]; then
+          # Will not run if no directories are available
+          echo $f
+          cd $f
+          cat compile.log
+          cd ..
+        fi
+      done
+
 script:
     - cd $PWD/tests; py.test
