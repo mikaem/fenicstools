@@ -22,12 +22,8 @@ install:
     - python setup.py install
 
 after_failure:
-    - cd $HOME/.instant/
-    - for f in *; do \ 
-          if [ -d ${f} ]; then \
-            echo $f && cat $f/compile.log \
-        fi \
-      done
+    - cd $HOME/.instant/error
+    - ./print_compilelog.sh
 
 script:
     - cd $PWD/tests; py.test
