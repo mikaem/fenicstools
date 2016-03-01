@@ -38,6 +38,7 @@ def gauss_divergence(u, mesh=None):
         _mesh = u.function_space().mesh()
     else:
         _mesh = mesh
+    
     tdim = _mesh.topology().dim()
     gdim = _mesh.geometry().dim()
     assert tdim == gdim

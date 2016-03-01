@@ -6,14 +6,18 @@ __license__  = "GNU Lesser GPL version 3 or any later version"
 from Probe import *
 from numpy import cos, repeat, argmax, cumsum, sum, count_nonzero, resize, linspace, float32
 from numpy.linalg import norm as numpy_norm
+import copy, warnings
 
-import pyvtk, h5py, copy
+try:
+    import pyvtk, h5py
+except:
+    warnings.warn("Need h5py and pyvtk for StructuredGrid class to work", ImportWarning)
 
 try:
     from scitools.std import surfc
     from scitools.basics import meshgrid
 except:
-    pass
+    warnings.warn("Need scitools for surf plotting to work", ImportWarning)
 
 class StructuredGrid:
     """A Structured grid of probe points. 
