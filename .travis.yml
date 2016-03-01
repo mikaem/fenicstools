@@ -3,13 +3,13 @@ language: python
 python:
     - "2.7"
 
-sudo: false
+sudo: required
 
 before_install:
     #- sudo add-apt-repository ppa:fenics-packages/fenics -y
     #- sudo apt-get update
     #- sudo apt-get install fenics
-    #- pip install gfortran freeglut3-dev
+    - sudo apt-get install gfortran build-essential freeglut3-dev
     - export FENICS_INSTALL_BUILD_TYPE=0
     - curl -s http://fenicsproject.org/fenics-install.sh | bash
     
