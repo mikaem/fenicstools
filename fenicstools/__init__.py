@@ -29,9 +29,9 @@ except:
 try:
     from Interpolation import interpolate_nonmatching_mesh, interpolate_nonmatching_mesh_any
 except:
-    warning.warn("interpolate_nonmatching_mesh/interpolate_nonmatching_mesh_any not installed")
+    warnings.warn("interpolate_nonmatching_mesh/interpolate_nonmatching_mesh_any not installed")
 
 try:
     from DofMapPlotter import DofMapPlotter
 except:
-    warning.warn("DofMapPlotter not installed") # Probably missing dependency
+    warnings.warn("DofMapPlotter not installed") # Probably missing dependency

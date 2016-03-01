@@ -11,13 +11,13 @@ import copy, warnings
 try:
     import pyvtk, h5py
 except:
-    warnings.warn("Need h5py and pyvtk for StructuredGrid class to work", ImportWarning)
+    warnings.warn("Need h5py and pyvtk for StructuredGrid class to work")
 
 try:
     from scitools.std import surfc
     from scitools.basics import meshgrid
 except:
-    warnings.warn("Need scitools for surf plotting to work", ImportWarning)
+    warnings.warn("Need scitools for surf plotting to work")
 
 class StructuredGrid:
     """A Structured grid of probe points. 
