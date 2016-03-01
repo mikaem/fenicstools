@@ -23,7 +23,7 @@ install:
 
 after_failure:
     - cd $HOME/.instant/error
-    - ./print_compilelog.sh
+    - bash /home/travis/build/mikaem/fenicstools/tests/print_compilelog.sh
 
 script:
     - cd $PWD/tests; py.test
