@@ -3,7 +3,6 @@ __date__ = '2014-04-23'
 __copyright__ = 'Copyright (C) 2013 ' + __author__
 __license__ = 'GNU Lesser GPL version 3 or any later version'
 
-from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
 from meshentityhandler import MeshEntityHandler
 from dofhandler import DofHandler
