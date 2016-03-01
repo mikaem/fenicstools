@@ -24,9 +24,8 @@ install:
 after_failure:
     - cd $HOME/.instant/
     - for f in *; do
-        if [ -d ${f} ]; then
-          # Will not run if no directories are available
-          echo $f; cd $f; cat compile.log; cd ..
+        if [ -d ${f} ]; then \
+          echo $f && cd $f && cat compile.log && cd ..
         fi
       done
 
