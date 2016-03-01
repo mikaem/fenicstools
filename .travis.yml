@@ -7,10 +7,10 @@ before_install:
     - sudo add-apt-repository ppa:fenics-packages/fenics -y
     - sudo apt-get update -qq
     - sudo apt-get install -qq fenics
-    - sudo apt-get install openmpi-bin openmpi-dev
+    - sudo apt-get dist-upgrade
     
-#virtualenv:
-#    system_site_packages: true
+virtualenv:
+    system_site_packages: true
 
 install:
     - export PYTHONPATH="/usr/lib/python2.7/dist-packages/dolfin:$PYTHONPATH"
