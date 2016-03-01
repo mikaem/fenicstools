@@ -4,8 +4,6 @@ import pytest
 import subprocess
 from fenicstools import DofMapPlotter
 from dolfin import MPI, mpi_comm_world
-import logging
-logging.getLogger("UFL").setLevel(logging.WARNING)
 
 def test_DofMapPlotter():
     '''Test logic used in DofMapPlotter by comparing its string representation

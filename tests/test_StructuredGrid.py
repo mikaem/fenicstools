@@ -4,7 +4,7 @@ import pytest
 from dolfin import FunctionSpace, UnitCubeMesh, UnitSquareMesh, interpolate, \
                    Expression, set_log_level, MPI, mpi_comm_world, mpi_comm_self, \
                    VectorFunctionSpace
-from fenicstools import *
+from fenicstools import StructuredGrid
 from fixtures import *
 #try:
 import mpi4py

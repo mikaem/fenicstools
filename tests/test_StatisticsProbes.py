@@ -3,7 +3,7 @@
 import pytest
 from dolfin import FunctionSpace, UnitCubeMesh, UnitSquareMesh, interpolate, \
                    Expression, VectorFunctionSpace, MPI, mpi_comm_world
-from fenicstools import *
+from fenicstools import StatisticsProbes
 from numpy import array
 from fixtures import *
 
