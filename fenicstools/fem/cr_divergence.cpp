@@ -50,7 +50,7 @@ namespace dolfin
       // There is only one DG0 dof per cell
       dolfin::la_index cell_dof = cell_dofs[0];
 
-      if((first_dof <= cell_dofff) and (cell_dof < last_dof))
+      if((first_dof <= cell_dof) and (cell_dof < last_dof))
       {
         Point cell_mp = cell->midpoint();
         double cell_volume = cell->volume();
