@@ -25,6 +25,7 @@ install:
     - git clone https://github.com/hashdist/hashdist.git
     - git clone https://github.com/hashdist/hashstack.git
     - cp hashstack/tests/test.dolfin.yaml .
+    - cp hashstack/*.yaml .
     - ./hashdist/bin/hit init-home
     - export PATH=`pwd`/hashdist/bin:$PATH
     - set -o pipefail    
