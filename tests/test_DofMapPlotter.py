@@ -33,7 +33,7 @@ M.print_dofmap()
             #print dolfin_out
 
         # Run the command here to create spaces etc.
-        exec(command)
+        exec command in vars()
 
         dmp = DofMapPlotter(M)
         dmp_out = dmp.__str__()
