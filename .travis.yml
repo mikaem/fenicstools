@@ -10,7 +10,8 @@ before_install:
     #- sudo apt-get update
     #- sudo apt-get install fenics
     #- pip install gfortran freeglut3-dev
-    - curl -s http://fenicsproject.org/fenics-install.sh 0 | bash
+    - export FENICS_INSTALL_BUILD_TYPE=1
+    - curl -s http://fenicsproject.org/fenics-install.sh | bash
     
 virtualenv:
     system_site_packages: true
