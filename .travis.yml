@@ -6,9 +6,10 @@ python:
 sudo: false
 
 before_install:
-    - sudo add-apt-repository ppa:fenics-packages/fenics -y
-    - sudo apt-get update
-    - sudo apt-get install fenics
+    #- sudo add-apt-repository ppa:fenics-packages/fenics -y
+    #- sudo apt-get update
+    #- sudo apt-get install fenics
+    curl -s http://fenicsproject.org/fenics-install.sh | bash
     
 virtualenv:
     system_site_packages: true
