@@ -15,12 +15,11 @@ install:
     - export PYTHONPATH="/usr/lib/python2.7/dist-packages/dolfin:$PYTHONPATH"
     - export CC=mpicc
     - pip install -r requirements.txt
+    - locate libhdf5
     - wget https://github.com/h5py/h5py/archive/2.5.0.tar.gz
     - tar -xzvf 2.5.0.tar.gz
-    - cd h5py-2.5.0 && python setup.py install --mpi
+    - cd h5py-2.5.0 && python setup.py configure --mpi && python setup.py build && python setup.py install
     - export PYTHONPATH="$HOME/lib/python2.7/site-packages:$PYTHONPATH";
-    - which mpirun
-    - locate libhdf5
     - python setup.py install
         
 script:
