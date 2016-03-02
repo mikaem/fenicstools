@@ -24,12 +24,13 @@ install:
     #- export PYTHONPATH="$HOME/lib/python2.7/site-packages/dolfin:$PYTHONPATH"
     - git clone https://github.com/hashdist/hashdist.git
     - git clone https://github.com/hashdist/hashstack.git
-    - cp hashstack/tests/test.dolfin.yaml .
-    - cp hashstack/*.yaml .
     - ./hashdist/bin/hit init-home
     - export PATH=`pwd`/hashdist/bin:$PATH
     - set -o pipefail    
+    - cd hashstack
+    - cp tests/test.dolfin.yaml .
     - hit build -v test.dolfin.yaml
+    - cd ..
     - export CC=mpicc
     - pip install -r requirements.txt
     - wget https://github.com/h5py/h5py/archive/2.6.0.tar.gz
