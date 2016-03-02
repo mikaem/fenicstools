@@ -30,7 +30,7 @@ install:
     - wget http://www.hdfgroup.org/ftp/HDF5/current/src/hdf5-1.8.16.tar
     - export HDFHOME=$HOME/hdf5-1.8.16
     - tar -xvf hdf5-1.8.16.tar
-    - cd hdf5-1.8.16 && ./configure --enable-parallel --enable-shared && make -j4 && make install
+    - cd hdf5-1.8.16 && ./configure --enable-parallel --enable-shared && make -j4 && make install && cd ..
     - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HDFHOME/hdf5
     - export CC=mpicc
     - pip install -r requirements.txt
