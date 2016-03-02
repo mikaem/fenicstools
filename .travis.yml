@@ -3,18 +3,30 @@ language: python
 python:
     - "2.7"
 
-sudo: required
+sudo: false
 
-before_install:
-    - sudo add-apt-repository ppa:fenics-packages/fenics -y
-    - sudo apt-get update
-    - sudo apt-get install fenics
+#before_install:
+#    - sudo add-apt-repository ppa:fenics-packages/fenics -y
+#    - sudo apt-get update
+#    - sudo apt-get install fenics
   
-virtualenv:
-    system_site_packages: true
-    
+#virtualenv:
+#    system_site_packages: true
+        
 install:
-    - export PYTHONPATH="/usr/lib/python2.7/dist-packages/dolfin:$PYTHONPATH"
+    - wget https://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh;
+    - bash miniconda.sh -b -p $HOME/miniconda
+    - export PATH="$HOME/miniconda/bin:$PATH"
+    - hash -r
+    - conda config --set always_yes yes --set changeps1 no
+    - conda update -q conda
+    - conda info -a
+    - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION Cython mpi4py scipy pytest sympy
+    #- export PYTHONPATH="/usr/lib/python2.7/dist-packages/dolfin:$PYTHONPATH"
+    - conda create --name fenics27 python=2.7
+    - source activate fenics27
+    - conda install fenics --channel juanlu001    
+
     - export CC=mpicc
     - pip install -r requirements.txt
     - wget https://github.com/h5py/h5py/archive/2.6.0.tar.gz
