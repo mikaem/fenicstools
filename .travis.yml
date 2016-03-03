@@ -26,7 +26,7 @@ install:
     #- export PYTHONPATH="/usr/lib/python2.7/dist-packages/dolfin:$PYTHONPATH"
     #- conda create --name fenics27 python=2.7
     #- source activate fenics27
-    - conda install fenics --channel juanlu001
+    - conda install fenics --channel mikaem
     
     - wget http://www.hdfgroup.org/ftp/HDF5/current/src/hdf5-1.8.16.tar
     - export HDFHOME=`pwd`/hdf5-1.8.16
