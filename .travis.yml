@@ -26,7 +26,7 @@ install:
     #- export PYTHONPATH="/usr/lib/python2.7/dist-packages/dolfin:$PYTHONPATH"
     #- conda create --name fenics27 python=2.7
     #- source activate fenics27
-    - conda install fenics --channel juanlu001
+    - conda install fenics --channel mikaem
     - conda install hdf5=1.8.14 --channel mikaem
     - conda install atlas
     #- conda install -c https://conda.anaconda.org/yungyuc scotch
