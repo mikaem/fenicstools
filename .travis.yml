@@ -29,7 +29,7 @@ install:
     - conda install fenics --channel mikaem
     - conda install hdf5=1.8.14 --channel mikaem
     - conda install -c https://conda.anaconda.org/inducer libhwloc
-    #S- conda install atlas
+    ##S- conda install atlas
     ##- conda install -c https://conda.anaconda.org/yungyuc scotch
     - ldd $HOME/miniconda/lib/libdolfin.so
     
