@@ -26,18 +26,19 @@ install:
     #- export PYTHONPATH="/usr/lib/python2.7/dist-packages/dolfin:$PYTHONPATH"
     #- conda create --name fenics27 python=2.7
     #- source activate fenics27
-    - conda install fenics --channel juanlu001    
+    - conda install fenics --channel mikaem    
     
-    - wget http://www.hdfgroup.org/ftp/HDF5/current/src/hdf5-1.8.16.tar
-    - export HDFHOME=`pwd`/hdf5-1.8.16
-    - tar -xvf hdf5-1.8.16.tar
-    - cd hdf5-1.8.16 && ./configure --enable-parallel --enable-shared && make -j4 && make install && cd ..
-    - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HDFHOME/hdf5
+    #- wget http://www.hdfgroup.org/ftp/HDF5/current/src/hdf5-1.8.16.tar
+    #- export HDFHOME=`pwd`/hdf5-1.8.16
+    #- tar -xvf hdf5-1.8.16.tar
+    #- cd hdf5-1.8.16 && ./configure --enable-parallel --enable-shared && make -j4 && make install && cd ..
+    #- export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HDFHOME/hdf5
     - export CC=mpicc
     - pip install -r requirements.txt
     - wget https://github.com/h5py/h5py/archive/2.6.0.tar.gz
     - tar -xzvf 2.6.0.tar.gz
-    - cd h5py-2.6.0 && python setup.py configure --mpi --hdf5=$HDFHOME/hdf5 && python setup.py build_ext --include-dirs=$HDFHOME/hdf5/include && python setup.py install && cd ..
+    #- cd h5py-2.6.0 && python setup.py configure --mpi --hdf5=$HDFHOME/hdf5 && python setup.py build_ext --include-dirs=$HDFHOME/hdf5/include && python setup.py install && cd ..
+    - cd h5py-2.6.0 && python setup.py configure --mpi && python setup.py build_ext --include-dirs=$HDFHOME/hdf5/include && python setup.py install && cd ..
     #- export PYTHONPATH="$HOME/lib/python2.7/site-packages:$PYTHONPATH";
     - python setup.py install
 
