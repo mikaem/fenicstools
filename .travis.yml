@@ -27,7 +27,7 @@ install:
     #- conda create --name fenics27 python=2.7
     #- source activate fenics27
     - conda install fenics --channel mikaem
-    - conda install hdf5=1.18.14 --channel mikaem
+    - conda install hdf5=1.8.14 --channel mikaem
     - conda install atlas
     
     #- wget http://www.hdfgroup.org/ftp/HDF5/current/src/hdf5-1.8.16.tar
