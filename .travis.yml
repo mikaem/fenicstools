@@ -36,6 +36,7 @@ install:
     - conda install hwloc --use-local && cd ..
     - conda install h5py=2.6.0 --channel mikaem
     - conda install fenics pyvtk mpi4py --channel mikaem
+    - conda install pytest
     #- conda install hdf5=1.8.14 --channel mikaem
     #- conda install -c https://conda.anaconda.org/inducer libhwloc
     #S- conda install atlas
