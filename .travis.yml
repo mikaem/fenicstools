@@ -22,7 +22,7 @@ install:
     #- unset DYLD_LIBRARY_PATH
     - conda config --set always_yes yes 
     - conda install h5py=2.6.0 --channel mikaem
-    - conda install fenics pyvtk mpi4py --channel mikaem
+    - conda install fenics pyvtk mpi4py hwloc --channel mikaem
     - conda install pytest
     - ldd $HOME/miniconda/lib/libdolfin.so
     #- wget http://www.hdfgroup.org/ftp/HDF5/current/src/hdf5-1.8.16.tar
