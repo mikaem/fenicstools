@@ -18,8 +18,8 @@ install:
     - bash miniconda.sh -b -p $HOME/miniconda
     - export PATH="$HOME/miniconda/bin:$PATH"
     - unset PYTHONPATH
-    - unset LD_LIBRARY_PATH
-    - unset DYLD_LIBRARY_PATH
+    #- unset LD_LIBRARY_PATH
+    #- unset DYLD_LIBRARY_PATH
     - conda config --set always_yes yes 
     - conda install h5py=2.6.0 --channel mikaem
     - conda install fenics pyvtk mpi4py --channel mikaem
