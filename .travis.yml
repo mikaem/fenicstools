@@ -25,7 +25,6 @@ install:
     - conda install fenics pyvtk mpi4py --channel mikaem
     - conda install pytest
     - ldd $HOME/miniconda/lib/libdolfin.so
-    
     #- wget http://www.hdfgroup.org/ftp/HDF5/current/src/hdf5-1.8.16.tar
     #- export HDFHOME=`pwd`/hdf5-1.8.16
     #- tar -xvf hdf5-1.8.16.tar
