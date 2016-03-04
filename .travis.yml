@@ -32,8 +32,7 @@ install:
     #- source activate fenics27
     - conda install conda-build
     - git clone https://github.com/mikaem/fenics-recipes.git
-    - cd fenics-recipes && conda build hwloc && cd ..
-    - conda install hwloc
+    - cd fenics-recipes && conda build hwloc && conda install hwloc && cd ..
     - conda install fenics pyvtk h5py pytest --channel mikaem
     #- conda install hdf5=1.8.14 --channel mikaem
     #- conda install -c https://conda.anaconda.org/inducer libhwloc
