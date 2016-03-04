@@ -32,7 +32,7 @@ install:
     #- source activate fenics27
     - conda install fenics pyvtk h5py pytest --channel mikaem
     #- conda install hdf5=1.8.14 --channel mikaem
-    #- conda install -c https://conda.anaconda.org/inducer libhwloc
+    - conda install -c https://conda.anaconda.org/inducer libhwloc
     #S- conda install atlas
     ##- conda install -c https://conda.anaconda.org/yungyuc scotch
     - ldd $HOME/miniconda/lib/libdolfin.so
