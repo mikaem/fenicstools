@@ -30,6 +30,9 @@ install:
     #- export PYTHONPATH="/usr/lib/python2.7/dist-packages/dolfin:$PYTHONPATH"
     #- conda create --name fenics27 python=2.7
     #- source activate fenics27
+    - git clone https://github.com/mikaem/fenics-recipes.git
+    - cd fenics-recipes && conda build hwloc && cd ..
+    - conda install hwloc
     - conda install fenics pyvtk h5py pytest --channel mikaem
     #- conda install hdf5=1.8.14 --channel mikaem
     #- conda install -c https://conda.anaconda.org/inducer libhwloc
