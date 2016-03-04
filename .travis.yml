@@ -22,7 +22,8 @@ install:
     - unset DYLD_LIBRARY_PATH
     #- export PYTHONPATH="$HOME/miniconda/lib/python2.7/site-packages:$PYTHONPATH"
     #- hash -r
-    #- conda config --set always_yes yes --set changeps1 no
+    - conda config --set always_yes yes 
+    # --set changeps1 no
     #- conda update -q conda
     #- conda info -a
     #- conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION Cython mpi4py scipy pytest sympy
