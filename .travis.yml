@@ -20,27 +20,10 @@ install:
     - unset PYTHONPATH
     - unset LD_LIBRARY_PATH
     - unset DYLD_LIBRARY_PATH
-    #- export PYTHONPATH="$HOME/miniconda/lib/python2.7/site-packages:$PYTHONPATH"
-    #- hash -r
     - conda config --set always_yes yes 
-    # --set changeps1 no
-    #- conda update -q conda
-    #- conda info -a
-    #- conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION Cython mpi4py scipy pytest sympy
-    #- export PYTHONPATH="/usr/lib/python2.7/dist-packages/dolfin:$PYTHONPATH"
-    #- conda create --name fenics27 python=2.7
-    #- source activate fenics27
-    #- conda install conda-build
-    #- git clone https://github.com/mikaem/fenics-recipes.git
-    #- cd fenics-recipes && conda build hwloc 
-    #- conda install hwloc --use-local && cd ..
     - conda install h5py=2.6.0 --channel mikaem
     - conda install fenics pyvtk mpi4py hwloc --channel mikaem
     - conda install pytest
-    #- conda install hdf5=1.8.14 --channel mikaem
-    #- conda install -c https://conda.anaconda.org/inducer libhwloc
-    #S- conda install atlas
-    ##- conda install -c https://conda.anaconda.org/yungyuc scotch
     - ldd $HOME/miniconda/lib/libdolfin.so
     
     #- wget http://www.hdfgroup.org/ftp/HDF5/current/src/hdf5-1.8.16.tar
