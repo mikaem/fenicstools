@@ -30,7 +30,7 @@ install:
     #- export PYTHONPATH="/usr/lib/python2.7/dist-packages/dolfin:$PYTHONPATH"
     #- conda create --name fenics27 python=2.7
     #- source activate fenics27
-    - conda install conda-build
+    - conda install conda-build anaconda-client
     - git clone https://github.com/mikaem/fenics-recipes.git
     - cd fenics-recipes && conda build hwloc && conda install hwloc && cd ..
     - conda install fenics pyvtk h5py pytest --channel mikaem
