@@ -17,11 +17,14 @@ install:
     - wget https://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh;
     - bash miniconda.sh -b -p $HOME/miniconda
     - export PATH="$HOME/miniconda/bin:$PATH"
-    - export PYTHONPATH="$HOME/miniconda/lib/python2.7/site-packages:$PYTHONPATH"
-    - hash -r
-    - conda config --set always_yes yes --set changeps1 no
-    - conda update -q conda
-    - conda info -a
+    - unset PYTHONPATH
+    - unset LD_LIBRARY_PATH
+    - unset DYLD_LIBRARY_PATH
+    #- export PYTHONPATH="$HOME/miniconda/lib/python2.7/site-packages:$PYTHONPATH"
+    #- hash -r
+    #- conda config --set always_yes yes --set changeps1 no
+    #- conda update -q conda
+    #- conda info -a
     #- conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION Cython mpi4py scipy pytest sympy
     #- export PYTHONPATH="/usr/lib/python2.7/dist-packages/dolfin:$PYTHONPATH"
     #- conda create --name fenics27 python=2.7
