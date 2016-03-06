@@ -23,10 +23,10 @@ install:
     - conda config --set always_yes yes 
     - conda config --add channels mikaem/label/dev
     - conda config --add channels mikaem
-    - conda install h5py=2.6.0 --channel mikaem
-    - conda install fenics --channel mikaem/label/dev
-    - conda install pyvtk mpi4py hwloc --channel mikaem
-    - conda install pytest
+    - conda install h5py=2.6.0 fenics=1.7.0 pyvtk mpi4py hwloc pytest
+    #- conda install fenics --channel mikaem/label/dev
+    #- conda install pyvtk mpi4py hwloc --channel mikaem
+    #- conda install pytest
     - ldd $HOME/miniconda/lib/libdolfin.so
     #- wget http://www.hdfgroup.org/ftp/HDF5/current/src/hdf5-1.8.16.tar
     #- export HDFHOME=`pwd`/hdf5-1.8.16
