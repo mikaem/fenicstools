@@ -21,7 +21,7 @@ install:
     - conda config --set always_yes yes 
     - conda config --add channels mikaem/label/dev
     - conda config --add channels mikaem
-    - conda install h5py=2.6.0 fenics=1.7.0 pyvtk mpi4py hwloc pytest boost
+    - conda install h5py=2.6.0 fenics=1.7.0 pyvtk mpi4py hwloc pytest boost=1.57.0
     - python setup.py install
 
 after_failure:
