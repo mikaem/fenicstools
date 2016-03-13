@@ -7,7 +7,7 @@ from Probe import *
 from numpy import cos, repeat, argmax, cumsum, sum, count_nonzero, resize, linspace, float32
 from numpy.linalg import norm as numpy_norm
 import copy, warnings
-import pyvtk
+import h5py
 
 try:
     import pyvtk, h5py
