@@ -3,7 +3,7 @@ language: python
 python:
     - "2.7"
 
-sudo: false
+#sudo: false
 
 #before_install:
 #    - sudo add-apt-repository ppa:fenics-packages/fenics -y
@@ -21,9 +21,11 @@ addons:
       - gcc-4.9
       - g++-4.9
 
+before_install:
+  - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.9 90
+  - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.9 100
+
 install:
-    - gcc --version
-    - gcc-4.9 --version
     - wget https://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh;
     - bash miniconda.sh -b -p $HOME/miniconda
     - export PATH="$HOME/miniconda/bin:$PATH"
