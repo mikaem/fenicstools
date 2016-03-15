@@ -31,6 +31,7 @@ install:
     - conda config --add channels mikaem
     - conda install mpi4py fenics=1.7.0 pyvtk h5py=2.6.0 hwloc pytest boost=1.57.0
     - python setup.py install
+    - which gcc
 
 after_failure:
     - cd $HOME/.instant/error
