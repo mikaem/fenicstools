@@ -3,15 +3,7 @@ language: python
 python:
     - "2.7"
 
-#sudo: false
-
-#before_install:
-#    - sudo add-apt-repository ppa:fenics-packages/fenics -y
-#    - sudo apt-get update
-#    - sudo apt-get install fenics
-  
-#virtualenv:
-#    system_site_packages: true
+sudo: false
 
 install:
     - wget https://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh;
@@ -21,7 +13,7 @@ install:
     - conda config --set always_yes yes 
     - conda config --add channels mikaem/label/test
     - conda config --add channels mikaem
-    - conda install mpi4py fenics=1.7.0 pyvtk h5py=2.6.0 hwloc pytest boost=1.57.0
+    - conda install mpi4py fenics=1.7.0 pyvtk h5py=2.6.0 pytest hwloc boost=1.57.0
     - python setup.py install
 
 after_failure:
