@@ -13,30 +13,16 @@ python:
 #virtualenv:
 #    system_site_packages: true
 
-addons:
-  apt:
-    sources:
-      - ubuntu-toolchain-r-test
-    packages:
-      - gcc-4.9
-      - g++-4.9
-
-before_install:
-  - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.9 90
-  - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.9 100
-
 install:
     - wget https://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh;
     - bash miniconda.sh -b -p $HOME/miniconda
     - export PATH="$HOME/miniconda/bin:$PATH"
     - unset PYTHONPATH
     - conda config --set always_yes yes 
-    - conda config --add channels mikaem/label/dev
+    - conda config --add channels mikaem/label/test
     - conda config --add channels mikaem
-    - ln -s gcc-4.9 gcc &&  ln -s g++-4.9 g++ 
     - conda install mpi4py fenics=1.7.0 pyvtk h5py=2.6.0 hwloc pytest boost=1.57.0
     - python setup.py install
-    - gcc --version
 
 after_failure:
     - cd $HOME/.instant/error
