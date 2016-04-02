@@ -95,34 +95,33 @@ def clement_interpolant(expr, shape, mesh):
     # L2 projections of comps to indiv. cells
     projections = map(assemble, forms)
     # Interpolant will be built from entries of projections/volumes in appropriate 
-    # cells of the patch that supports basis functions of CG_1
-    # vertex -> cells of patch -> dofs of Q
-    patch_dofs = []
-    dofmap = Q.dofmap()
-    tdim = mesh.topology().dim()
-    mesh.init(0, tdim)
-    for vertex in vertices(mesh):
-        patch_dofs.append([dofmap.cell_dofs(index)[0] for index in vertex.entities(tdim)])
-    # Patch volumes can be precomputed
-    volumes = volumes.array()
-    patch_volumes = np.array([sum(volumes[dofs]) for dofs in patch_dofs])
-    # It remains to build the interpolant component by component
+    # cells of the patch that supports basis functions of CG_1. Map of the
+    # entries to single dof value is provided by averaging operator A
     V = FunctionSpace(mesh, 'CG', 1)
-    # Reordering for layout of V
-    layout = dof_to_vertex_map(V)
+    Q = FunctionSpace(mesh, 'DG', 0)
+    q = TrialFunction(Q)
+    v = TestFunction(V)
+    tdim = mesh.topology().dim()
+    K = CellVolume(mesh)
+    dX = dx(metadata={'form_compiler_parameters': {'quadrature_degree': 1,
+                                                   'quadrature_scheme': 'vertex'}})
+    A = assemble(Constant(tdim+1)*K*inner(v, q)*dX)
+    # Map to CG1. Volumes only once
+    patch_volumes = Function(V).vector()
+    A.mult(volumes, patch_volumes)
+    # Awkard poitwise inverse
+    patch_volumes.set_local(1./patch_volumes.get_local())
+    patch_volumes.apply('insert')
+
+    # Now the components
     components = []
     for projection in projections:
-        b = projection.array()
-        # Rhs for L2 patch projection
-        b = np.array([sum(b[dofs]) for dofs in patch_dofs])  
-        b /= patch_volumes   # Comple the L2 projection
-        b = b[layout]
-
-        comp = Function(V)
-        comp.vector().set_local(b)
-        comp.vector().apply('insert')
-        components.append(comp)
-
+        component = Function(V)
+        # Compute rhs for L2 patch projection
+        A.mult(projection, component.vector()) 
+        # Apply the mass matrix inverse
+        component.vector()[:] *= patch_volumes
+        components.append(component)
     # Finalize the interpolant
     # Scalar has same space as component
     if len(shape) == 0: 
@@ -247,5 +246,5 @@ if __name__ == '__main__':
         test_analyze_extract()
     else:
         mesh = sys.argv[2]
-        with_plot = len(sys.argv) == 4 and bool(sys.argv[3])
+        with_plot = len(sys.argv) == 4 and bool(int(sys.argv[3]))
         demo_ci(which, mesh=mesh, with_plot=with_plot)
