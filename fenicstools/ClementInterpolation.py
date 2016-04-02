@@ -1,10 +1,10 @@
-from itertools import izip
 from dolfin import *
+import numpy as np
 import ufl
 
 
 def clement_interpolate(expr):
-    '''Construct the Clement interpolant of expr'''
+    '''Construct the Clement interpolant of expr.'''
     # Make sure that the expression is valid
     try:
         terminals = analyze_expr(expr)
@@ -81,39 +81,45 @@ def clement_interpolant(expr, shape, mesh):
            (i.e wj is the support of vj - the basis function of CG_1 function
            space such that vj(xj) = 1). Then Qj(expr) is an L2 projection of
            expr into constant field on wj.
-        2) Set Ih(expr) = sum_j Qj(expr)vj
+        2) Set Ih(expr) = sum_j Qj(expr)vj.
     '''
-    # Scalar, Vectors, Tensors are all build from CG_1
-    V = FunctionSpace(mesh, 'CG', 1)
-    # Build patches as map dof -> cells of the the patch
-    # FIXME parallel?
-    v2d = vertex_to_dof_map(V)
-    patches = []
-
+    # 1: L2 Projections
+    Q = FunctionSpace(mesh, 'DG', 0)
+    # Scalar, Vectors, Tensors are built from components
+    q = TestFunction(Q)
+    volumes = assemble(inner(Constant(1), q)*dx)
+    # Translate expression into forms for individual components
+    if len(shape) == 0: forms = [inner(expr, q)*dx]
+    elif len(shape) == 1: forms = [inner(expr[i], q)*dx for i in range(shape[0])]
+    else: forms = [inner(expr[i, j], q)*dx for i in range(shape[0]) for j in range(shape[1])]
+    # L2 projections of comps to indiv. cells
+    projections = map(assemble, forms)
+    # Interpolant will be built from entries of projections/volumes in appropriate 
+    # cells of the patch that supports basis functions of CG_1
+    # vertex -> cells of patch -> dofs of Q
+    patch_dofs = []
+    dofmap = Q.dofmap()
     tdim = mesh.topology().dim()
     mesh.init(0, tdim)
     for vertex in vertices(mesh):
-        patches.append([Cell(mesh, index) for index in vertex.entities(tdim)])
-
-    # FIXME modif when dolfin.assemble_local is available
-    cellf = CellFunction('size_t', mesh, 0)
-    dX = Measure('dx', domain=mesh, subdomain_id=1, subdomain_data=cellf)
-
-    # Translate expression into forms for individual components of interpolant
-    if len(shape) == 0: forms = [expr*dX]
-    elif len(shape) == 1: forms = [expr[i]*dX for i in range(shape[0])]
-    else: forms = [expr[i, j]*dX for i in range(shape[0]) for j in range(shape[1])]
-    
+        patch_dofs.append([dofmap.cell_dofs(index)[0] for index in vertex.entities(tdim)])
+    # Patch volumes can be precomputed
+    volumes = volumes.array()
+    patch_volumes = np.array([sum(volumes[dofs]) for dofs in patch_dofs])
+    # It remains to build the interpolant component by component
+    V = FunctionSpace(mesh, 'CG', 1)
+    # Reordering for layout of V
+    layout = dof_to_vertex_map(V)
     components = []
-    # Build components of interpolant. Combines 1, 2
-    for form in forms:
+    for projection in projections:
+        b = projection.array()
+        # Rhs for L2 patch projection
+        b = np.array([sum(b[dofs]) for dofs in patch_dofs])  
+        b /= patch_volumes   # Comple the L2 projection
+        b = b[layout]
+
         comp = Function(V)
-        vec = comp.vector().array()
-        for dof, patch in izip(v2d, patches):
-            m = sum(cell.volume() for cell in patch)
-            b = sum(assemble_local(form, cell) for cell in patch)
-            vec[dof] = b/m
-        comp.vector().set_local(vec)
+        comp.vector().set_local(b)
         comp.vector().apply('insert')
         components.append(comp)
 
@@ -129,13 +135,6 @@ def clement_interpolant(expr, shape, mesh):
         assign(uh, components)
 
     return uh
-
-# FIXME remove when dolfin.assemble_local is available
-def assemble_local(form, cell):
-    indicator = form.subdomain_data()[form.ufl_domain()]['cell']
-    indicator.set_all(0)
-    indicator[cell] = 1
-    return assemble(form)
 
 # --- Tests
 
@@ -202,24 +201,33 @@ def demo_ci(which, mesh='uniform', with_plot=False):
     if mesh == 'uniform': mesh = UnitSquareMesh(4, 4)
     else: mesh = mshr.generate_mesh(mshr.Rectangle(Point(0, 0), Point(1, 1)), 3)
 
-    e0, h0 = None, None
-    print 'h\t\te\t\tEOC'
-    for _ in range(5):
+    e0, h0, dim0 = None, None, None
+    print 'h\t\te\t\tEOC\t\tTime\t\tlen(Ih)\t\tScaling'
+    for _ in range(8):
         U = VectorFunctionSpace(mesh, 'CG', 1)
         u = interpolate(u0, U)
 
         V = FunctionSpace(mesh, 'CG', 2)
         v = interpolate(v0, V)
-
+        
+        # How long it takes to construct the interpolant
+        timer = Timer('CI')
         uh = clement_interpolate(expr(u, v))
+        t = timer.stop()
+        # Error
         e = errornorm(exact, uh, 'L2', mesh=mesh)
 
         h = mesh.hmin()
+        dim = uh.function_space().dim()
         if e0 is not None:
-            print '\t'.join(('%3f' % arg for arg in (h, e, ln(e/e0)/ln(h/h0))))
+            rate = ln(e/e0)/ln(h/h0)
+            scale = ln(t/t0)/ln(dim/dim0)
+            print '\t'.join(('%3f' % arg for arg in (h, e, rate, t, dim, scale)))
 
-        e0, h0 = e, h
+        e0, h0, t0, dim0 = e, h, t, dim
         mesh = refine(mesh)
+    
+    print 'Final interpolant has %d dofs' % uh.function_space().dim()
 
     if with_plot and len(uh.ufl_shape) < 2:
         e = interpolate(exact, uh.function_space())
