@@ -7,8 +7,8 @@ import ufl
 GREEN = '\033[1;37;32m%s\033[0m' 
 RED = '\033[1;37;31m%s\033[0m'
 
-
 class TimerDecorator(object):
+    '''Use dolfin.Timer to get execution time.'''
     def __init__(self, name):
         self.name = GREEN % name
     def __call__(self, f):
@@ -18,6 +18,33 @@ class TimerDecorator(object):
             info(' '.join(['\t', self.name, 'done in %.2f s.' % timer.stop()]))
             return ans
         return wrapped_f
+
+
+class ClementInterpolant(object):
+    '''
+    This class implements efficient construction of Clement interpolant of an
+    UFL-built expression. Here, the Clement interpolant is a CG_1 function over 
+    mesh constructed in two steps (See Braess' Finite element book):
+        1) For each mesh vertex xj let wj the union of cells that share the vertex 
+           (i.e wj is the support of vj - the basis function of CG_1 function
+           space such that vj(xj) = 1). Then Qj(expr) is an L2 projection of
+           expr into constant field on wj.
+        2) Set Ih(expr) = sum_j Qj(expr)vj.
+    '''
+
+    def __init__(self, expr):
+        '''For efficient interpolation things are precomuputed here'''
+        # Analyze expr and raise if invalid
+        # Analyze shape and raise if expr cannot be represented
+        # Extract mesh and raise if it is not unique or missing
+        # Precompute averaging operator
+        # Precompute 'mass matrix inverse'
+        # Compute the forms
+        pass
+
+    def __call__(self):
+        '''Return the interpolant'''
+        pass
 
 
 def clement_interpolate(expr):
