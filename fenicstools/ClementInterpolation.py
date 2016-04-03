@@ -29,7 +29,7 @@ def clement_interpolate(expr):
         return None
 
     # Construct the interpolant
-    return clement_interpolant(expr, shape, mesh)
+    return construct_clement_interpolant(expr, shape, mesh)
 
 # --- Implementation
 
@@ -74,7 +74,7 @@ def extract_mesh(terminals):
     raise ValueError('Failed to extract mesh: Operands with no or different meshes')
 
 
-def clement_interpolant(expr, shape, mesh):
+def construct_clement_interpolant(expr, shape, mesh):
     '''
     Here, the Clement interpolant is a CG_1 function over msh constructed in 
     two steps (See Braess' book):
@@ -99,19 +99,17 @@ def clement_interpolant(expr, shape, mesh):
     # cells of the patch that supports basis functions of CG_1. Map of the
     # entries to single dof value is provided by averaging operator A
     V = FunctionSpace(mesh, 'CG', 1)
-    Q = FunctionSpace(mesh, 'DG', 0)
-    q = TrialFunction(Q)
-    v = TestFunction(V)
-    tdim = mesh.topology().dim()
-    K = CellVolume(mesh)
-    dX = dx(metadata={'form_compiler_parameters': {'quadrature_degree': 1,
-                                                   'quadrature_scheme': 'vertex'}})
-    A = assemble(Constant(tdim+1)*K*inner(v, q)*dX)
+    A = construct_averaging_operator(V)
+
     # Map to CG1. Volumes only once
     patch_volumes = Function(V).vector()
     A.mult(volumes, patch_volumes)
-    # Awkard poitwise inverse
-    patch_volumes.set_local(1./patch_volumes.get_local())
+    # Awkard poitwise inverse (inverting the mass matrix)
+    patch_volumes = as_backend_type(patch_volumes)
+    try:
+        patch_volumes.vec()[:] = 1./patch_volumes.vec()
+    except AttributeError:
+        patch_volumes.set_local(1./patch_volumes.get_local())
     patch_volumes.apply('insert')
 
     # Now the components
@@ -135,6 +133,33 @@ def clement_interpolant(expr, shape, mesh):
         assign(uh, components)
 
     return uh
+
+def construct_averaging_operator(V):
+    '''
+    Avaraging matrix has the following properties: It is a map from DG0 to CG1.
+    It has the same sparsity pattern as the mass matrix and in each row the nonzero
+    entries are 1. Finally let v \in DG0 then (A*v)_i is the sum of entries of v
+    that live on the support of i-th basis function of CG1.
+    '''
+    mesh = V.mesh()
+    Q = FunctionSpace(mesh, 'DG', 0)
+    q = TrialFunction(Q)
+    v = TestFunction(V)
+    tdim = mesh.topology().dim()
+    K = CellVolume(mesh)
+    dX = dx(metadata={'form_compiler_parameters': {'quadrature_degree': 1,
+                                                   'quadrature_scheme': 'vertex'}})
+    # This is a nice trick which uses properties of the vertex quadrature to get
+    # only ones as nonzero entries.
+    # NOTE: Its is designed spec for CG1. In particular does not work CG2 etc so
+    # for such spaces a difference construction is required, e.g. rewrite nnz
+    # entries of mass matric V, Q to 1. That said CG2 is the highest order where
+    # clement interpolation makes sense. With higher ordered the dofs that are
+    # interior to cell (or if there are multiple dofs par facet interior) are
+    # assigned the same value.
+    A = assemble((1./K)*Constant(tdim+1)*inner(v, q)*dX)
+
+    return A
 
 # --- Tests
 
@@ -176,6 +201,56 @@ def test_analyze_extract():
         except ValueError:
             count += 1
     assert 3 == count
+    print 'TESTS PASSED'
+
+
+def test_averaging_operator():
+    '''Test logic of averaging operator'''
+    meshes = (IntervalMesh(3, -1, 30),
+              RectangleMesh(Point(-1, -2), Point(2, 4), 4, 8),
+              BoxMesh(Point(0, 0, 0), Point(1, 2, 3), 4, 3, 2))
+   
+    for i, mesh in enumerate(meshes):
+        V = FunctionSpace(mesh, 'CG', 1)
+        A = construct_averaging_operator(V)
+        # Shape
+        Q = FunctionSpace(mesh, 'DG', 0)
+        assert (A.size(0), A.size(1)) == (V.dim(), Q.dim())
+        # All nonzero values are 1
+        entries = np.unique(A.array().flatten())
+        assert all(near(e, 1, 1E-14) for e in entries[np.abs(entries) > 1E-14])
+
+        # FIXME: Add parallel test for this. I skip it now for it is a bit too
+        # involved.
+        # The action on a vector of cell volumes should give vector volumes of
+        # supports of CG1 functions
+        q = TestFunction(Q)
+        volumes = assemble(inner(Constant(1), q)*dx)
+        # Just check that this is really the volume vector
+        va = volumes.array()
+        dofmap = Q.dofmap()
+        va0 = np.zeros_like(va)
+        for cell in cells(mesh): va0[dofmap.cell_dofs(cell.index())[0]] = cell.volume()
+        assert np.allclose(va, va0)
+        # Compute patch volumes with A
+        patch_volumes = Function(V).vector()
+        A.mult(volumes, patch_volumes)
+        
+        # The desired result: patch_volumes
+        tdim = i+1
+        mesh.init(0, tdim)
+        d2v = dof_to_vertex_map(V)
+        pv0 = np.array([sum(Cell(mesh, cell).volume()
+                            for cell in Vertex(mesh, d2v[dof]).entities(tdim))
+                        for dof in range(V.dim())])
+        patch_volumes0 = Function(V).vector()
+        patch_volumes0.set_local(pv0)
+        patch_volumes0.apply('insert')
+
+        patch_volumes -= patch_volumes0
+        assert patch_volumes.norm('linf') < 1E-14
+
+
     print 'TESTS PASSED'
 
 # --- Demo
@@ -317,6 +392,7 @@ def demo_ci_3d(which, mesh='uniform', with_plot=False):
     if not mesh == 'uniform': 
         pass
     mesh = UnitCubeMesh(1, 1, 1)
+    # NOTE: I ignore mshr mesh for it seems that the mesh can be degenerate
 
     e0, h0, dim0 = None, None, None
     print 'h\t\te\t\tEOC\t\tTime\t\tlen(Ih)\t\tScaling'
@@ -359,6 +435,7 @@ if __name__ == '__main__':
     which = int(sys.argv[1])
     if which == -1:
         test_analyze_extract()
+        test_averaging_operator()
     else:
         mesh = sys.argv[2]
         with_plot = len(sys.argv) == 4 and bool(int(sys.argv[3]))
