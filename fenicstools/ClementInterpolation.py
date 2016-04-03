@@ -4,6 +4,22 @@ import numpy as np
 import ufl
 
 
+GREEN = '\033[1;37;32m%s\033[0m' 
+RED = '\033[1;37;31m%s\033[0m'
+
+
+class TimerDecorator(object):
+    def __init__(self, name):
+        self.name = GREEN % name
+    def __call__(self, f):
+        def wrapped_f(*args, **kwargs):
+            timer = Timer(self.name)
+            ans = f(*args, **kwargs)
+            info(' '.join(['\t', self.name, 'done in %.2f s.' % timer.stop()]))
+            return ans
+        return wrapped_f
+
+
 def clement_interpolate(expr):
     '''Construct the Clement interpolant of expr.'''
     # Make sure that the expression is valid
@@ -32,7 +48,7 @@ def clement_interpolate(expr):
     return construct_clement_interpolant(expr, shape, mesh)
 
 # --- Implementation
-
+@TimerDecorator('analyze expression')
 def analyze_expr(expr):
     '''
     A valid expr for Clement interpolation is defined only in terms of pointwise
@@ -48,6 +64,7 @@ def analyze_expr(expr):
     return terminals
 
 
+@TimerDecorator('analyze shape')
 def analyze_shape(shape):
     '''
     The shape of expr that UFL can build is arbitrary but we only support
@@ -58,6 +75,7 @@ def analyze_shape(shape):
         raise ValueError('Interpolating Expr does not result rank-0, 1, 2 function')
 
 
+@TimerDecorator('extract mesh')
 def extract_mesh(terminals):
     '''Get the common mesh of operands that make the expression.'''
     pairs = []
@@ -73,7 +91,7 @@ def extract_mesh(terminals):
     # Mesh of Nones of multiple
     raise ValueError('Failed to extract mesh: Operands with no or different meshes')
 
-
+@TimerDecorator('construct Clement interpolant')
 def construct_clement_interpolant(expr, shape, mesh):
     '''
     Here, the Clement interpolant is a CG_1 function over msh constructed in 
@@ -134,6 +152,8 @@ def construct_clement_interpolant(expr, shape, mesh):
 
     return uh
 
+
+@TimerDecorator('construct averaging operator')
 def construct_averaging_operator(V):
     '''
     Avaraging matrix has the following properties: It is a map from DG0 to CG1.
@@ -281,7 +301,8 @@ def demo_ci_1d(which, mesh='uniform', with_plot=False):
         mesh.coordinates()[:] = np.sin(mesh.coordinates()[:])
 
     e0, h0, dim0 = None, None, None
-    print 'h\t\te\t\tEOC\t\tTime\t\tlen(Ih)\t\tScaling'
+    table = ['\t\t'.join(['h', 'e', RED % 'EOC', 'Time', 'len(Ih)', RED % 'Scaling'])]
+    print table[-1] 
     for _ in range(8):
         U = FunctionSpace(mesh, 'CG', 2)
         V = FunctionSpace(mesh, 'CG', 1)
@@ -301,7 +322,12 @@ def demo_ci_1d(which, mesh='uniform', with_plot=False):
         if e0 is not None:
             rate = ln(e/e0)/ln(h/h0)
             scale = ln(t/t0)/ln(dim/dim0)
-            print '\t'.join(('%3f' % arg for arg in (h, e, rate, t, dim, scale)))
+            fmt = ['%3f' % arg for arg in (h, e, t, dim)]
+            fmt.insert(2, RED % ('%3f' % rate))
+            fmt.append(RED % ('%3f' % scale))
+            table.append('\t'.join(fmt))
+            print table[-1]
+            
 
         e0, h0, t0, dim0 = e, h, t, dim
         mesh = refine(mesh)
@@ -313,7 +339,8 @@ def demo_ci_1d(which, mesh='uniform', with_plot=False):
         e.vector().axpy(-1, uh.vector())
         plot(e, title='Error')
         interactive()
-
+    
+    return table
 
 def demo_ci_2d(which, mesh='uniform', with_plot=False):
     '''Show of L2 order of convergence for some predefined test cases in 2d.'''
@@ -341,7 +368,8 @@ def demo_ci_2d(which, mesh='uniform', with_plot=False):
     else: mesh = mshr.generate_mesh(mshr.Rectangle(Point(0, 0), Point(1, 1)), 3)
 
     e0, h0, dim0 = None, None, None
-    print 'h\t\te\t\tEOC\t\tTime\t\tlen(Ih)\t\tScaling'
+    table = ['\t\t'.join(['h', 'e', RED % 'EOC', 'Time', 'len(Ih)', RED % 'Scaling'])]
+    print table[-1]
     for _ in range(8):
         U = VectorFunctionSpace(mesh, 'CG', 1)
         u = interpolate(u0, U)
@@ -361,7 +389,11 @@ def demo_ci_2d(which, mesh='uniform', with_plot=False):
         if e0 is not None:
             rate = ln(e/e0)/ln(h/h0)
             scale = ln(t/t0)/ln(dim/dim0)
-            print '\t'.join(('%3f' % arg for arg in (h, e, rate, t, dim, scale)))
+            fmt = ['%3f' % arg for arg in (h, e, t, dim)]
+            fmt.insert(2, RED % ('%3f' % rate))
+            fmt.append(RED % ('%3f' % scale))
+            table.append('\t'.join(fmt))
+            print table[-1]
 
         e0, h0, t0, dim0 = e, h, t, dim
         mesh = refine(mesh)
@@ -373,6 +405,8 @@ def demo_ci_2d(which, mesh='uniform', with_plot=False):
         e.vector().axpy(-1, uh.vector())
         plot(e, title='Error')
         interactive()
+    
+    return table
 
 
 def demo_ci_3d(which, mesh='uniform', with_plot=False):
@@ -395,7 +429,8 @@ def demo_ci_3d(which, mesh='uniform', with_plot=False):
     # NOTE: I ignore mshr mesh for it seems that the mesh can be degenerate
 
     e0, h0, dim0 = None, None, None
-    print 'h\t\te\t\tEOC\t\tTime\t\tlen(Ih)\t\tScaling'
+    table = ['\t\t'.join(['h', 'e', RED % 'EOC', 'Time', 'len(Ih)', RED % 'Scaling'])]
+    print table[-1]
     for _ in range(6):
         U = VectorFunctionSpace(mesh, 'CG', 1)
         u = interpolate(u0, U)
@@ -412,7 +447,11 @@ def demo_ci_3d(which, mesh='uniform', with_plot=False):
         if e0 is not None:
             rate = ln(e/e0)/ln(h/h0)
             scale = ln(t/t0)/ln(dim/dim0)
-            print '\t'.join(('%3f' % arg for arg in (h, e, rate, t, dim, scale)))
+            fmt = ['%3f' % arg for arg in (h, e, t, dim)]
+            fmt.insert(2, RED % ('%3f' % rate))
+            fmt.append(RED % ('%3f' % scale))
+            table.append('\t'.join(fmt))
+            print table[-1]
 
         e0, h0, t0, dim0 = e, h, t, dim
         mesh = refine(mesh)
@@ -425,18 +464,36 @@ def demo_ci_3d(which, mesh='uniform', with_plot=False):
         plot(e, title='Error')
         interactive()
 
+    return table
+
 # -----------------------------------------------------------------------------
 
 if __name__ == '__main__':
     import sys
-    usage = 'Select -1 for test or 0, 1, 2, 3 ["uniform"|"foo"] [1|0] for demos'
-    assert len(sys.argv) > 1, usage 
+    assert len(sys.argv) == 2
 
-    which = int(sys.argv[1])
-    if which == -1:
+    # Test
+    if sys.argv[1] == 'test':
         test_analyze_extract()
         test_averaging_operator()
+    # Demos
     else:
-        mesh = sys.argv[2]
-        with_plot = len(sys.argv) == 4 and bool(int(sys.argv[3]))
-        demo_ci_3d(which, mesh=mesh, with_plot=with_plot)
+        from functools import partial
+        mesh = 'uniform'
+        with_plot = False
+        spec = lambda fi: partial(fi[0], which=fi[1], mesh=mesh, with_plot=with_plot)
+        
+        demos = map(spec, 
+                    [(demo_ci_1d, i) for i in range(2)] + \
+                    [(demo_ci_2d, i) for i in range(4)] + \
+                    [(demo_ci_3d, i) for i in range(1)])
+
+        if not sys.argv[1] == 'all': demos = [demos[int(sys.argv[1])]]
+
+        for i, demo in enumerate(demos):
+            table = demo()
+            print '-'*40, 'Demo', i , '-'*40
+            for row in table: print row
+            print '-'*79
+
+    print list_timings(TimingClear_keep, [TimingType_wall, TimingType_system]) 
