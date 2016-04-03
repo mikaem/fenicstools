@@ -1,3 +1,4 @@
+from __future__ import division
 from dolfin import *
 import numpy as np
 import ufl
@@ -128,8 +129,8 @@ def clement_interpolant(expr, shape, mesh):
         uh = components.pop()
     # Other ranks
     else:
-        W = VectorFunctionSpace(mesh, 'CG', 1) if len(shape) == 1 else\
-            TensorFunctionSpace(mesh, 'CG', 1)
+        W = VectorFunctionSpace(mesh, 'CG', 1, dim=shape[0]) if len(shape) == 1 else\
+            TensorFunctionSpace(mesh, 'CG', 1, shape=shape)
         uh = Function(W)
         assign(uh, components)
 
@@ -144,7 +145,7 @@ def test_analyze_extract():
     u = TrialFunction(V)
     v = TestFunction(V)
     f = Function(V)
-    g = Expression('x[0]')
+    g = Expression('x[0]', degree=1)
     c = Constant(1)
     n = FacetNormal(mesh)
     e = Function(FunctionSpace(mesh, 'CG', 2))
@@ -179,22 +180,86 @@ def test_analyze_extract():
 
 # --- Demo
 
-def demo_ci(which, mesh='uniform', with_plot=False):
-    '''Show of L2 order of convergence for some predefined test cases.'''
+def demo_ci_1d(which, mesh='uniform', with_plot=False):
+    '''Show of L2 order of convergence for some predefined test cases in 1d.'''
+    # NOTE: The interpolant is CG1 and first order in L2 is expected if the
+    # expression is bounded in H1 norm. In the examples order 1.5 is observed on
+    # both meshes
+    from math import log as ln
+
+    u0 = 'sin(4*pi*x[0])'
+    v0 = 'x[0]*x[0]'
+
+    cases = {0: (lambda u, v: inner(Dx(u, 0), Dx(u, 0)) + v,
+                 Expression('16*pi*pi*cos(4*pi*x[0])*cos(4*pi*x[0])+x[0]*x[0]', degree=8)),
+             1: (lambda u, v: inner(as_vector((u, Dx(u, 0), Dx(Dx(u, 0), 0))),
+                                    as_vector((u, Dx(u, 0), Dx(Dx(u, 0), 0))))+\
+                              inner(Constant(0), v),
+                 Expression('''sin(4*pi*x[0])*sin(4*pi*x[0])+
+                               16*pi*pi*cos(4*pi*x[0])*cos(4*pi*x[0])+
+                               256*pi*pi*pi*pi*sin(4*pi*x[0])*sin(4*pi*x[0])''', degree=8))
+             }
+
+    expr, exact = cases[which]
+    mesh = UnitIntervalMesh(128)
+    if not mesh == 'uniform':
+        mesh.coordinates()[:] = np.sin(mesh.coordinates()[:])
+
+    e0, h0, dim0 = None, None, None
+    print 'h\t\te\t\tEOC\t\tTime\t\tlen(Ih)\t\tScaling'
+    for _ in range(8):
+        U = FunctionSpace(mesh, 'CG', 2)
+        V = FunctionSpace(mesh, 'CG', 1)
+        W = MixedFunctionSpace([U, V])
+        w = interpolate(Expression((u0, v0), degree=3), W)
+        u, v = w.split()
+        
+        # How long it takes to construct the interpolant
+        timer = Timer('CI')
+        uh = clement_interpolate(expr(u, v))
+        t = timer.stop()
+        # Error
+        e = errornorm(exact, uh, 'L2', mesh=mesh)
+
+        h = mesh.hmin()
+        dim = uh.function_space().dim()
+        if e0 is not None:
+            rate = ln(e/e0)/ln(h/h0)
+            scale = ln(t/t0)/ln(dim/dim0)
+            print '\t'.join(('%3f' % arg for arg in (h, e, rate, t, dim, scale)))
+
+        e0, h0, t0, dim0 = e, h, t, dim
+        mesh = refine(mesh)
+    
+    print 'Final interpolant has %d dofs' % uh.function_space().dim()
+
+    if with_plot and len(uh.ufl_shape) < 2:
+        e = interpolate(exact, uh.function_space())
+        e.vector().axpy(-1, uh.vector())
+        plot(e, title='Error')
+        interactive()
+
+
+def demo_ci_2d(which, mesh='uniform', with_plot=False):
+    '''Show of L2 order of convergence for some predefined test cases in 2d.'''
     # NOTE: The interpolant is CG1 and first order in L2 is expected if the
     # expression is bounded in H1 norm. In the examples order 1.5 is observed on
     # both meshes
     from math import log as ln
     import mshr
 
-    u0 = Expression(('x[0]', 'x[1]'))
-    v0 = Expression('x[0]*x[1]') 
+    u0 = Expression(('x[0]', 'x[1]'), degree=1)
+    v0 = Expression('x[0]*x[1]', degree=2) 
 
-    cases = {0: (lambda u, v: sin(inner(u, grad(v))), Expression('sin(2*x[0]*x[1])')),
-             1: (lambda u, v: outer(u, grad(v)), Expression((('x[0]*x[1]', 'x[0]*x[0]'),
-                                                             ('x[1]*x[1]', 'x[0]*x[1]')))),
-             2: (lambda u, v: div(outer(u, grad(v))), Expression(('x[1]', 'x[0]'))),
-             3: (lambda u, v: tr(outer(u, grad(v))), Expression('2*x[0]*x[1]'))}
+    cases = {0: (lambda u, v: sin(inner(u, grad(v))),
+                 Expression('sin(2*x[0]*x[1])', degree=4)),
+             1: (lambda u, v: outer(u, grad(v)),
+                 Expression((('x[0]*x[1]', 'x[0]*x[0]'),
+                            ('x[1]*x[1]', 'x[0]*x[1]')), degree=4)),
+             2: (lambda u, v: div(outer(u, grad(v))),
+                 Expression(('x[1]', 'x[0]'), degree=4)),
+             3: (lambda u, v: tr(outer(u, grad(v))),
+                 Expression('2*x[0]*x[1]', degree=4))}
 
     expr, exact = cases[which]
     if mesh == 'uniform': mesh = UnitSquareMesh(4, 4)
@@ -234,6 +299,56 @@ def demo_ci(which, mesh='uniform', with_plot=False):
         plot(e, title='Error')
         interactive()
 
+
+def demo_ci_3d(which, mesh='uniform', with_plot=False):
+    '''Show of L2 order of convergence for some predefined test cases in 3d.'''
+    # NOTE: The interpolant is CG1 and first order in L2 is expected if the
+    # expression is bounded in H1 norm. In the examples order 1.5 is observed on
+    # both meshes
+    from math import log as ln
+    import mshr
+
+    u0 = Expression(('x[0]*x[0]', 'x[1]*x[1]', 'x[2]*x[2]'), degree=2)
+
+    cases = {0: (lambda u: sin(det(grad(u))),
+                 Expression('sin(8*x[0]*x[1]*x[2])', degree=4))}
+
+    expr, exact = cases[which]
+    if not mesh == 'uniform': 
+        pass
+    mesh = UnitCubeMesh(1, 1, 1)
+
+    e0, h0, dim0 = None, None, None
+    print 'h\t\te\t\tEOC\t\tTime\t\tlen(Ih)\t\tScaling'
+    for _ in range(6):
+        U = VectorFunctionSpace(mesh, 'CG', 1)
+        u = interpolate(u0, U)
+
+        # How long it takes to construct the interpolant
+        timer = Timer('CI')
+        uh = clement_interpolate(expr(u))
+        t = timer.stop()
+        # Error
+        e = errornorm(exact, uh, 'L2', mesh=mesh)
+
+        h = mesh.hmin()
+        dim = uh.function_space().dim()
+        if e0 is not None:
+            rate = ln(e/e0)/ln(h/h0)
+            scale = ln(t/t0)/ln(dim/dim0)
+            print '\t'.join(('%3f' % arg for arg in (h, e, rate, t, dim, scale)))
+
+        e0, h0, t0, dim0 = e, h, t, dim
+        mesh = refine(mesh)
+    
+    print 'Final interpolant has %d dofs' % uh.function_space().dim()
+
+    if with_plot and len(uh.ufl_shape) < 2:
+        e = interpolate(exact, uh.function_space())
+        e.vector().axpy(-1, uh.vector())
+        plot(e, title='Error')
+        interactive()
+
 # -----------------------------------------------------------------------------
 
 if __name__ == '__main__':
@@ -247,4 +362,4 @@ if __name__ == '__main__':
     else:
         mesh = sys.argv[2]
         with_plot = len(sys.argv) == 4 and bool(int(sys.argv[3]))
-        demo_ci(which, mesh=mesh, with_plot=with_plot)
+        demo_ci_3d(which, mesh=mesh, with_plot=with_plot)
