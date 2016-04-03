@@ -1,22 +1,19 @@
-from __future__ import division
 from dolfin import *
-import numpy as np
 import ufl
 
 
-GREEN = '\033[1;37;32m%s\033[0m' 
-RED = '\033[1;37;31m%s\033[0m'
-
 class TimerDecorator(object):
     '''Use dolfin.Timer to get execution time.'''
-    def __init__(self, name, depth=1):
-        self.name = GREEN % name
+    def __init__(self, name, depth=1, verbose=True):
+        self.name = '\033[1;37;32m%s\033[0m' % name
         self.depth = depth
+        self.verbose = verbose
     def __call__(self, f):
         def wrapped_f(*args, **kwargs):
             timer = Timer(self.name)
             ans = f(*args, **kwargs)
-            info(' '.join(['\t'*self.depth, self.name, 'done in %.2f s.' % timer.stop()]))
+            if self.verbose:
+                info(' '.join(['\t'*self.depth, self.name, 'done in %.2f s.' % timer.stop()]))
             return ans
         return wrapped_f
 
@@ -37,12 +34,12 @@ class ClementInterpolant(object):
     def __init__(self, expr):
         '''For efficient interpolation things are precomuputed here'''
         # Analyze expr and raise if invalid
-        terminals = analyze_expr(expr)
+        terminals = _analyze_expr(expr)
         # Analyze shape and raise if expr cannot be represented
         shape = expr.ufl_shape
-        analyze_shape(shape)
+        _analyze_shape(shape)
         # Extract mesh from expr operands and raise if it is not unique or missing
-        mesh = extract_mesh(terminals)
+        mesh = _extract_mesh(terminals)
         # Compute things for constructing Q
         Q = FunctionSpace(mesh, 'DG', 0)
         q = TestFunction(Q)
@@ -61,7 +58,7 @@ class ClementInterpolant(object):
         # functions of CG_1. Map of the entries to single dof value is provided by 
         # averaging operator A
         V = FunctionSpace(mesh, 'CG', 1)
-        A = construct_averaging_operator(V)
+        A = _construct_averaging_operator(V)
         # Precompute 'mass matrix inverse'
         patch_volumes = Function(V).vector()
         A.mult(volumes, patch_volumes)
@@ -97,6 +94,7 @@ class ClementInterpolant(object):
             uh = components.pop()
         # Other ranks
         else:
+            mesh = V.mesh()
             W = VectorFunctionSpace(mesh, 'CG', 1, dim=shape[0]) if len(shape) == 1 else\
                 TensorFunctionSpace(mesh, 'CG', 1, shape=shape)
             uh = Function(W)
@@ -107,7 +105,7 @@ class ClementInterpolant(object):
 # Workers--
 
 @TimerDecorator('analyze expression', 2)
-def analyze_expr(expr):
+def _analyze_expr(expr):
     '''
     A valid expr for Clement interpolation is defined only in terms of pointwise
     operations on finite element functions.
@@ -123,7 +121,7 @@ def analyze_expr(expr):
 
 
 @TimerDecorator('analyze shape', 2)
-def analyze_shape(shape):
+def _analyze_shape(shape):
     '''
     The shape of expr that UFL can build is arbitrary but we only support
     scalar, rank-1 and rank-2(square) tensors.
@@ -134,7 +132,7 @@ def analyze_shape(shape):
 
 
 @TimerDecorator('extract mesh', 2)
-def extract_mesh(terminals):
+def _extract_mesh(terminals):
     '''Get the common mesh of operands that make the expression.'''
     pairs = []
     for t in terminals:
@@ -151,7 +149,7 @@ def extract_mesh(terminals):
 
 
 @TimerDecorator('construct averaging operator', 2)
-def construct_averaging_operator(V):
+def _construct_averaging_operator(V):
     '''
     Avaraging matrix has the following properties: It is a map from DG0 to CG1.
     It has the same sparsity pattern as the mass matrix and in each row the nonzero
@@ -178,6 +176,7 @@ def construct_averaging_operator(V):
 
     return A
 
+
 def clement_interpolate(expr):
     '''
     A free function for construting Clement interpolant of an expr. This is
@@ -186,321 +185,3 @@ def clement_interpolate(expr):
     '''
     ci = ClementInterpolant(expr)
     return ci()
-
-
-# --- Tests
-
-def test_analyze_extract():
-    '''Test quering expressions for Clement interpolation.'''
-    mesh = UnitSquareMesh(2, 2)
-    V = FunctionSpace(mesh, 'CG', 1)
-    u = TrialFunction(V)
-    v = TestFunction(V)
-    f = Function(V)
-    g = Expression('x[0]', degree=1)
-    c = Constant(1)
-    n = FacetNormal(mesh)
-    e = Function(FunctionSpace(mesh, 'CG', 2))
-    x = Function(FunctionSpace(UnitIntervalMesh(2), 'CG', 2))
-    
-    # Raises
-    expressions = (u, v, inner(u, v), inner(f, v), dot(grad(f), n),
-                   inner(grad(f), grad(v)), inner(f, f)*dx, inner(f, f)*ds)
-    count = 0
-    for expr in expressions:
-        try: analyze_expr(expr)
-        except ValueError:
-            count += 1
-    assert len(expressions) == count
-
-    # Pass analysis
-    expressions = (f, grad(f), inner(f, f) + inner(grad(f), grad(f)), inner(f, g)+c, 
-                   grad(f)[0], f+g, inner(f, g), c+e, inner(grad(e), grad(f)),
-                   x+e, c, g)
-    terminals = map(analyze_expr, expressions)
-
-    assert all(extract_mesh(term) for i, term in enumerate(terminals[:9]))
-
-    # Fails to extract
-    count = 0
-    for term in terminals[9:]:
-        try: extract_mesh(term)
-        except ValueError:
-            count += 1
-    assert 3 == count
-    print 'TESTS PASSED'
-
-
-def test_averaging_operator():
-    '''Test logic of averaging operator'''
-    meshes = (IntervalMesh(3, -1, 30),
-              RectangleMesh(Point(-1, -2), Point(2, 4), 4, 8),
-              BoxMesh(Point(0, 0, 0), Point(1, 2, 3), 4, 3, 2))
-   
-    for i, mesh in enumerate(meshes):
-        V = FunctionSpace(mesh, 'CG', 1)
-        A = construct_averaging_operator(V)
-        # Shape
-        Q = FunctionSpace(mesh, 'DG', 0)
-        assert (A.size(0), A.size(1)) == (V.dim(), Q.dim())
-        # All nonzero values are 1
-        entries = np.unique(A.array().flatten())
-        assert all(near(e, 1, 1E-14) for e in entries[np.abs(entries) > 1E-14])
-
-        # FIXME: Add parallel test for this. I skip it now for it is a bit too
-        # involved.
-        # The action on a vector of cell volumes should give vector volumes of
-        # supports of CG1 functions
-        q = TestFunction(Q)
-        volumes = assemble(inner(Constant(1), q)*dx)
-        # Just check that this is really the volume vector
-        va = volumes.array()
-        dofmap = Q.dofmap()
-        va0 = np.zeros_like(va)
-        for cell in cells(mesh): va0[dofmap.cell_dofs(cell.index())[0]] = cell.volume()
-        assert np.allclose(va, va0)
-        # Compute patch volumes with A
-        patch_volumes = Function(V).vector()
-        A.mult(volumes, patch_volumes)
-        
-        # The desired result: patch_volumes
-        tdim = i+1
-        mesh.init(0, tdim)
-        d2v = dof_to_vertex_map(V)
-        pv0 = np.array([sum(Cell(mesh, cell).volume()
-                            for cell in Vertex(mesh, d2v[dof]).entities(tdim))
-                        for dof in range(V.dim())])
-        patch_volumes0 = Function(V).vector()
-        patch_volumes0.set_local(pv0)
-        patch_volumes0.apply('insert')
-
-        patch_volumes -= patch_volumes0
-        assert patch_volumes.norm('linf') < 1E-14
-
-
-    print 'TESTS PASSED'
-
-# --- Demo
-
-def demo_ci_1d(which, mesh='uniform', with_plot=False):
-    '''Show of L2 order of convergence for some predefined test cases in 1d.'''
-    # NOTE: The interpolant is CG1 and first order in L2 is expected if the
-    # expression is bounded in H1 norm. In the examples order 1.5 is observed on
-    # both meshes
-    from math import log as ln
-
-    u0 = 'sin(4*pi*x[0])'
-    v0 = 'x[0]*x[0]'
-
-    cases = {0: (lambda u, v: inner(Dx(u, 0), Dx(u, 0)) + v,
-                 Expression('16*pi*pi*cos(4*pi*x[0])*cos(4*pi*x[0])+x[0]*x[0]', degree=8)),
-             1: (lambda u, v: inner(as_vector((u, Dx(u, 0), Dx(Dx(u, 0), 0))),
-                                    as_vector((u, Dx(u, 0), Dx(Dx(u, 0), 0))))+\
-                              inner(Constant(0), v),
-                 Expression('''sin(4*pi*x[0])*sin(4*pi*x[0])+
-                               16*pi*pi*cos(4*pi*x[0])*cos(4*pi*x[0])+
-                               256*pi*pi*pi*pi*sin(4*pi*x[0])*sin(4*pi*x[0])''', degree=8))
-             }
-
-    expr, exact = cases[which]
-    mesh = UnitIntervalMesh(128)
-    if not mesh == 'uniform':
-        mesh.coordinates()[:] = np.sin(mesh.coordinates()[:])
-
-    e0, h0, dim0 = None, None, None
-    table = ['\t\t'.join(['h', 'e', RED % 'EOC', 'Time', 'len(Ih)', RED % 'Scaling'])]
-    print table[-1] 
-    for _ in range(8):
-        U = FunctionSpace(mesh, 'CG', 2)
-        V = FunctionSpace(mesh, 'CG', 1)
-        W = MixedFunctionSpace([U, V])
-        w = interpolate(Expression((u0, v0), degree=3), W)
-        u, v = w.split()
-        
-        # How long it takes to construct the interpolant
-        timer = Timer('CI')
-        uh = clement_interpolate(expr(u, v))
-        t = timer.stop()
-        # Error
-        e = errornorm(exact, uh, 'L2', mesh=mesh)
-
-        h = mesh.hmin()
-        dim = uh.function_space().dim()
-        if e0 is not None:
-            rate = ln(e/e0)/ln(h/h0)
-            scale = ln(t/t0)/ln(dim/dim0)
-            fmt = ['%3f' % arg for arg in (h, e, t, dim)]
-            fmt.insert(2, RED % ('%3f' % rate))
-            fmt.append(RED % ('%3f' % scale))
-            table.append('\t'.join(fmt))
-            print table[-1]
-            
-
-        e0, h0, t0, dim0 = e, h, t, dim
-        mesh = refine(mesh)
-    
-    print 'Final interpolant has %d dofs' % uh.function_space().dim()
-
-    if with_plot and len(uh.ufl_shape) < 2:
-        e = interpolate(exact, uh.function_space())
-        e.vector().axpy(-1, uh.vector())
-        plot(e, title='Error')
-        interactive()
-    
-    return table
-
-def demo_ci_2d(which, mesh='uniform', with_plot=False):
-    '''Show of L2 order of convergence for some predefined test cases in 2d.'''
-    # NOTE: The interpolant is CG1 and first order in L2 is expected if the
-    # expression is bounded in H1 norm. In the examples order 1.5 is observed on
-    # both meshes
-    from math import log as ln
-    import mshr
-
-    u0 = Expression(('x[0]', 'x[1]'), degree=1)
-    v0 = Expression('x[0]*x[1]', degree=2) 
-
-    cases = {0: (lambda u, v: sin(inner(u, grad(v))),
-                 Expression('sin(2*x[0]*x[1])', degree=4)),
-             1: (lambda u, v: outer(u, grad(v)),
-                 Expression((('x[0]*x[1]', 'x[0]*x[0]'),
-                            ('x[1]*x[1]', 'x[0]*x[1]')), degree=4)),
-             2: (lambda u, v: div(outer(u, grad(v))),
-                 Expression(('x[1]', 'x[0]'), degree=4)),
-             3: (lambda u, v: tr(outer(u, grad(v))),
-                 Expression('2*x[0]*x[1]', degree=4))}
-
-    expr, exact = cases[which]
-    if mesh == 'uniform': mesh = UnitSquareMesh(4, 4)
-    else: mesh = mshr.generate_mesh(mshr.Rectangle(Point(0, 0), Point(1, 1)), 3)
-
-    e0, h0, dim0 = None, None, None
-    table = ['\t\t'.join(['h', 'e', RED % 'EOC', 'Time', 'len(Ih)', RED % 'Scaling'])]
-    print table[-1]
-    for _ in range(8):
-        U = VectorFunctionSpace(mesh, 'CG', 1)
-        u = interpolate(u0, U)
-
-        V = FunctionSpace(mesh, 'CG', 2)
-        v = interpolate(v0, V)
-        
-        # How long it takes to construct the interpolant
-        timer = Timer('CI')
-        uh = clement_interpolate(expr(u, v))
-        t = timer.stop()
-        # Error
-        e = errornorm(exact, uh, 'L2', mesh=mesh)
-
-        h = mesh.hmin()
-        dim = uh.function_space().dim()
-        if e0 is not None:
-            rate = ln(e/e0)/ln(h/h0)
-            scale = ln(t/t0)/ln(dim/dim0)
-            fmt = ['%3f' % arg for arg in (h, e, t, dim)]
-            fmt.insert(2, RED % ('%3f' % rate))
-            fmt.append(RED % ('%3f' % scale))
-            table.append('\t'.join(fmt))
-            print table[-1]
-
-        e0, h0, t0, dim0 = e, h, t, dim
-        mesh = refine(mesh)
-    
-    print 'Final interpolant has %d dofs' % uh.function_space().dim()
-
-    if with_plot and len(uh.ufl_shape) < 2:
-        e = interpolate(exact, uh.function_space())
-        e.vector().axpy(-1, uh.vector())
-        plot(e, title='Error')
-        interactive()
-    
-    return table
-
-
-def demo_ci_3d(which, mesh='uniform', with_plot=False):
-    '''Show of L2 order of convergence for some predefined test cases in 3d.'''
-    # NOTE: The interpolant is CG1 and first order in L2 is expected if the
-    # expression is bounded in H1 norm. In the examples order 1.5 is observed on
-    # both meshes
-    from math import log as ln
-    import mshr
-
-    u0 = Expression(('x[0]*x[0]', 'x[1]*x[1]', 'x[2]*x[2]'), degree=2)
-
-    cases = {0: (lambda u: sin(det(grad(u))),
-                 Expression('sin(8*x[0]*x[1]*x[2])', degree=4))}
-
-    expr, exact = cases[which]
-    if not mesh == 'uniform': 
-        pass
-    mesh = UnitCubeMesh(1, 1, 1)
-    # NOTE: I ignore mshr mesh for it seems that the mesh can be degenerate
-
-    e0, h0, dim0 = None, None, None
-    table = ['\t\t'.join(['h', 'e', RED % 'EOC', 'Time', 'len(Ih)', RED % 'Scaling'])]
-    print table[-1]
-    for _ in range(6):
-        U = VectorFunctionSpace(mesh, 'CG', 1)
-        u = interpolate(u0, U)
-
-        # How long it takes to construct the interpolant
-        timer = Timer('CI')
-        uh = clement_interpolate(expr(u))
-        t = timer.stop()
-        # Error
-        e = errornorm(exact, uh, 'L2', mesh=mesh)
-
-        h = mesh.hmin()
-        dim = uh.function_space().dim()
-        if e0 is not None:
-            rate = ln(e/e0)/ln(h/h0)
-            scale = ln(t/t0)/ln(dim/dim0)
-            fmt = ['%3f' % arg for arg in (h, e, t, dim)]
-            fmt.insert(2, RED % ('%3f' % rate))
-            fmt.append(RED % ('%3f' % scale))
-            table.append('\t'.join(fmt))
-            print table[-1]
-
-        e0, h0, t0, dim0 = e, h, t, dim
-        mesh = refine(mesh)
-    
-    print 'Final interpolant has %d dofs' % uh.function_space().dim()
-
-    if with_plot and len(uh.ufl_shape) < 2:
-        e = interpolate(exact, uh.function_space())
-        e.vector().axpy(-1, uh.vector())
-        plot(e, title='Error')
-        interactive()
-
-    return table
-
-# -----------------------------------------------------------------------------
-
-if __name__ == '__main__':
-    import sys
-    assert len(sys.argv) == 2
-
-    # Test
-    if sys.argv[1] == 'test':
-        test_analyze_extract()
-        test_averaging_operator()
-    # Demos
-    else:
-        from functools import partial
-        mesh = 'uniform'
-        with_plot = False
-        spec = lambda fi: partial(fi[0], which=fi[1], mesh=mesh, with_plot=with_plot)
-        
-        demos = map(spec, 
-                    [(demo_ci_1d, i) for i in range(2)] + \
-                    [(demo_ci_2d, i) for i in range(4)] + \
-                    [(demo_ci_3d, i) for i in range(1)])
-
-        if not sys.argv[1] == 'all': demos = [demos[int(sys.argv[1])]]
-
-        for i, demo in enumerate(demos):
-            table = demo()
-            print '-'*40, 'Demo', i , '-'*40
-            for row in table: print row
-            print '-'*79
-
-    print list_timings(TimingClear_keep, [TimingType_wall, TimingType_system]) 
