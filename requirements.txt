@@ -1,3 +1,0 @@
-#mpi4py
-pyvtk
-#cython
