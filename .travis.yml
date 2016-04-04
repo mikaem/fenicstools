@@ -28,4 +28,5 @@ after_failure:
 script:
     - mpirun -np 1 python ./tests/test_ClementInterpolation_parallel.py
     - mpirun -np 2 python ./tests/test_ClementInterpolation_parallel.py
+    - mpirun -np 3 python ./tests/test_ClementInterpolation_parallel.py
     - cd $PWD/tests; py.test
