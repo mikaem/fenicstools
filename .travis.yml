@@ -27,6 +27,6 @@ after_failure:
 
 script:
     - cd $PWD/tests
-    - mpirun -np 1 py.test test_ClementInterpolation.py -v
-    - mpirun -np 2 py.test test_ClementInterpolation.py -v
-    - mpirun -np 3 py.test test_ClementInterpolation.py -v
+    - mpirun -np 1 py.test -v
+    - mpirun -np 2 py.test -v
+    - mpirun -np 3 py.test -v
