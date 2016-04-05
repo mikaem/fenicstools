@@ -16,17 +16,11 @@ install:
     - conda install fenics=1.7.0 pyvtk h5py=2.6.0 pytest
     - python setup.py install
 
-branches:
-    - only:
-        - master
-        - feat-clement-interpolation
-
 after_failure:
     - cd $HOME/.instant/error
     - bash /home/travis/build/mikaem/fenicstools/tests/print_compilelog.sh
 
 script:
     - cd $PWD/tests
-    - mpirun -np 1 py.test -v
+    - py.test -v
     - mpirun -np 2 py.test -v
-    - mpirun -np 3 py.test -v
