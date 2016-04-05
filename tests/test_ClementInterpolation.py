@@ -1,4 +1,5 @@
 #!/usr/bin/env py.test
+from __future__ import division
 from dolfin import *
 import fenicstools.ClementInterpolation as ci
 import numpy as np
@@ -44,11 +45,22 @@ def test_analyze_extract():
     assert 3 == count
 
 
-def test_parallel():
+def test_parallel(mesh=None):
     '''Test if clement interpolation works in parallel'''
-    mesh = UnitSquareMesh(30, 30)
+    meshes = (IntervalMesh(100, -1, 2),
+              RectangleMesh(Point(-1, -2), Point(2, 4), 10, 10),
+              BoxMesh(Point(0, 0, 0), Point(1, 2, 3), 3, 3, 3))
+   
+    # Run across all dims
+    if mesh is None: 
+        return [test_parallel(mesh) for mesh in range(len(meshes))]
+
+    mesh = meshes[mesh]
     V = FunctionSpace(mesh, 'DG', 0)
-    lhs = interpolate(Expression('std::abs(x[0]+x[1])', degree=1), V)
+    gdim = mesh.geometry().dim()
+    lhs = interpolate(Expression('std::abs(%s)' % '+'.join(['x[%d]' % i for i in range(gdim)]),
+                                 degree=1),
+                      V)
     # Compute first the interpolant
     uh, CI = ci.clement_interpolate(lhs, True)
     uh_values = uh.vector().array()
@@ -59,14 +71,15 @@ def test_parallel():
     first, last = dofmap.ownership_range()
     v2d = vertex_to_dof_map(V)
 
-    mesh.init(0, 2)
+    tdim = mesh.topology().dim()
+    mesh.init(0, tdim)
     offproc_bA, offproc_dof = [], []
     my_incomplete_dofs = set([])
     for vertex in vertices(mesh):
         # It is alway meaning full to compute locally
-        patch_cells = [Cell(mesh, index) for index in vertex.entities(2)]
+        patch_cells = [Cell(mesh, index) for index in vertex.entities(tdim)]
         volumes = [cell.volume() for cell in patch_cells]
-        midpoints = np.array([[cell.midpoint().x(), cell.midpoint().y()]
+        midpoints = np.array([[cell.midpoint()[i] for i in range(gdim)]
                               for cell in patch_cells])
         b = sum(lhs(mp)*volume for mp, volume in zip(midpoints, volumes))
         A = sum(volumes)
@@ -129,7 +142,7 @@ def test_parallel():
 
 def test_parallel_avg(mesh=None):
     '''Test logic of averaging operator'''
-    meshes = (IntervalMesh(3, -1, 100),
+    meshes = (IntervalMesh(100, -1, 2),
               RectangleMesh(Point(-1, -2), Point(2, 4), 10, 10),
               BoxMesh(Point(0, 0, 0), Point(1, 2, 3), 3, 3, 3))
    
@@ -220,9 +233,7 @@ def test_parallel_avg(mesh=None):
         # Compare
         assert abs(patch_volumes[dof-first]-value0) < 1E-14
 
-# ----------------------------------------------------------------------------
-
 if __name__ == '__main__':
-    test_analyze_extract()
-    test_parallel_avg()
+    # test_analyze_extract()
+    # test_parallel_avg() 
     test_parallel()
