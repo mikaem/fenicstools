@@ -1,8 +1,7 @@
 #!/usr/bin/env py.test
 from dolfin import *
-import ClementInterpolation as ci
+import fenicstools.ClementInterpolation as ci
 import numpy as np
-import pytest
 
 
 def test_analyze_extract():
@@ -220,3 +219,10 @@ def test_parallel_avg(mesh=None):
         value0 = b
         # Compare
         assert abs(patch_volumes[dof-first]-value0) < 1E-14
+
+# ----------------------------------------------------------------------------
+
+if __name__ == '__main__':
+    test_analyze_extract()
+    test_parallel_avg()
+    test_parallel()

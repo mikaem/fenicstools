@@ -47,8 +47,8 @@ if __name__ == '__main__':
     # If you feel like it you can run this script in parallel.
 
     nrepeats = 20
-    ci = performance_ci(repeats=nrepeats)
     CI = performance_CI(repeats=nrepeats)
+    ci = performance_ci(repeats=nrepeats)
 
     if MPI.rank(mpi_comm_world()) == 0:
         print 'clement_interpolate', '%d repeats in %.2f s, %.4f s per repeat' % ci

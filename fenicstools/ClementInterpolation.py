@@ -105,13 +105,14 @@ class ClementInterpolant(object):
 
         return uh
 
-    def timings(self):
+    def timings(self, verbose=False):
         '''Statistics for construction and averaged time spent in __call__'''
         # In parallel we will MPI_averaged those numbers
         comm = self.V.mesh().mpi_comm().tompi4py()
         data = [self.__init_time, self.__total_call_time/self.__ncalls]
         data = comm.allreduce(data)
-        if comm.rank == 0: 
+        data = [v/comm.size for v in data]
+        if comm.rank == 0 and verbose: 
             GREEN = '\033[1;37;32m%s\033[0m'
             print '---- Clement Interpolant(stats for %d procs) ----' % comm.size
             print 'Construction time [s]              ', GREEN % ('%g' % data[0])
@@ -200,4 +201,4 @@ def clement_interpolate(expr, with_CI=False):
     instance. 
     '''
     ci = ClementInterpolant(expr)
-    return ci() if not with_CI else ci(), ci
+    return (ci(), ci) if with_CI else ci()
