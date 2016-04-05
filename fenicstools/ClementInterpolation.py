@@ -1,4 +1,5 @@
 from dolfin import *
+import time
 import ufl
 
 
@@ -22,6 +23,7 @@ class ClementInterpolant(object):
 
     def __init__(self, expr):
         '''For efficient interpolation things are precomuputed here'''
+        t0 = time.time()  
         # Analyze expr and raise if invalid
         terminals = _analyze_expr(expr)
         # Analyze shape and raise if expr cannot be represented
@@ -57,16 +59,21 @@ class ClementInterpolant(object):
         except AttributeError:
             patch_volumes.set_local(1./patch_volumes.get_local())
             patch_volumes.apply('insert')
-
+        # Record time it takes to construct and also later the average call
+        self.__init_time = time.time() - t0
+        self.__ncalls, self.__total_call_time = 0., 0.
         # Collect stuff
         self.shape, self.V, self.A, self.patch_volumes, self.forms = \
                 shape, V, A, patch_volumes, forms
+
 
     def __call__(self):
         '''Return the interpolant.'''
         shape, V, A, patch_volumes, forms = \
                 self.shape, self.V, self.A, self.patch_volumes, self.forms
-
+        
+        self.__ncalls += 1
+        t0 = time.time()
         # L2 projections of comps to indiv. cells
         projections = map(assemble, forms)
         # The interpolant (scalar, vector, tensor) is build from components
@@ -94,7 +101,23 @@ class ClementInterpolant(object):
             # So just to be sure
             uh.vector().apply('insert')
 
+        self.__total_call_time += time.time() - t0
+
         return uh
+
+    def timings(self):
+        '''Statistics for construction and averaged time spent in __call__'''
+        # In parallel we will MPI_averaged those numbers
+        comm = self.V.mesh().mpi_comm().tompi4py()
+        data = [self.__init_time, self.__total_call_time/self.__ncalls]
+        data = comm.allreduce(data)
+        if comm.rank == 0: 
+            GREEN = '\033[1;37;32m%s\033[0m'
+            print '---- Clement Interpolant(stats for %d procs) ----' % comm.size
+            print 'Construction time [s]              ', GREEN % ('%g' % data[0])
+            print 'Average time per call [s](%d calls)' % self.__ncalls,  GREEN % ('%g' % data[1])
+            print
+        return data
 
 # Workers--
 
@@ -167,11 +190,14 @@ def _construct_averaging_operator(V):
     return A
 
 
-def clement_interpolate(expr):
+def clement_interpolate(expr, with_CI=False):
     '''
     A free function for construting Clement interpolant of an expr. This is
     done by creating instance of ClementInterpolant and applying it. The
     instance is not cached. The function is intended for one time interpolation.
+    However, should you decide to do the repeated interpolation use with_CI=True
+    to return the interpolated function along with the ClementInterpolant
+    instance. 
     '''
     ci = ClementInterpolant(expr)
-    return ci()
+    return ci() if not with_CI else ci(), ci

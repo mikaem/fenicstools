@@ -26,7 +26,7 @@ after_failure:
     - bash /home/travis/build/mikaem/fenicstools/tests/print_compilelog.sh
 
 script:
-    - mpirun -np 1 python ./tests/test_ClementInterpolation_parallel.py
-    - mpirun -np 2 python ./tests/test_ClementInterpolation_parallel.py
-    - mpirun -np 3 python ./tests/test_ClementInterpolation_parallel.py
-    - cd $PWD/tests; py.test
+    - cd $PWD/tests
+    - mpirun -np 2 py.test -v
+    - mpirun -np 3 py.test -v
+     
