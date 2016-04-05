@@ -35,3 +35,8 @@ try:
     from DofMapPlotter import DofMapPlotter
 except:
     warnings.warn("DofMapPlotter not installed") # Probably missing dependency
+
+try:
+    from ClementInterpolation import clement_interpolate
+except:
+    warnings.warn("ClementInterpolation not installed")
