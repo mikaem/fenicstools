@@ -1,4 +1,5 @@
 from dolfin import *
+from mpi4py import MPI as piMPI
 import time
 import ufl
 
@@ -21,7 +22,7 @@ class ClementInterpolant(object):
                     ufl.FacetArea, ufl.FacetNormal, 
                     ufl.CellNormal, ufl.CellVolume)
 
-    def __init__(self, expr):
+    def __init__(self, expr, use_averaging=False):
         '''For efficient interpolation things are precomuputed here'''
         t0 = time.time()  
         # Analyze expr and raise if invalid
@@ -34,31 +35,40 @@ class ClementInterpolant(object):
         # Compute things for constructing Q
         Q = FunctionSpace(mesh, 'DG', 0)
         q = TestFunction(Q)
-        # L2 projections [rhs]
+        # Forms for L2 means [rhs]
         # Scalar, Vectors, Tensors are built from components
         # Translate expression into forms for individual components
         if len(shape) == 0: forms = [inner(expr, q)*dx]
         elif len(shape) == 1: forms = [inner(expr[i], q)*dx for i in range(shape[0])]
         else: forms = [inner(expr[i, j], q)*dx for i in range(shape[0]) for j in range(shape[1])]
-        # Precompute averaging operator: Interpolant will be built from entries of 
-        # projections/volumes in appropriate cells of the patch that supports basis 
-        # functions of CG_1. Map of the entries to single dof value is provided by 
-        # averaging operator A
+        # Build averaging or summation operator for computing the interpolant
+        # from L2 averaged components.
         V = FunctionSpace(mesh, 'CG', 1)
-        A = _construct_averaging_operator(V)
-        # Precompute 'mass matrix inverse [lhs]
         volumes = assemble(inner(Constant(1), q)*dx)
-        patch_volumes = Function(V).vector()
-        A.mult(volumes, patch_volumes)
+        # Ideally we compute the averaging operator, then the interpolant is
+        # simply A*component. I have not implemented this for backends other 
+        # than PETSc. 
+        is_petsc = parameters['linear_algebra_backend'] == 'PETSc'
+        # FIXME: use_averaging is here to allow comparing avg vs sum and petsc
+        if is_petsc and use_averaging:
+            A = _construct_averaging_operator(V, volumes)
+            patch_volumes = None
+        # Then we go back to the old ways
+        else:
+            warning('Using summation!')
+            A = _construct_summation_operator(V)
+            # Precompute 'mass matrix inverse [lhs]
+            patch_volumes = Function(V).vector()
+            A.mult(volumes, patch_volumes)
+            
+            if is_petsc:
+                patch_volumes = as_backend_type(patch_volumes)
+                patch_volumes.vec().reciprocal()
+            else:
+                # Awkard poitwise inverse (inverting the mass matrix)
+                patch_volumes.set_local(1./patch_volumes.get_local())
+                patch_volumes.apply('insert')
 
-        patch_volumes = as_backend_type(patch_volumes)
-        try:
-            patch_volumes.vec().reciprocal()
-        # Awkard poitwise inverse (inverting the mass matrix) in case the
-        # backend is not PETSc which has the nice reciprocal function
-        except AttributeError:
-            patch_volumes.set_local(1./patch_volumes.get_local())
-            patch_volumes.apply('insert')
         # Record time it takes to construct and also later the average call
         self.__init_time = time.time() - t0
         self.__ncalls, self.__total_call_time = 0., 0.
@@ -74,17 +84,21 @@ class ClementInterpolant(object):
         
         self.__ncalls += 1
         t0 = time.time()
-        # L2 projections of comps to indiv. cells
-        projections = map(assemble, forms)
+        # L2 means of comps to indiv. cells
+        means = map(assemble, forms)
         # The interpolant (scalar, vector, tensor) is build from components
         components = []
-        for projection in projections:
+        for mean in means:
             component = Function(V)
-            # Compute rhs for L2 patch projection
-            A.mult(projection, component.vector()) 
-            # Apply the mass matrix inverse
-            component.vector()[:] *= patch_volumes  # hould apply insert
+            # In case we have the averaging operator A*component computed the
+            # final value. Otherwise it is rhs for L2 patch projection
+            A.mult(mean, component.vector()) 
+            # And to complete the interpolant we need to apply the precomputed
+            # mass matrix inverse
+            if not self.patch_volumes is None: component.vector()[:] *= patch_volumes
+
             components.append(component)
+
         # Finalize the interpolant
         # Scalar has same space as component
         if len(shape) == 0: 
@@ -105,19 +119,27 @@ class ClementInterpolant(object):
 
         return uh
 
-    def timings(self, verbose=False):
-        '''Statistics for construction and averaged time spent in __call__'''
-        # In parallel we will MPI_averaged those numbers
+    def timings(self, mpiop='avg', verbose=False):
+        '''
+        Statistics for construction and ncalls averaged time spent in __call__.
+        In parallel these values are MPI.OP-ed reduced on all processes. 
+        '''
         comm = self.V.mesh().mpi_comm().tompi4py()
         data = [self.__init_time, self.__total_call_time/self.__ncalls]
-        data = comm.allreduce(data)
-        data = [v/comm.size for v in data]
+
+        ops = {'sum': piMPI.SUM, 'avg': piMPI.SUM, 'min': piMPI.MIN, 'max': piMPI.MAX}
+        op = ops[mpiop]
+        
+        data = comm.allreduce(data, op=op)
+        if mpiop == 'avg': data = [v/comm.size for v in data]
+
         if comm.rank == 0 and verbose: 
             GREEN = '\033[1;37;32m%s\033[0m'
             print '---- Clement Interpolant(stats for %d procs) ----' % comm.size
             print 'Construction time [s]              ', GREEN % ('%g' % data[0])
-            print 'Average time per call [s](%d calls)' % self.__ncalls,  GREEN % ('%g' % data[1])
+            print 'MPI-%s time per call [s](%d calls)' % (mpiop, self.__ncalls),  GREEN % ('%g' % data[1])
             print
+
         return data
 
 # Workers--
@@ -163,9 +185,9 @@ def _extract_mesh(terminals):
     raise ValueError('Failed to extract mesh: Operands with no or different meshes')
 
 
-def _construct_averaging_operator(V):
+def _construct_summation_operator(V):
     '''
-    Avaraging matrix has the following properties: It is a map from DG0 to CG1.
+    Summation matrix has the following properties: It is a map from DG0 to CG1.
     It has the same sparsity pattern as the mass matrix and in each row the nonzero
     entries are 1. Finally let v \in DG0 then (A*v)_i is the sum of entries of v
     that live on the support of i-th basis function of CG1.
@@ -187,6 +209,28 @@ def _construct_averaging_operator(V):
     # interior to cell (or if there are multiple dofs par facet interior) are
     # assigned the same value.
     A = assemble((1./K)*Constant(tdim+1)*inner(v, q)*dX)
+
+    return A
+
+
+def _construct_averaging_operator(V, c):
+    '''
+    If b is the vectors of L^2 means of some u on the mesh, v is the vector
+    of cell volumes and A is the summation oparotr then x=(Ab)/(Ac) are the
+    coefficient of Clement interpolant of u in V. Here we construct an operator
+    B such that x = Bb.
+    '''
+    assert parameters['linear_algebra_backend'] == 'PETSc'
+    
+    A = _construct_summation_operator(V)
+    Ac = Function(V).vector()
+    A.mult(c, Ac)
+    # 1/Ac
+    Ac = as_backend_type(Ac).vec()
+    Ac.reciprocal()     
+    # Scale rows
+    mat = as_backend_type(A).mat()
+    mat.diagonalScale(L=Ac)
 
     return A
 
