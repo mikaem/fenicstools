@@ -2,6 +2,7 @@
 from __future__ import division
 from dolfin import *
 import fenicstools.ClementInterpolation as ci
+import pytest
 import numpy as np
 
 

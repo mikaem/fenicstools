@@ -40,3 +40,8 @@ try:
     from ClementInterpolation import clement_interpolate
 except:
     warnings.warn("ClementInterpolation not installed")
+
+try:
+    from LagrangianParticles import LagrangianParticles
+except:
+    warnings.warn("Lagrangian particles not installed")
