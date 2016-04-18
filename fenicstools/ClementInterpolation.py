@@ -22,7 +22,7 @@ class ClementInterpolant(object):
                     ufl.FacetArea, ufl.FacetNormal, 
                     ufl.CellNormal, ufl.CellVolume)
 
-    def __init__(self, expr, use_averaging=False):
+    def __init__(self, expr, use_averaging=True):
         '''For efficient interpolation things are precomuputed here'''
         t0 = time.time()  
         # Analyze expr and raise if invalid
