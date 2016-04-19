@@ -131,7 +131,7 @@ class DemoCI3d(CIDriver):
             u = interpolate(u0, U)
             return u, None
 
-        nrefines = 6
+        nrefines = 8
 
         return u0, v0, cases, mesh, get_uv, nrefines
 
