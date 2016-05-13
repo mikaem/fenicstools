@@ -27,7 +27,7 @@ Licence
 fenicstools is licensed under the GNU GPL, version 3 or (at your option) any
 later version.
 
-fenicstools is Copyright (2013-2015) by the authors.
+fenicstools is Copyright (2013-2016) by the authors.
 
 Documentation
 -------------
