@@ -80,7 +80,7 @@ def test_StructuredGrid_Slice(s0, V, dirpath):
     sl2 = StructuredGrid(V, restart=dirpath+'dump_scalar.h5')
 
     assert sl.dL[0] == sl2.dL[0] and sl.dL[1] == sl2.dL[1] 
-    assert sl.arithmetic_mean() == sl2.arithmetic_mean()
+    assert abs(sl.arithmetic_mean() - sl2.arithmetic_mean()) < 1e-14
 
 
 # then vector
