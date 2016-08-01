@@ -24,8 +24,10 @@ def Vv(mesh):
     return VectorFunctionSpace(mesh, 'CG', 1)
 
 @pytest.fixture(scope="module")
-def W(V, Vv):
-    return V * Vv
+def W(mesh):
+    e1 = FiniteElement("CG", mesh.ufl_cell(), 1)
+    e2 = VectorElement("CG", mesh.ufl_cell(), 1)
+    return FunctionSpace(mesh, e1 * e2)
 
 @pytest.fixture(scope="module")
 def s0(V):
