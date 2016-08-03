@@ -13,7 +13,7 @@ def test_analyze_extract():
     u = TrialFunction(V)
     v = TestFunction(V)
     f = Function(V)
-    g = Expression('x[0]**c', degree=1)
+    g = Expression('x[0]', degree=1)
     c = Constant(1)
     n = FacetNormal(mesh)
     e = Function(FunctionSpace(mesh, 'CG', 2))
