@@ -2,7 +2,7 @@ fenicstools
 ===========
 
 [![Build Status](https://travis-ci.org/mikaem/fenicstools.svg?branch=master)](https://travis-ci.org/mikaem/fenicstools)
-
+[![CircleCI](https://circleci.com/gh/mikaem/fenicstools/tree/master.svg?style=svg)](https://circleci.com/gh/mikaem/fenicstools/tree/master)
 
 <p align="center">
   <img src="https://www.dropbox.com/s/bol4v776lhugiyn/csf_sliced2.png?dl=1" alt="CSF flow"/>
