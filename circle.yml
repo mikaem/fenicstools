@@ -21,7 +21,7 @@ dependencies:
     - conda config --add channels mikaem/label/travis
     - conda config --add channels mikaem
     - conda update -q conda
-    - conda install -y fenics=${FENICS_VERSION} pyvtk h5py=2.6.0 pytest
+    - conda install -y fenics=${FENICS_VERSION} pyvtk h5py=2.6.0 pytest conda-build
 
 test:
   override:
