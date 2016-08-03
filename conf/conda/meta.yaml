@@ -1,0 +1,38 @@
+package:
+  name: fenicstools
+  version: {{FENICS_VERSION}}
+  
+source:
+  git_url: ../../
+
+build:
+  number: 1
+
+requirements:
+  build:
+    - fenics =={{FENICS_VERSION}}
+    - pyvtk
+    - h5py ==2.6.0
+
+  run:
+    - fenics =={{FENICS_VERSION}}
+    - pyvtk
+    - mpi4py
+    - h5py ==2.6.0
+    - ffc =={{FENICS_VERSION}}
+
+test:
+    requires:
+      - fenics =={{FENICS_VERSION}}
+      - pyvtk
+      - h5py ==2.6.0
+      - pytest
+    
+    imports:
+      - dolfin
+      - fenicstools
+
+      
+# See
+# http://docs.continuum.io/conda/build.html for
+# more information about meta.yaml
