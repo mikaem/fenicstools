@@ -2,15 +2,16 @@ from fenicstools import DofMapPlotter
 from dolfin import *
 
 # Define domain and create mesh
-domain2d = Rectangle(-1, -1, 1, 1)
-domain3d = Box(-1, -1, -1, 1, 1, 1)
-mesh = Mesh(domain2d, 3)
+#domain2d = Rectangle(Point(-1, -1), Point(1, 1))
+#domain3d = Box(-1, -1, -1, 1, 1, 1)
+mesh = RectangleMesh(Point(0, 0), Point(1, 1), 10, 10)
+#mesh = Mesh(domain2d, 3)
 
 # Create function space
-V = VectorFunctionSpace(mesh, 'CR', 1)
-Q = FunctionSpace(mesh, 'DG', 0)
-S = FunctionSpace(mesh, 'DG', 1)
-M = MixedFunctionSpace([V, Q, S])
+V = VectorElement('CR', mesh.ufl_cell(), 1)
+Q = FiniteElement('DG', mesh.ufl_cell(), 0)
+S = FiniteElement('DG', mesh.ufl_cell(), 1)
+M = FunctionSpace(mesh, MixedElement([V, Q, S]))
 
 # Create DofMapPlotter for the space
 dmp = DofMapPlotter(M)
