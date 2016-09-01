@@ -83,9 +83,9 @@ def signature(V):
 def extract_dofmaps(V):
     '''Extract dofmap of every component of V.
     S, space whose signature is 0 has only one dofmap
-    V, space whose signature is 3, has 3 dofmaps
+    V, space whose signature is 3, has 3 dofmaps V.sub(i), i = 0, 1, 2
     M=[S, V], space whose signature is [0, 3] has four dofmaps, M.sub(0) and
-    (M.sub(0)).sub(i), i = 0, 1, 2'''
+    (M.sub(1)).sub(i), i = 0, 1, 2'''
     signature_ = signature(V)
     if type(signature_) is int:
         if signature_ == 0:
@@ -99,6 +99,26 @@ def extract_dofmaps(V):
                 Vi = V.sub(i)
                 dofmaps += extract_dofmaps(Vi)
             return dofmaps
+            
+def extract_elements(V):
+    '''Extract element of every component of V.
+    S, space whose signature is 0 has only one element
+    V, space whose signature is 3, has 3 elements V.sub(i).element(), i = 0, 1, 2
+    M=[S, V], space whose signature is [0, 3] has four dofmaps, M.sub(0) and
+    (M.element().sub(1)).sub(i), i = 0, 1, 2'''
+    signature_ = signature(V)
+    if type(signature_) is int:
+        if signature_ == 0:
+            return [V.element()]
+        else:
+            return [V.sub(i).element() for i in range(signature_)]
+    else:
+        if type(signature_) is list:
+            elements = []
+            for i in range(len(signature_)):
+                Vi = V.sub(i)
+                elements += extract_elements(Vi)
+            return elements
 
 
 def flat_signature(V):

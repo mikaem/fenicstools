@@ -4,9 +4,10 @@ __copyright__ = 'Copyright (C) 2013 ' + __author__
 __license__ = 'GNU Lesser GPL version 3 or any later version'
 
 from dofmaphandler import DofMapHandler
-from common import x_to_str, subspace_index
+from common import x_to_str, subspace_index, extract_elements
 from dolfin import Cell
 import time
+import numpy as np
 
 
 class DofHandler(DofMapHandler):
@@ -30,6 +31,7 @@ class DofHandler(DofMapHandler):
         # See which dofmaps will be plotted and which subspaces are used
         self.component = options['component']
         self.dofmaps = dmp.dofmaps
+        self.elements = dmp.elements
         self.bounds = dmp.bounds
         # Get ownership range. To be used with global ordering scheme
         self.first_dof = self.dofmaps[0].ownership_range()[0]
@@ -137,11 +139,12 @@ class DofHandler(DofMapHandler):
         changed_labels = []
         order = self.order
         first_dof = self.first_dof
-
+        
         for i, j in enumerate(self.component):
             cell = Cell(self.mesh, cell_index)
             dofs = self.dofmaps[j].cell_dofs(cell_index)
-            dofs_x = self.dofmaps[j].tabulate_coordinates(cell)
+            dofs_x = np.zeros((len(dofs), self.mesh.topology().dim()))
+            self.elements[j].tabulate_dof_coordinates(cell, dofs_x)
             for dof, dof_x in zip(dofs, dofs_x):
                 dof_x_str = x_to_str(dof_x)
                 # Append to change if dof position was not plotted yet
