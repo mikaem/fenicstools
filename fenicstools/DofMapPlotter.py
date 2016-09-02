@@ -36,6 +36,7 @@ class DofMapPlotter(object):
         # Analyze the space V
         self.V = V
         self.dofmaps = extract_dofmaps(self.V)
+        self.elements = extract_elements(self.V)
         self.bounds = bounds(self.V)
 
         # Rewrite default plotting options if they are provided by user
