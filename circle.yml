@@ -19,7 +19,7 @@ dependencies:
       fi
     - conda config --set always_yes yes 
     - conda config --add channels mikaem/label/docker-conda-gcc
-    - conda update -q conda
+    - conda config --add channels mikaem
 
 test:
   override:
