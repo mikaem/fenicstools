@@ -19,10 +19,10 @@ dependencies:
       fi
     - conda config --set always_yes yes 
     - conda config --add channels conda-forge
-    - conda config --add channels mikaem
     - conda config --add channels mikaem/label/docker-conda-gcc
+    - conda config --add channels mikaem
     - conda update -q conda
-    - conda install -y fenics=2016.2.dev pyvtk h5py-parallel pytest conda-build
+    - conda install -y fenics=2016.2.dev pyvtk h5py-parallel pytest conda-build=1.21.4
 
 test:
   override:
