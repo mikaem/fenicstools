@@ -9,8 +9,6 @@ class Quadratic2D(Expression):
     def eval(self, values, x):
         values[0] = x[0]*x[0] + x[1]*x[1] + 1.0
 
-    def 
-
 class Quadratic3D(Expression):
     def eval(self, values, x):
         values[0] = x[0]*x[0] + x[1]*x[1] + x[2]*x[2] + 1.0
