@@ -22,7 +22,7 @@ def test_LP():
     lp.add_particles(particle_positions, properties_d={'dt position': particle_positions_dt})
 
     # Time travel
-    u = interpolate(Expression(('-(x[1]-0.5)', '(x[0]-0.5)')), V)
+    u = interpolate(Expression(('-(x[1]-0.5)', '(x[0]-0.5)'), degree=1), V)
     lp.step(u, dt=dt)
 
     e = [np.linalg.norm(p.position-p.properties['dt position']) < 1E-15 for p in lp]

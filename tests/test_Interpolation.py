@@ -36,7 +36,7 @@ def test_functional2D():
     assert round(assemble(u0*dx) - assemble(u1*dx), 10) == 0
 
     f = Expression(("x[0]*x[0] + x[1]*x[1]", 
-                    "x[0]*x[0] + x[1]*x[1] + 1"))
+                    "x[0]*x[0] + x[1]*x[1] + 1"), degree=2)
     V0 = FunctionSpace(mesh0, "Nedelec 1st kind H(curl)", 2)
     u0 = interpolate(f, V0)
 
@@ -69,7 +69,7 @@ def test_functional3D():
 
     f = Expression(("x[0]*x[0] + x[1]*x[1]", 
                     "x[0]*x[0] + x[1]*x[1] + 1",
-                    "x[0]*x[0] + x[1]*x[1] + 2"))
+                    "x[0]*x[0] + x[1]*x[1] + 2"), degree=2)
     V0 = FunctionSpace(mesh0, "Nedelec 1st kind H(curl)", 2)
     u0 = interpolate(f, V0)
 

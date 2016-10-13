@@ -8,7 +8,7 @@ from fixtures import *
 
 def test_WeightedGradient(V2):
     expr = "+".join(["%d*x[%d]" % (i+1,i) for i in range(2)])
-    u = interpolate(Expression(expr), V2)
+    u = interpolate(Expression(expr, degree=3), V2)
     du = Function(V2)
     wx = weighted_gradient_matrix(V2.mesh(), tuple(range(2)))
     for i in range(2):

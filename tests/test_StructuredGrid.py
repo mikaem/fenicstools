@@ -31,22 +31,22 @@ def W(mesh):
 
 @pytest.fixture(scope="module")
 def s0(V):
-    s0 = interpolate(Expression('exp(-(pow(x[0]-0.5, 2) + pow(x[1]-0.5, 2) + pow(x[2]-0.5, 2)))'), V)
+    s0 = interpolate(Expression('exp(-(pow(x[0]-0.5, 2) + pow(x[1]-0.5, 2) + pow(x[2]-0.5, 2)))', degree=3), V)
     return s0
 
 @pytest.fixture(scope="module")
 def v0(Vv):
-    return interpolate(Expression(('x[0]', '2*x[1]', '3*x[2]')), Vv)
+    return interpolate(Expression(('x[0]', '2*x[1]', '3*x[2]'), degree=1), Vv)
 
 @pytest.fixture(scope="module")
 def w0(W):
-    return interpolate(Expression(('x[0]', 'x[1]', 'x[2]', 'x[1]*x[2]')), W)
+    return interpolate(Expression(('x[0]', 'x[1]', 'x[2]', 'x[1]*x[2]'), degree=2), W)
 
 @pytest.fixture(scope="module")
 def x(V):
-    x0 = interpolate(Expression('x[0]'), V)
-    y0 = interpolate(Expression('x[1]'), V)
-    z0 = interpolate(Expression('x[2]'), V)
+    x0 = interpolate(Expression('x[0]', degree=1), V)
+    y0 = interpolate(Expression('x[1]', degree=1), V)
+    z0 = interpolate(Expression('x[2]', degree=1), V)
     return [x0, y0, z0]
 
 
