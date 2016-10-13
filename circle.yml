@@ -18,6 +18,8 @@ dependencies:
           echo "Using cached Miniconda install";
       fi
     - conda config --set always_yes yes 
+    - conda config --add channels conda-forge
+    - conda config --add channels mikaem
     - conda config --add channels mikaem/label/docker-conda-gcc
     - conda update -q conda
     - conda install -y fenics=2016.2.dev pyvtk h5py-parallel pytest conda-build
