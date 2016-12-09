@@ -10,7 +10,7 @@ dependencies:
 
   override:
     - >
-      if [[ ! -d ${CONDA_ROOT/mik} ]]; then
+      if [[ false ]]; then
           echo "Installing Miniconda...";
           wget --quiet https://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh &&
           bash Miniconda-latest-Linux-x86_64.sh -b -p ${CONDA_ROOT};
