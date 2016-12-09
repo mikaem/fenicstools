@@ -3,7 +3,7 @@ language: python
 python:
     - "2.7"
 
-sudo: true
+sudo: false
 
 install:
     - wget https://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh;
@@ -27,4 +27,3 @@ after_failure:
 script:
     - cd $PWD/tests
     - py.test -v
-    - mpirun -np 2 py.test -v
