@@ -1,16 +1,16 @@
 machine:
   environment:
-    CONDA_ROOT: /home/ubuntu/miniconda
+    CONDA_ROOT: /home/ubuntu/miniconda2
     PATH: ${CONDA_ROOT}/bin:${PATH}
     FENICS_VERSION: 2017.1.dev
 
 dependencies:
   cache_directories:
-    - /home/ubuntu/miniconda
+    - ${CONDA_ROOT}
 
   override:
     - >
-      if [[ false ]]; then
+      if [[ ! -d ${CONDA_ROOT} ]]; then
           echo "Installing Miniconda...";
           wget --quiet https://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh &&
           bash Miniconda-latest-Linux-x86_64.sh -b -p ${CONDA_ROOT};
