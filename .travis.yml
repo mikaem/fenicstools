@@ -21,9 +21,9 @@ install:
     - unset PYTHONPATH
     - conda config --set always_yes yes
     - conda config --set show_channel_urls true
-    #- conda config --add channels mikaem
-    #- conda config --add channels conda-forge
-    #- conda config --add channels mikaem/label/docker-conda-gcc
+    - conda config --add channels mikaem
+    - conda config --add channels conda-forge
+    - conda config --add channels mikaem/label/docker-conda-gcc
     - conda update -q conda
     - conda install -c conda-forge conda-forge-build-setup
     - source run_conda_forge_build_setup
@@ -36,7 +36,7 @@ after_failure:
     - bash /home/travis/build/mikaem/fenicstools/tests/print_compilelog.sh
 
 script:
-    - conda build -c mikaem -c conda-forge -c mikaem/label/docker-conda-gcc conf/conda
+    - conda build conf/conda
     #- cd $PWD/tests
     #- py.test -v
 
