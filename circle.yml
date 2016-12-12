@@ -22,7 +22,7 @@ dependencies:
     - conda config --add channels conda-forge
     - conda config --add channels mikaem/label/docker-conda-gcc
     - conda update -q conda
-    - conda install -y fenics=${FENICS_VERSION} pyvtk h5py-parallel pytest conda-build=1.21.4
+    - conda install -y openblas fenics=${FENICS_VERSION} pyvtk h5py-parallel pytest conda-build=1.21.4
 
 test:
   override:
