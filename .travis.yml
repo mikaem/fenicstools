@@ -15,14 +15,16 @@ install:
     - conda config --add channels conda-forge
     - conda config --add channels mikaem/label/docker-conda-gcc
     - conda update -q conda
-    - conda create --name fenics fenics=2017.1.dev pyvtk h5py-parallel pytest conda-build=1.21.4
+    - conda install conda-build=1.21.4
+    - conda create --name fenics fenics=2017.1.dev pyvtk h5py-parallel pytest
     - source activate fenics
-    - python setup.py install
+    #- python setup.py install
 
 after_failure:
     - cd $HOME/.instant/error
     - bash /home/travis/build/mikaem/fenicstools/tests/print_compilelog.sh
 
 script:
-    - cd $PWD/tests
-    - py.test -v
+    - conda build conf/conda
+    #- cd $PWD/tests
+    #- py.test -v
