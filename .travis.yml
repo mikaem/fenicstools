@@ -36,6 +36,9 @@ after_failure:
     - bash /home/travis/build/mikaem/fenicstools/tests/print_compilelog.sh
 
 script:
+    - cd /home/travis/miniconda2/envs/_test/lib/python2.7/site-packages/dolfin/cpp
+    - python -c "import _common"
+    - cd $SRC_DIR
     - conda build conf/conda
     #- cd $PWD/tests
     #- py.test -v
