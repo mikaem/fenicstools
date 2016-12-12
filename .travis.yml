@@ -27,6 +27,9 @@ install:
     - conda update -q conda
     - conda install -c conda-forge conda-forge-build-setup
     - source run_conda_forge_build_setup
+    - cd fenicstools
+    - git fetch --unshallow
+    - cd ..
 
 after_failure:
     - cd $HOME/.instant/error
