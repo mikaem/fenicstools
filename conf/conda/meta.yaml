@@ -29,9 +29,9 @@ test:
       - h5py-parallel
       - pytest
 
-    imports:
-      - dolfin
-      - fenicstools
+    #imports:
+      #- dolfin
+      #- fenicstools
 
 
 # See
