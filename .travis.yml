@@ -3,10 +3,11 @@ language: python
 sudo: false
 
 env:
-  - FENICS_VERSION="2017.1.dev"
 
   matrix:
     - CONDA_PY=27
+  global:
+    - FENICS_VERSION="2017.1.dev"
 
   #global:
     ## Generated with "anaconda auth --create --name travis-2016"
