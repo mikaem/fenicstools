@@ -1,4 +1,7 @@
-language: python
+language: generic
+
+os: osx
+osx_image: xcode7.3
 
 sudo: false
 
@@ -21,9 +24,8 @@ install:
     - unset PYTHONPATH
     - conda config --set always_yes yes
     - conda config --set show_channel_urls true
-    - conda config --add channels mikaem
     - conda config --add channels conda-forge
-    - conda config --add channels mikaem/label/docker-conda-gcc
+    - conda config --add channels mikaem/label/OSX-10.11-clang
     - conda update -q conda
     - conda install -c conda-forge conda-forge-build-setup
     - source run_conda_forge_build_setup
