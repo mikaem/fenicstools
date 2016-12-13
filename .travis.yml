@@ -44,7 +44,8 @@ install:
 after_failure:
     #- cd $HOME/.instant/error
     #- bash $SRC_DIR/tests/print_compilelog.sh
-    - find $CONDA_DEFAULT_ENV/.cache/instant/error -name '*.log' -print -exec cat '{}' \;
+    - find ${INSTANT_CACHE_DIR}/error -name '*.log' -print -exec cat '{}' \;
+    - find ${SRC_DIR}/instant/error -name '*.log' -print -exec cat '{}' \;
 
 script:
     - conda build conf/conda

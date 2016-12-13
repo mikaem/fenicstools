@@ -12,21 +12,16 @@ requirements:
   build:
     - fenics =={{FENICS_VERSION}}
     - pyvtk
-    - openblas
     - h5py-parallel
 
   run:
     - fenics =={{FENICS_VERSION}}
     - pyvtk
     - mpi4py
-    - openblas
     - h5py-parallel
 
 test:
     requires:
-      - fenics =={{FENICS_VERSION}}
-      - pyvtk
-      - h5py-parallel
       - pytest
 
     imports:
