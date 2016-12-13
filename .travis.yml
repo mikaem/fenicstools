@@ -14,7 +14,7 @@ env:
     - FENICS_VERSION="2017.1.dev"
     ## Generated with "anaconda auth --create --name token"
     ## then "travis encrypt BINSTAR_TOKEN=<token> --repo mikaem/fenicstools"
-    - secure: "udZ1qoZVRTqP31vm92m/Zox3vhXPBQPaoRSJZ1AtCwNdJdRgQXSNFu9i7nYP721DS+XuFRGN2j/KPNCPDXb8eEc9XlDaFcFvt5DsFi/8Ee2dGZpSey1JyppgdJXYqNIdV3y8E/YjnnZWyfcX6/ycHqAD4xMNVDE7QKGO09EcU8A="
+    - secure: "rx8kxwECd8PeCOw9pmitRoD3A5dElbNsobetZ1qGrohOk8Ev7gM0s8MgJXi7AIeaue7JZr92+BiaEAQ23tiBn/sp1hfAamQH197QXJTEg5D1GvFYvhbMeaB+KEZM0GaO1R4HzSBbBbN+/AlwcBYRuPgEIQ9NkVlojSdzI+p65Tk="
 
 before_install:
     # Remove homebrew.
