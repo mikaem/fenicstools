@@ -9,14 +9,12 @@ env:
 
   matrix:
     - CONDA_PY=27
+
   global:
     - FENICS_VERSION="2017.1.dev"
-    - INSTANT_CACHE_DIR="${SRC_DIR}/instant"
-
-  #global:
-    ## Generated with "anaconda auth --create --name travis-2016"
-    ## then "travis encrypt BINSTAR_TOKEN=<token> --repo spectralDNS/mpiFFT4py"
-    #- secure: "q3eTmrI7PV+uTbE7uqvwEZxBUvDSv5eCPc4iAxr6RcTccIDfAAFmyS0oasWQWpiNQuHyOUPhwK8T04AMwDcH6TUWsLcrrKuc2BNFibRzvytPyRBqkODqsGcog8/xABbCQ95Vr3xAogU2/a3BSFm9cOgjI1O/kwQlLSPQKVCv45XoOyItkQ4FMmARbLF9fU6hC7VGADQtirkhRi5DqwHZffla00JfH8rBbEmRkK5/1SOv0b9/Kb1/mboVljmDkN46kbFQqn1/o8eA9xlyS7LOZBPqbuojWR96GTub1FMo5kVabkFxqdm5MrMCkhSpFN8TF4xCX0ICDtEdIpKOhGFpZ1jd86Ir3qWeG9TioOzi+3oz1RK8Qu6PTMtgM8v764jru5Xsze4BstSllDdL4GYztjGoua0HL3TAmYaWAqCE39XXyoCJ82X34Ntz3+j/N+UHeg4KRpZoKYf4ZDp0mGzFappCE6uWLzGVkU9t3opd2uLK/h+3eDKjvV26ABDpPLtGUct1p+MuU9MPsFvFaXRLIoBpjl4MBiC895VE3e6xgipKpwmgW80aAyJRlPwOAU3H8SSRTlFeQeAMannFgtN8tMkFf4FE61hy283orCegsRcudp06z+cgtjsAxgDBLKvJTd2Uqqn7lF7/4Lg0quu85YwbmhAI8HlQTVOj/A+zq8o="
+    ## Generated with "anaconda auth --create --name token"
+    ## then "travis encrypt BINSTAR_TOKEN=<token> --repo mikaem/fenicstools"
+    secure: "udZ1qoZVRTqP31vm92m/Zox3vhXPBQPaoRSJZ1AtCwNdJdRgQXSNFu9i7nYP721DS+XuFRGN2j/KPNCPDXb8eEc9XlDaFcFvt5DsFi/8Ee2dGZpSey1JyppgdJXYqNIdV3y8E/YjnnZWyfcX6/ycHqAD4xMNVDE7QKGO09EcU8A="
 
 before_install:
     # Remove homebrew.
@@ -48,5 +46,5 @@ after_failure:
 script:
     - conda build conf/conda
 
-#after_success:
-    #- upload_or_check_non_existence ./conf/conda mikaem --channel main || exit 1
+after_success:
+    - upload_or_check_non_existence ./conf/conda mikaem --channel main || exit 1
