@@ -6,7 +6,7 @@ machine:
 
 dependencies:
   cache_directories:
-    - ${CONDA_ROOT}
+    - /home/ubuntu/miniconda2
 
   override:
     - >
