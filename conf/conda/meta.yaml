@@ -24,11 +24,6 @@ test:
     requires:
       - pytest
 
-    imports:
-      - dolfin
-      - fenicstools
-
-
 # See
 # http://docs.continuum.io/conda/build.html for
 # more information about meta.yaml

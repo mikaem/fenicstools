@@ -43,14 +43,10 @@ install:
     - cd ..
 
 after_failure:
-    #- cd $HOME/.instant/error
-    #- bash $SRC_DIR/tests/print_compilelog.sh
     - find ${INSTANT_CACHE_DIR}/error -name '*.log' -print -exec cat '{}' \;
 
 script:
     - conda build conf/conda
-    #- cd $PWD/tests
-    #- py.test -v
 
 #after_success:
     #- upload_or_check_non_existence ./conf/conda mikaem --channel main || exit 1
