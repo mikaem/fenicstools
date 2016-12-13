@@ -43,7 +43,8 @@ install:
 
 after_failure:
     - cd $HOME/.instant/error
-    - bash /home/travis/build/mikaem/fenicstools/tests/print_compilelog.sh
+    #- bash $SRC_DIR/tests/print_compilelog.sh
+    - find $HOME/.instant/error -name '*.log' -print -exec cat '{}' \;
 
 script:
     - conda build conf/conda
