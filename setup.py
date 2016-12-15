@@ -3,8 +3,8 @@
 from distutils.core import setup
 
 # Version number
-major = 2016
-minor = 2
+major = 2017
+minor = 1
 
 setup(name = "fenicstools",
       version = "%d.%d" % (major, minor),

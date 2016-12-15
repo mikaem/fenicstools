@@ -2,7 +2,7 @@ machine:
   environment:
     CONDA_ROOT: /home/ubuntu/miniconda2
     PATH: ${CONDA_ROOT}/bin:${PATH}
-    FENICS_VERSION: 2016.2
+    FENICS_VERSION: 2017.1.dev
 
 dependencies:
   cache_directories:
