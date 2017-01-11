@@ -6,7 +6,7 @@ source:
   git_url: ../../
 
 build:
-  number: 1
+  number: 2
 
 requirements:
   build:
@@ -21,8 +21,11 @@ requirements:
     - h5py-parallel
 
 test:
-    requires:
-      - pytest
+  source_files:
+    - tests
+
+  requires:
+    - pytest
 
 # See
 # http://docs.continuum.io/conda/build.html for
