@@ -5,8 +5,8 @@ machine:
     FENICS_VERSION: 2017.1.dev
 
 dependencies:
-  cache_directories:
-    - /home/ubuntu/miniconda2
+  #cache_directories:
+    #- /home/ubuntu/miniconda2
 
   override:
     - >

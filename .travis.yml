@@ -12,8 +12,6 @@ env:
 
   global:
     - FENICS_VERSION="2017.1.dev"
-    ## Generated with "anaconda auth --create --name token"
-    ## then "travis encrypt BINSTAR_TOKEN=<token> --repo mikaem/fenicstools"
     - secure: "JsygfPwIhsn6ywcqP2PjQhwNMZ3KuNuEo0Zyyg1r0KlyVHuGBnt/HUoLjtTGa7mjCvvevCko+BbAaTjTLB56OiqXiteMoutAQMSEjbM9tKV9TwgTcCtPSwMq8Kk1QqiAHRgQW/VWWlEUlIrXE3Zas34+3i1+xvA1ovettMrlFU4="
 
 before_install:
