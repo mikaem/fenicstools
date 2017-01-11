@@ -5,8 +5,8 @@ machine:
     FENICS_VERSION: 2017.1.dev
 
 dependencies:
-  #cache_directories:
-    #- /home/ubuntu/miniconda2
+  cache_directories:
+    - /home/ubuntu/miniconda2
 
   override:
     - >
@@ -22,6 +22,7 @@ dependencies:
     - conda config --add channels conda-forge
     - conda config --add channels mikaem/label/docker-conda-gcc
     - conda update -q conda
+    - conda install -n root --yes --quiet conda-build
     - conda install --yes --quiet conda-forge-build-setup
     - source run_conda_forge_build_setup
 
