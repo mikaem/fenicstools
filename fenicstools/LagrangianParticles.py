@@ -51,9 +51,11 @@ class CellWithParticles(df.Cell):
         # Make the cell aware of its neighbors; neighbor cells are cells
         # connected to this one by vertices
         tdim = mesh.topology().dim()
+
+        neighbors = sum((vertex.entities(tdim).tolist() for vertex in df.vertices(self)), [])
+        neighbors = set(neighbors) - set([cell_id])   # Remove self
         self.neighbors = map(lambda neighbor_index: df.Cell(mesh, neighbor_index), 
-                             sum((vertex.entities(tdim).tolist()
-                                  for vertex in df.vertices(self)), []))
+                             neighbors)
 
     def __add__(self, particle):
         'Add single particle to cell.'
