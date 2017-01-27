@@ -3,12 +3,11 @@
 from distutils.core import setup
 
 # Version number
-major = 1
-minor = 6
-maintenance = 0
+major = 2017
+minor = 1
 
 setup(name = "fenicstools",
-      version = "%d.%d.%d" % (major, minor, maintenance),
+      version = "%d.%d" % (major, minor),
       description = "fenicstools -- tools for postprocessing in FEniCS programs",
       author = "Mikael Mortensen",
       author_email = "mikaem@math.uio.no",

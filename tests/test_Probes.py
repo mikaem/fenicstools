@@ -9,7 +9,7 @@ from fixtures import *
 
 
 def test_Probes_functionspace_2D(V2):
-    u0 = interpolate(Expression('x[0]'), V2)
+    u0 = interpolate(Expression('x[0]', degree=1), V2)
     x = array([[0.5, 0.5], [0.4, 0.4], [0.3, 0.3]])
 
     p = Probes(x.flatten(), V2)
@@ -31,7 +31,7 @@ def test_Probes_functionspace_2D(V2):
 
 
 def test_Probes_functionspace_3D(V3, dirpath):
-    u0 = interpolate(Expression('x[0]'), V3)
+    u0 = interpolate(Expression('x[0]', degree=1), V3)
     x = array([[0.5, 0.5, 0.5], [0.4, 0.4, 0.4], [0.3, 0.3, 0.3]])
     
     p = Probes(x.flatten(), V3)
@@ -66,7 +66,7 @@ def test_Probes_functionspace_3D(V3, dirpath):
 
 
 def test_Probes_vectorfunctionspace_2D(VF2, dirpath):
-    u0 = interpolate(Expression(('x[0]', 'x[1]')), VF2)
+    u0 = interpolate(Expression(('x[0]', 'x[1]'), degree=1), VF2)
     x = array([[0.5, 0.5], [0.4, 0.4], [0.3, 0.3]])
     
     p = Probes(x.flatten(), VF2)
@@ -101,7 +101,7 @@ def test_Probes_vectorfunctionspace_2D(VF2, dirpath):
 
 
 def test_Probes_vectorfunctionspace_3D(VF3, dirpath):
-    u0 = interpolate(Expression(('x[0]', 'x[1]', 'x[2]')), VF3)
+    u0 = interpolate(Expression(('x[0]', 'x[1]', 'x[2]'), degree=1), VF3)
     x = array([[0.5, 0.5, 0.5], [0.4, 0.4, 0.4], [0.3, 0.3, 0.3]])
     
     p = Probes(x.flatten(), VF3)

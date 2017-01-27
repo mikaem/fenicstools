@@ -24,27 +24,29 @@ def Vv(mesh):
     return VectorFunctionSpace(mesh, 'CG', 1)
 
 @pytest.fixture(scope="module")
-def W(V, Vv):
-    return V * Vv
+def W(mesh):
+    e1 = FiniteElement("CG", mesh.ufl_cell(), 1)
+    e2 = VectorElement("CG", mesh.ufl_cell(), 1)
+    return FunctionSpace(mesh, e1 * e2)
 
 @pytest.fixture(scope="module")
 def s0(V):
-    s0 = interpolate(Expression('exp(-(pow(x[0]-0.5, 2) + pow(x[1]-0.5, 2) + pow(x[2]-0.5, 2)))'), V)
+    s0 = interpolate(Expression('exp(-(pow(x[0]-0.5, 2) + pow(x[1]-0.5, 2) + pow(x[2]-0.5, 2)))', degree=3), V)
     return s0
 
 @pytest.fixture(scope="module")
 def v0(Vv):
-    return interpolate(Expression(('x[0]', '2*x[1]', '3*x[2]')), Vv)
+    return interpolate(Expression(('x[0]', '2*x[1]', '3*x[2]'), degree=1), Vv)
 
 @pytest.fixture(scope="module")
 def w0(W):
-    return interpolate(Expression(('x[0]', 'x[1]', 'x[2]', 'x[1]*x[2]')), W)
+    return interpolate(Expression(('x[0]', 'x[1]', 'x[2]', 'x[1]*x[2]'), degree=2), W)
 
 @pytest.fixture(scope="module")
 def x(V):
-    x0 = interpolate(Expression('x[0]'), V)
-    y0 = interpolate(Expression('x[1]'), V)
-    z0 = interpolate(Expression('x[2]'), V)
+    x0 = interpolate(Expression('x[0]', degree=1), V)
+    y0 = interpolate(Expression('x[1]', degree=1), V)
+    z0 = interpolate(Expression('x[2]', degree=1), V)
     return [x0, y0, z0]
 
 
@@ -80,7 +82,7 @@ def test_StructuredGrid_Slice(s0, V, dirpath):
     sl2 = StructuredGrid(V, restart=dirpath+'dump_scalar.h5')
 
     assert sl.dL[0] == sl2.dL[0] and sl.dL[1] == sl2.dL[1] 
-    assert sl.arithmetic_mean() == sl2.arithmetic_mean()
+    assert abs(sl.arithmetic_mean() - sl2.arithmetic_mean()) < 1e-14
 
 
 # then vector

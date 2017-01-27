@@ -14,7 +14,7 @@ def test_GaussDivergence(mesh):
     dim = mesh.topology().dim()
     expr = ["%s*x[%s]" % (dim,i) for i in range(dim)]
     V = VectorFunctionSpace(mesh, 'CG', 1)
-    u = interpolate(Expression(tuple(expr)), V)
+    u = interpolate(Expression(tuple(expr), degree=1), V)
     divu = gauss_divergence(u)
     DIVU = divu.vector().array()
     point_0 = all(abs(DIVU - dim*dim) < 1E-13)

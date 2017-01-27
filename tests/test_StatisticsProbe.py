@@ -8,8 +8,8 @@ from numpy import array
 from fixtures import *
 
 def test_StatisticsProbe_segregated_2D(V2_self):
-    u0 = interpolate(Expression('x[0]'), V2_self)
-    v0 = interpolate(Expression('x[1]'), V2_self)
+    u0 = interpolate(Expression('x[0]', degree=1), V2_self)
+    v0 = interpolate(Expression('x[1]', degree=1), V2_self)
     x = array([0.5, 0.25])
 
     p = StatisticsProbe(x, V2_self, True)    
@@ -33,9 +33,9 @@ def test_StatisticsProbe_segregated_2D(V2_self):
 
 
 def test_StatisticsProbe_segregated_3D(V3_self):
-    u0 = interpolate(Expression('x[0]'), V3_self)
-    v0 = interpolate(Expression('x[1]'), V3_self)
-    w0 = interpolate(Expression('x[2]'), V3_self)
+    u0 = interpolate(Expression('x[0]', degree=1), V3_self)
+    v0 = interpolate(Expression('x[1]', degree=1), V3_self)
+    w0 = interpolate(Expression('x[2]', degree=1), V3_self)
     x = array([0.5, 0.25, 0.25])
 
     p = StatisticsProbe(x, V3_self, True)    
@@ -63,7 +63,7 @@ def test_StatisticsProbe_segregated_3D(V3_self):
 
 
 def test_StatisticsProbe_vector_2D(VF2_self):
-    u0 = interpolate(Expression(('x[0]', 'x[1]')), VF2_self)
+    u0 = interpolate(Expression(('x[0]', 'x[1]'), degree=1), VF2_self)
     x = array([0.5, 0.25])
 
     p = StatisticsProbe(x, VF2_self)    
@@ -88,7 +88,7 @@ def test_StatisticsProbe_vector_2D(VF2_self):
 
 
 def test_StatisticsProbe_vector_3D(VF3_self):
-    u0 = interpolate(Expression(('x[0]', 'x[1]', 'x[2]')), VF3_self)
+    u0 = interpolate(Expression(('x[0]', 'x[1]', 'x[2]'), degree=1), VF3_self)
     x = array([0.5, 0.25, 0.25])
 
     p = StatisticsProbe(x, VF3_self)

@@ -161,7 +161,7 @@ def _analyze_expr(expr):
     # Elliminate forms
     if isinstance(expr, ufl.Form): raise ValueError('Expression is a form')
     # Elliminate expressions build from Trial/Test functions, FacetNormals 
-    terminals = [t for t in ufl.algorithms.traverse_unique_terminals(expr)]
+    terminals = [t for t in ufl.corealg.traversal.traverse_unique_terminals(expr)]
     if any(isinstance(t, ClementInterpolant.black_listed) for t in terminals):
         raise ValueError('Invalid expression (e.g. has Arguments as operand)')
     # At this point the expression is valid

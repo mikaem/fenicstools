@@ -1,6 +1,7 @@
 from fenicstools.LagrangianParticles import LagrangianParticles, RandomCircle
 import matplotlib.pyplot as plt
-from dolfin import VectorFunctionSpace, interpolate, RectangleMesh, Expression, Point
+#from dolfin import VectorFunctionSpace, interpolate, RectangleMesh, Expression, Point
+from dolfin import *
 from mpi4py import MPI as pyMPI
 
 comm = pyMPI.COMM_WORLD

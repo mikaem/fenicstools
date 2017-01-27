@@ -17,7 +17,7 @@ try:
     from scitools.std import surfc
     from scitools.basics import meshgrid
 except:
-    warnings.warn("Need scitools for surf plotting to work")
+    warnings.warn("Errors occurred attempting to import surfc and meshgrid from scitools")
 
 class StructuredGrid:
     """A Structured grid of probe points. 
