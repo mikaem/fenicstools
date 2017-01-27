@@ -7,8 +7,8 @@ from fenicstools import weighted_gradient_matrix
 set_log_level(WARNING)
 
 # Exact u and its divergence
-u_ = Expression(('sin(pi*x[0])', 'cos(2*pi*x[1])'))
-divu_ = Expression('pi*(cos(pi*x[0]) - 2*sin(2*pi*x[1]))')
+u_ = Expression(('sin(pi*x[0])', 'cos(2*pi*x[1])'), degree=3)
+divu_ = Expression('pi*(cos(pi*x[0]) - 2*sin(2*pi*x[1]))', degree=3)
 
 
 def divergence_test(mesh):

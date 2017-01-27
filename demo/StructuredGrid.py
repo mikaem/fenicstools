@@ -8,12 +8,12 @@ V = FunctionSpace(mesh, 'CG', 1)
 Vv = VectorFunctionSpace(mesh, 'CG', 1)
 W = V * Vv
 
-x0 = interpolate(Expression('x[0]'), V)
-y0 = interpolate(Expression('x[1]'), V)
-z0 = interpolate(Expression('x[2]'), V)
-s0 = interpolate(Expression('exp(-(pow(x[0]-0.5, 2)+ pow(x[1]-0.5, 2) + pow(x[2]-0.5, 2)))'), V)
-v0 = interpolate(Expression(('x[0]', '2*x[1]', '3*x[2]')), Vv)
-w0 = interpolate(Expression(('x[0]', 'x[1]', 'x[2]', 'x[1]*x[2]')), W)
+x0 = interpolate(Expression('x[0]', degree=1), V)
+y0 = interpolate(Expression('x[1]', degree=1), V)
+z0 = interpolate(Expression('x[2]', degree=1), V)
+s0 = interpolate(Expression('exp(-(pow(x[0]-0.5, 2)+ pow(x[1]-0.5, 2) + pow(x[2]-0.5, 2)))', degree=3), V)
+v0 = interpolate(Expression(('x[0]', '2*x[1]', '3*x[2]'), degree=3), Vv)
+w0 = interpolate(Expression(('x[0]', 'x[1]', 'x[2]', 'x[1]*x[2]'), degree=3), W)
 
 # 3D box
 origin = [0.25, 0.25, 0.25]               # origin of box

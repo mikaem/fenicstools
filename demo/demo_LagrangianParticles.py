@@ -11,7 +11,8 @@ particle_positions = RandomCircle([0.5, 0.75], 0.15).generate([100, 100])
 
 V = VectorFunctionSpace(mesh, 'CG', 1)
 u = interpolate(Expression(("-2*sin(pi*x[1])*cos(pi*x[1])*pow(sin(pi*x[0]),2)",
-                            "2*sin(pi*x[0])*cos(pi*x[0])*pow(sin(pi*x[1]),2)")),
+                            "2*sin(pi*x[0])*cos(pi*x[0])*pow(sin(pi*x[1]),2)"),
+                            degree=3),
                 V)
 lp = LagrangianParticles(V)
 lp.add_particles(particle_positions)

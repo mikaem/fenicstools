@@ -11,7 +11,7 @@ Vv = VectorFunctionSpace(mesh, 'CG', 1)
 W = V * Vv
 
 # Just create some random data to be used for probing
-w0 = interpolate(Expression(('x[0]', 'x[1]', 'x[2]', 'x[1]*x[2]')), W)
+w0 = interpolate(Expression(('x[0]', 'x[1]', 'x[2]', 'x[1]*x[2]'), degree=2), W)
 
 x = array([[1.5, 0.5, 0.5], [0.2, 0.3, 0.4], [0.8, 0.9, 1.0]])
 p = Probes(x.flatten(), W)
