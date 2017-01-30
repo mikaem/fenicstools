@@ -41,23 +41,23 @@ meshes = [UnitCubeMesh(N, N, N) for N in [4, 8, 16,  32]]
 # Create a dicionary of u, divu for u scalar, vector, tensor
 test_cases = {}
 
-u_exact = Expression('sin(pi*x[0]*x[1]*x[2])')
+u_exact = Expression('sin(pi*x[0]*x[1]*x[2])', degree=3)
 divu_exact = Expression(('cos(pi*x[0]*x[1]*x[2])*pi*x[1]*x[2]',
                          'cos(pi*x[0]*x[1]*x[2])*pi*x[0]*x[2]',
-                         'cos(pi*x[0]*x[1]*x[2])*pi*x[0]*x[1]'))
+                         'cos(pi*x[0]*x[1]*x[2])*pi*x[0]*x[1]'), degree=3)
 test_cases['Scalar'] = [u_exact, divu_exact]
 
-u_exact = Expression(('sin(pi*x[0])', 'cos(2*pi*x[1])', 'exp(-x[2]*x[2])'))
+u_exact = Expression(('sin(pi*x[0])', 'cos(2*pi*x[1])', 'exp(-x[2]*x[2])'), degree=3)
 divu_exact = \
-    Expression('pi*(cos(pi*x[0]) - 2*sin(2*pi*x[1])) - 2*exp(-x[2]*x[2])*x[2]')
+    Expression('pi*(cos(pi*x[0]) - 2*sin(2*pi*x[1])) - 2*exp(-x[2]*x[2])*x[2]', degree=3)
 test_cases['Vector'] = [u_exact, divu_exact]
 
 u_exact = Expression((('sin(pi*x[0]*x[1]*x[2])', '0', '0'),
                       ('0', 'sin(pi*x[0]*x[1]*x[2])', '0'),
-                      ('0', '0', 'sin(pi*x[0]*x[1]*x[2])')))
+                      ('0', '0', 'sin(pi*x[0]*x[1]*x[2])')), degree=3)
 divu_exact = Expression(('cos(pi*x[0]*x[1]*x[2])*pi*x[1]*x[2]',
                          'cos(pi*x[0]*x[1]*x[2])*pi*x[0]*x[2]',
-                         'cos(pi*x[0]*x[1]*x[2])*pi*x[0]*x[1]'))
+                         'cos(pi*x[0]*x[1]*x[2])*pi*x[0]*x[1]'), degree=3)
 
 test_cases['Tensor'] = [u_exact, divu_exact]
 

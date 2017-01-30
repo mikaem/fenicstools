@@ -4,11 +4,11 @@ from math import log as ln
 
 set_log_level(WARNING)
 
-f = Expression('5*pi*pi*sin(2*pi*x[0])*sin(pi*x[1])')
+f = Expression('5*pi*pi*sin(2*pi*x[0])*sin(pi*x[1])', degree=3)
 
-u_ = Expression('sin(2*pi*x[0])*sin(pi*x[1])')
+u_ = Expression('sin(2*pi*x[0])*sin(pi*x[1])', degree=3)
 gradu_ = Expression(('cos(2*pi*x[0])*2*pi*sin(pi*x[1])',\
-                     'sin(2*pi*x[0])*cos(pi*x[1])*pi'))
+                     'sin(2*pi*x[0])*cos(pi*x[1])*pi'), degree=3)
 
 def foo(mesh, family, degree):
     V = FunctionSpace(mesh, family, 1)

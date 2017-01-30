@@ -8,7 +8,7 @@ x[:] = (x - 0.5) * 2
 x[:] = 0.5*(cos(pi*(x-1.) / 2.) + 1.)
 
 CG = VectorFunctionSpace(mesh, 'CG', 1)
-u = interpolate(Expression(("sin(2*pi*x[0])", "cos(3*pi*x[1])")), CG)
+u = interpolate(Expression(("sin(2*pi*x[0])", "cos(3*pi*x[1])"), degree=3), CG)
 
 C = divergence_matrix(mesh)
 DG = FunctionSpace(mesh, 'DG', 0)

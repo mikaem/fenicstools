@@ -41,6 +41,9 @@ class ClementInterpolant(object):
         if len(shape) == 0: forms = [inner(expr, q)*dx]
         elif len(shape) == 1: forms = [inner(expr[i], q)*dx for i in range(shape[0])]
         else: forms = [inner(expr[i, j], q)*dx for i in range(shape[0]) for j in range(shape[1])]
+        self.cstr_times = [time.time() - t0]
+
+        t0 = time.time()
         # Build averaging or summation operator for computing the interpolant
         # from L2 averaged components.
         V = FunctionSpace(mesh, 'CG', 1)
@@ -68,13 +71,20 @@ class ClementInterpolant(object):
                 # Awkard poitwise inverse (inverting the mass matrix)
                 patch_volumes.set_local(1./patch_volumes.get_local())
                 patch_volumes.apply('insert')
+        self.cstr_times.append(time.time() - t0)
 
-        # Record time it takes to construct and also later the average call
-        self.__init_time = time.time() - t0
+        t0 = time.time()
+        # We can precompute maps for assigning the components
+        W = VectorFunctionSpace(mesh, 'CG', 1, dim=shape[0]) if len(shape) == 1 else\
+            TensorFunctionSpace(mesh, 'CG', 1, shape=shape)
+        assigner = FunctionAssigner(W, [V]*len(forms))
+        self.cstr_times.append(time.time() - t0)
+
+        # Record average call time
         self.__ncalls, self.__total_call_time = 0., 0.
         # Collect stuff
-        self.shape, self.V, self.A, self.patch_volumes, self.forms = \
-                shape, V, A, patch_volumes, forms
+        self.shape, self.V, self.A, self.patch_volumes, self.forms, self.W, self.assigner = \
+            shape, V, A, patch_volumes, forms, W, assigner
 
 
     def __call__(self):
@@ -86,6 +96,7 @@ class ClementInterpolant(object):
         t0 = time.time()
         # L2 means of comps to indiv. cells
         means = map(assemble, forms)
+
         # The interpolant (scalar, vector, tensor) is build from components
         components = []
         for mean in means:
@@ -98,18 +109,15 @@ class ClementInterpolant(object):
             if not self.patch_volumes is None: component.vector()[:] *= patch_volumes
 
             components.append(component)
-
+        
         # Finalize the interpolant
         # Scalar has same space as component
         if len(shape) == 0: 
             uh = components.pop()
         # Other ranks
         else:
-            mesh = V.mesh()
-            W = VectorFunctionSpace(mesh, 'CG', 1, dim=shape[0]) if len(shape) == 1 else\
-                TensorFunctionSpace(mesh, 'CG', 1, shape=shape)
-            uh = Function(W)
-            assign(uh, components)
+            uh = Function(self.W)
+            self.assigner.assign(uh, components)
             # NOTE: assign might not use apply correctly. see 
             # https://bitbucket.org/fenics-project/dolfin/issues/587/functionassigner-does-not-always-call
             # So just to be sure
@@ -125,7 +133,7 @@ class ClementInterpolant(object):
         In parallel these values are MPI.OP-ed reduced on all processes. 
         '''
         comm = self.V.mesh().mpi_comm().tompi4py()
-        data = [self.__init_time, self.__total_call_time/self.__ncalls]
+        data = self.cstr_times + [self.__total_call_time/self.__ncalls]
 
         ops = {'sum': piMPI.SUM, 'avg': piMPI.SUM, 'min': piMPI.MIN, 'max': piMPI.MAX}
         op = ops[mpiop]
@@ -136,9 +144,10 @@ class ClementInterpolant(object):
         if comm.rank == 0 and verbose: 
             GREEN = '\033[1;37;32m%s\033[0m'
             print '---- Clement Interpolant(stats for %d procs) ----' % comm.size
-            print 'Construction time [s]              ', GREEN % ('%g' % data[0])
-            print 'MPI-%s time per call [s](%d calls)' % (mpiop, self.__ncalls),  GREEN % ('%g' % data[1])
-            print
+            print 'Construct forms     [s]           ', GREEN % ('%g' % data[0])
+            print 'Construct A         [s]           ', GREEN % ('%g' % data[1])
+            print 'Construct assigner  [s]           ', GREEN % ('%g' % data[2])
+            print 'MPI-%s time per call [s](%d calls)' % (mpiop, self.__ncalls), GREEN % ('%g' % data[-1])
 
         return data
 
@@ -221,8 +230,9 @@ def _construct_averaging_operator(V, c):
     B such that x = Bb.
     '''
     assert parameters['linear_algebra_backend'] == 'PETSc'
-    
+   
     A = _construct_summation_operator(V)
+
     Ac = Function(V).vector()
     A.mult(c, Ac)
     # 1/Ac
