@@ -66,6 +66,11 @@ def test_StructuredGrid_Box(s0, V, dirpath):
     assert sl.dL[0] == sl2.dL[0] and sl.dL[1] == sl2.dL[1] and sl.dL[2] == sl2.dL[2] 
     assert sl.arithmetic_mean() == sl2.arithmetic_mean()
 
+#mesh = UnitCubeMesh(4,4,4)
+#V = FunctionSpace(mesh, 'CG', 1)
+#s = s0(V)
+#test_StructuredGrid_Box(s, V, dirpath())
+
 
 def test_StructuredGrid_Slice(s0, V, dirpath):
     # 2D slice
@@ -83,7 +88,6 @@ def test_StructuredGrid_Slice(s0, V, dirpath):
 
     assert sl.dL[0] == sl2.dL[0] and sl.dL[1] == sl2.dL[1] 
     assert abs(sl.arithmetic_mean() - sl2.arithmetic_mean()) < 1e-14
-
 
 # then vector
 def test_StructuredGrid_Box_vector(v0, Vv, dirpath):

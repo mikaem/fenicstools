@@ -3,7 +3,7 @@ __date__ = "2014-02-06"
 __copyright__ = "Copyright (C) 2014 " + __author__
 __license__  = "GNU Lesser GPL version 3 or any later version"
 
-from Probe import *
+from .Probe import *
 from numpy import cos, repeat, argmax, cumsum, sum, count_nonzero, resize, linspace, float32
 from numpy.linalg import norm as numpy_norm
 import copy, warnings
@@ -200,7 +200,7 @@ class StructuredGrid:
             self.dy = [dx0[1], dx1[1]]
             self.dz = [dx0[2], dx1[2]]
             
-        self.dims = map(len , self.dx)
+        self.dims = list(map(len , self.dx))
         statistics = "stats" in f["FEniCS"]
         f.close()
         return statistics
@@ -223,7 +223,7 @@ class StructuredGrid:
             self.probes.set_probes_from_ids(data.flatten(), self._num_eval)
         else:            
             if tstep == None:
-                step = f['FEniCS'].keys()
+                step = list(f['FEniCS'].keys())
                 step.sort()
                 loc = 'FEniCS/' + step[-1]
             else:
@@ -242,8 +242,8 @@ class StructuredGrid:
         """return i, j, k indices of structured grid based on global index"""
         d = self.dims
         return (global_index % d[0], 
-               (global_index % (d[0]*d[1])) / d[0], 
-                global_index / (d[0]*d[1]))
+               (global_index % (d[0]*d[1])) // d[0],
+                global_index // (d[0]*d[1]))
         
     def toh5(self, N, tstep, filename="restart.h5", dtype='f'):
         """Dump probes to HDF5 file. The data can be used for 3D visualization
@@ -284,7 +284,7 @@ class StructuredGrid:
             try:
                 f.create_dataset(loc+"/Scalar", shape=dimT, dtype=dtype)
             except RuntimeError:
-                print 'RuntimeError'
+                print('RuntimeError')
         elif type(self.probes) != StatisticsProbes:
             try:
                 for ii in range(self.probes.value_size()):
@@ -320,7 +320,7 @@ class StructuredGrid:
         Nc = comm.Get_size()
         myrank = comm.Get_rank()
         Np = self.probes.get_total_number_probes()
-        planes_per_proc = d[2] / Nc
+        planes_per_proc = d[2] // Nc
         # Distribute remaining planes 
         if Nc-myrank <= (d[2] % Nc):
             planes_per_proc += 1
@@ -391,10 +391,10 @@ class StructuredGrid:
     def surf(self, N, component=0):
         """surf plot of scalar or one component of tensor"""
         if comm.Get_size() > 1:
-            print "No surf for multiple processors"
+            print("No surf for multiple processors")
             return
         if len(self.dims) == 3:
-            print "No surf for 3D cube"
+            print("No surf for 3D cube")
             return
         z = self.array(N=N, component=component).reshape(*self.dims[::-1])
         x = self.create_dense_grid()

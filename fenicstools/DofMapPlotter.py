@@ -3,7 +3,7 @@ __date__ = '2014-04-23'
 __copyright__ = 'Copyright (C) 2013 ' + __author__
 __license__ = 'GNU Lesser GPL version 3 or any later version'
 
-from dofmapplotter import *
+from fenicstools.dofmapplotter import *
 from dolfin import MPI
 try:
     from matplotlib.pyplot import show as plt_show

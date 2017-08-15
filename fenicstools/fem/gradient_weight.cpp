@@ -28,8 +28,7 @@ namespace dolfin
     dg_vector.zero();
     for (CellIterator cell(*mesh, "all"); !cell.end(); ++cell)
     {
-      const ArrayView<const dolfin::la_index> dofs
-        = dofmap_u->cell_dofs(cell->index());
+      auto dofs = dofmap_u->cell_dofs(cell->index());
         
       std::fill(ws.begin(), ws.end(), 1./cell->volume());
       dg_vector.add_local(ws.data(), dofs.size(), dofs.data());    

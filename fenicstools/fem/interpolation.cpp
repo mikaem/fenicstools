@@ -119,8 +119,7 @@ namespace dolfin
         cell->get_coordinate_dofs(coordinate_dofs);
 
         // Get local-to-global map
-        const ArrayView<const dolfin::la_index> dofs
-        = dofmap.cell_dofs(cell->index());
+        auto dofs = dofmap.cell_dofs(cell->index());
 
         // Tabulate dof coordinates on cell
         element.tabulate_dof_coordinates(coordinates, coordinate_dofs, *cell);
@@ -733,8 +732,7 @@ namespace dolfin
                 vertex_coordinates.data(), ufc_cell.orientation, ufc_cell);
 
         // Tabulate dofs
-        const ArrayView<const dolfin::la_index> cell_dofs
-        = dofmap.cell_dofs(cell->index());
+        auto cell_dofs = dofmap.cell_dofs(cell->index());
 
         // Place result in local vector
         for (uint i = 0; i < cell_dofs.size(); i++)
@@ -823,8 +821,7 @@ namespace dolfin
                 vertex_coordinates.data(), ufc_cell.orientation, ufc_cell);
 
         // Tabulate dofs
-        const ArrayView<const dolfin::la_index> cell_dofs
-        = dofmap.cell_dofs(cell->index());
+        auto cell_dofs = dofmap.cell_dofs(cell->index());
 
         // Place result in local vector
         for (uint i = 0; i < cell_dofs.size(); i++)

@@ -6,7 +6,7 @@ __license__  = "GNU Lesser GPL version 3 or any later version"
 This module contains functionality for efficiently probing a Function many times. 
 """
 from dolfin import *
-from numpy import zeros, array, squeeze, reshape 
+from numpy import zeros, array, squeeze, reshape, save
 import os, inspect
 from mpi4py.MPI import COMM_WORLD as comm
 
@@ -52,7 +52,7 @@ class Probes(compiled_module.Probes):
     def __getitem__(self, i):
         return self.get_probe_id(i), Probe(self.get_probe(i))
 
-    def next(self):
+    def __next__(self):
         try:
             p =  self[self.i]
         except:
@@ -104,9 +104,9 @@ class Probes(compiled_module.Probes):
         if is_root:
             if filename:
                 if not N is None:
-                    z.dump(filename+"_snapshot_"+str(N)+".probes")
+                    save(filename+"_snapshot_"+str(N), z)
                 else:
-                    z.dump(filename+"_all.probes")
+                    save(filename+"_all", z)
             return squeeze(z)
 
 class StatisticsProbe(compiled_module.StatisticsProbe):
@@ -136,7 +136,7 @@ class StatisticsProbes(compiled_module.StatisticsProbes):
     def __getitem__(self, i):
         return self.get_probe_id(i), StatisticsProbe(self.get_probe(i))
 
-    def next(self):
+    def __next__(self):
         try:
             p = self[self.i]
         except:
@@ -176,6 +176,6 @@ class StatisticsProbes(compiled_module.StatisticsProbes):
             
         if is_root:
             if filename:
-                z.dump(filename+"_statistics.probes")
+                save(filename+"_statistics", z)
             return squeeze(z)
 

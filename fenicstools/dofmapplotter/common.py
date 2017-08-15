@@ -51,10 +51,10 @@ class ParallelColorPrinter(object):
         else:
             template = '%s%s%s'
 
-        print template % (mpi_string, fig_string, string),
+        print(template % (mpi_string, fig_string, string),)
 
         if line_break:
-            print ''
+            print('')
 
 
 def signature(V):
@@ -229,14 +229,14 @@ if __name__ == '__main__':
 
     _dofmaps = extract_dofmaps(M)
     _bounds = bounds(M)
-    print 'Signature of M:', signature(M)
-    print 'Flat signature of M:', flat_signature(M)
-    print 'Bounds of M:', _bounds
-    print 'Sub. indices for comps [0, 1]:', subspace_index([0, 1], _bounds)
-    print 'Sub. indices for all comps:', subspace_index(M)
+    print('Signature of M:', signature(M))
+    print('Flat signature of M:', flat_signature(M))
+    print('Bounds of M:', _bounds)
+    print('Sub. indices for comps [0, 1]:', subspace_index([0, 1], _bounds))
+    print('Sub. indices for all comps:', subspace_index(M))
 
     for i in range(len(_bounds) - 1):
         first = _bounds[i]
         last = _bounds[i + 1]
         for j in range(first, last):
-            print _dofmaps[j].dofs()
+            print(_dofmaps[j].dofs())

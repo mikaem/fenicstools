@@ -29,7 +29,6 @@ def test_Probes_functionspace_2D(V2):
         assert round(p0[1] - 0.4, 7) == 0
         assert round(p0[2] - 0.3, 7) == 0
 
-
 def test_Probes_functionspace_3D(V3, dirpath):
     u0 = interpolate(Expression('x[0]', degree=1), V3)
     x = array([[0.5, 0.5, 0.5], [0.4, 0.4, 0.4], [0.3, 0.3, 0.3]])
@@ -51,19 +50,22 @@ def test_Probes_functionspace_3D(V3, dirpath):
         assert round(p0[0] - 0.5, 7) == 0
         assert round(p0[1] - 0.4, 7) == 0
         assert round(p0[2] - 0.3, 7) == 0
-        
+
     p0 = p.array(filename=dirpath+'dump')
     if MPI.rank(mpi_comm_world()) == 0:
         assert round(p0[0, 0] - 0.5, 7) == 0
         assert round(p0[1, 1] - 0.4, 7) == 0
         assert round(p0[2, 1] - 0.3, 7) == 0
         
-        f = open(dirpath+'dump_all.probes', 'r')
-        p1 = load(f)
+        p1 = load(dirpath+'dump_all.npy')
         assert round(p1[0, 0, 0] - 0.5, 7) == 0
         assert round(p1[1, 0, 1] - 0.4, 7) == 0
         assert round(p1[2, 0, 1] - 0.3, 7) == 0
 
+#import dolfin
+#mesh = dolfin.UnitCubeMesh(4,4,3)
+#V2 = dolfin.FunctionSpace(mesh, 'CG', 1)
+#test_Probes_functionspace_3D(V2, dirpath())
 
 def test_Probes_vectorfunctionspace_2D(VF2, dirpath):
     u0 = interpolate(Expression(('x[0]', 'x[1]'), degree=1), VF2)
@@ -93,8 +95,7 @@ def test_Probes_vectorfunctionspace_2D(VF2, dirpath):
         assert round(p0[1, 1, 1] - 0.4, 7) == 0
         assert round(p0[2, 0, 1] - 0.3, 7) == 0
         
-        f = open(dirpath+'dumpvector2D_all.probes', 'r')
-        p1 = load(f)
+        p1 = load(dirpath+'dumpvector2D_all.npy')
         assert round(p1[0, 0, 0] - 0.5, 7) == 0
         assert round(p1[1, 1, 0] - 0.4, 7) == 0
         assert round(p1[2, 1, 1] - 0.3, 7) == 0
@@ -127,8 +128,7 @@ def test_Probes_vectorfunctionspace_3D(VF3, dirpath):
         assert round(p0[1, 1, 0] - 0.4, 7) == 0
         assert round(p0[2, 1, 0] - 0.3, 7) == 0
         
-        f = open(dirpath+'dumpvector3D_all.probes', 'r')
-        p1 = load(f)
+        p1 = load(dirpath+'dumpvector3D_all.npy')
         assert round(p1[0, 0, 0] - 0.5, 7) == 0
         assert round(p1[1, 1, 0] - 0.4, 7) == 0
         assert round(p1[2, 1, 1] - 0.3, 7) == 0

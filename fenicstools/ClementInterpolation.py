@@ -143,11 +143,11 @@ class ClementInterpolant(object):
 
         if comm.rank == 0 and verbose: 
             GREEN = '\033[1;37;32m%s\033[0m'
-            print '---- Clement Interpolant(stats for %d procs) ----' % comm.size
-            print 'Construct forms     [s]           ', GREEN % ('%g' % data[0])
-            print 'Construct A         [s]           ', GREEN % ('%g' % data[1])
-            print 'Construct assigner  [s]           ', GREEN % ('%g' % data[2])
-            print 'MPI-%s time per call [s](%d calls)' % (mpiop, self.__ncalls), GREEN % ('%g' % data[-1])
+            print('---- Clement Interpolant(stats for %d procs) ----' % comm.size)
+            print('Construct forms     [s]           ', GREEN % ('%g' % data[0]))
+            print('Construct A         [s]           ', GREEN % ('%g' % data[1]))
+            print('Construct assigner  [s]           ', GREEN % ('%g' % data[2]))
+            print('MPI-%s time per call [s](%d calls)' % (mpiop, self.__ncalls), GREEN % ('%g' % data[-1]))
 
         return data
 

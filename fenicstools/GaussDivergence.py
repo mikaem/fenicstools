@@ -74,7 +74,7 @@ def gauss_divergence(u, mesh=None):
 
     return divu
 
-from CRInterpolation import cg1_cr_interpolation_matrix
+from fenicstools.CRInterpolation import cg1_cr_interpolation_matrix
 def divergence_matrix(mesh):
     CR = VectorFunctionSpace(mesh, 'CR', 1)
     DG = FunctionSpace(mesh, 'DG', 0)

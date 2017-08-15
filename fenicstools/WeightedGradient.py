@@ -41,7 +41,7 @@ def weighted_gradient_matrix(mesh, i, family='CG', degree=1, constrained_domain=
         T = FunctionSpace(mesh, 'CG', degree, constrained_domain=constrained_domain)
     elif family == 'CR':
         if degree != 1:
-            print '\033[1;37;34m%s\033[0m' % 'Ignoring degree'
+            print('\033[1;37;34m%s\033[0m' % 'Ignoring degree')
 
         # Source and Target spaces are CR
         S = FunctionSpace(mesh, 'CR', 1, constrained_domain=constrained_domain)

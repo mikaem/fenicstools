@@ -33,7 +33,7 @@ def test_analyze_extract():
     expressions = (f, grad(f), inner(f, f) + inner(grad(f), grad(f)), inner(f, g)+c, 
                    grad(f)[0], f+g, inner(f, g), c+e, inner(grad(e), grad(f)),
                    x+e, c, g)
-    terminals = map(ci._analyze_expr, expressions)
+    terminals = list(map(ci._analyze_expr, expressions))
 
     assert all(ci._extract_mesh(term) for i, term in enumerate(terminals[:9]))
 
@@ -44,7 +44,6 @@ def test_analyze_extract():
         except ValueError:
             count += 1
     assert 3 == count
-
 
 def test_summation(mesh=None):
     '''Test logic of summation operator'''
