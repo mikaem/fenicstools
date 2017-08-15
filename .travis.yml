@@ -1,7 +1,7 @@
 language: generic
 
 os: osx
-osx_image: xcode7.3
+osx_image: xcode8.1
 
 sudo: false
 
@@ -11,37 +11,51 @@ env:
     - CONDA_PY=27
 
   global:
-    - FENICS_VERSION="2017.1.dev"
+    - FENICS_VERSION="2017.2.dev"
     - secure: "JsygfPwIhsn6ywcqP2PjQhwNMZ3KuNuEo0Zyyg1r0KlyVHuGBnt/HUoLjtTGa7mjCvvevCko+BbAaTjTLB56OiqXiteMoutAQMSEjbM9tKV9TwgTcCtPSwMq8Kk1QqiAHRgQW/VWWlEUlIrXE3Zas34+3i1+xvA1ovettMrlFU4="
 
 before_install:
     # Remove homebrew.
-    - brew remove --force $(brew list)
-    - brew cleanup -s
-    - rm -rf $(brew --cache)
+    - |
+      echo ""
+      echo "Removing homebrew from Travis CI to avoid conflicts."
+      curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/uninstall > ~/uninstall_homebrew
+      chmod +x ~/uninstall_homebrew
+      ~/uninstall_homebrew -fq
+      rm ~/uninstall_homebrew
 
 install:
-    - MINICONDA_URL="https://repo.continuum.io/miniconda"
-    - MINICONDA_FILE="Miniconda-latest-MacOSX-x86_64.sh"
-    - curl -L -O "${MINICONDA_URL}/${MINICONDA_FILE}"
-    - bash ${MINICONDA_FILE} -b -p $HOME/miniconda2
-    - export PATH="$HOME/miniconda2/bin:$PATH"
-    - unset PYTHONPATH
-    - conda config --set always_yes yes
-    - conda config --set show_channel_urls true
-    - conda config --add channels conda-forge
-    - conda config --add channels mikaem/label/OSX-10.11-clang
-    - conda update -q conda
-    - conda install -c conda-forge conda-forge-build-setup
-    - source run_conda_forge_build_setup
-    - cd fenicstools
-    - git fetch --unshallow
-    - cd ..
+    # Install Miniconda.
+    - |
+      echo ""
+      echo "Installing a fresh version of Miniconda."
+      MINICONDA_URL="https://repo.continuum.io/miniconda"
+      MINICONDA_FILE="Miniconda2-latest-MacOSX-x86_64.sh"
+      curl -L -O "${MINICONDA_URL}/${MINICONDA_FILE}"
+      bash $MINICONDA_FILE -b
+
+    # Configure conda
+    - |
+      echo ""
+      echo "Configuring conda."
+      source /Users/travis/miniconda2/bin/activate root
+      conda config --set always_yes yes
+      conda config --set show_channel_urls true
+      conda config --add channels conda-forge
+      conda config --add channels mikaem/label/OSX-10.12-clang
+      conda update -q conda
+      conda install conda-forge-build-setup
+      conda install --yes fenics=${FENICS_VERSION} pyvtk h5py-parallel pytest
+      source run_conda_forge_build_setup
+      cd fenicstools
+      git fetch --unshallow
+      cd ..
 
 after_failure:
-    - find ${INSTANT_CACHE_DIR}/error -name '*.log' -print -exec cat '{}' \;
+    - find /Users/travis/miniconda2/.cache/instant/error/* -name 'compile.log' -print -exec cat '{}' \;
 
 script:
     - |
+      export INSTANT_CACHE_DIR="${HOME}/instant"
       conda build conf/conda
       upload_or_check_non_existence ./conf/conda mikaem --channel main || exit 1
