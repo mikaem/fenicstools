@@ -33,8 +33,6 @@ class DofHandler(DofMapHandler):
         self.dofmaps = dmp.dofmaps
         self.elements = dmp.elements
         self.bounds = dmp.bounds
-        # Get ownership range. To be used with global ordering scheme
-        self.first_dof = self.dofmaps[0].ownership_range()[0]
         # Get indices of subspaces to which component belongs
         self.subspace_index = subspace_index(self.component, self.bounds)
         # Unique subspaces
@@ -138,7 +136,6 @@ class DofHandler(DofMapHandler):
         changed_positions = []
         changed_labels = []
         order = self.order
-        first_dof = self.first_dof
         
         for i, j in enumerate(self.component):
             cell = Cell(self.mesh, cell_index)
@@ -152,7 +149,7 @@ class DofHandler(DofMapHandler):
                     self.positions[dof_x_str] = dof_x.tolist()
                     changed_positions.append(dof_x_str)
 
-                dof = dof if order == 'global' else dof - first_dof
+                dof = self.dofmaps[j].local_to_global_index(dof) if order == 'global' else dof
                 # If dof label was no created yet create structure for label
                 if not(dof_x_str in self.labels):
                     self.labels[dof_x_str] =\
