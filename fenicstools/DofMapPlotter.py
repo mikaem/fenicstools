@@ -86,7 +86,7 @@ class DofMapPlotter(object):
             # Convert component to list if necessary and perform validity check
             component = component if type(component) is list else [component]
             # If component is empty plot all dofmaps
-            component = component if component else range(self.num_dofmaps())
+            component = component if component else list(range(self.num_dofmaps()))
             if not self._arg_check(component):
                 raise ValueError('Component is not list or in [0, %d)' %
                                  self.num_dofmaps())
@@ -99,7 +99,7 @@ class DofMapPlotter(object):
             assert (0 <= sub < self.num_subspaces()) and (type(sub) is int)
 
             # Compute component of subspace
-            sub_component = range(self.bounds[sub], self.bounds[sub+1])
+            sub_component = list(range(self.bounds[sub], self.bounds[sub+1]))
 
             # Plot
             self.plot(component=sub_component, sub=None, order=order)
