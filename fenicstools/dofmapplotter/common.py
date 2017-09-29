@@ -149,7 +149,7 @@ def bounds(V):
         signature_ = V
     signature_ = flat_signature(signature_)
     trans = lambda x: x if x else x + 1
-    signature_ = map(trans, signature_)
+    signature_ = list(map(trans, signature_))
     limits = partial_sum(signature_)
     limits = [0] + limits
 

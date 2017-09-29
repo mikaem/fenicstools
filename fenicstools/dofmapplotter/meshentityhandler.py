@@ -89,7 +89,7 @@ class MeshEntityHandler(DofMapHandler):
         elif pressed_gc and not self.showing_all_mesh_entities[tdim]:
             start = time.time()
             self.printer('Processing ...', 'blue')
-            cell_indices = xrange(self.mesh.num_cells())
+            cell_indices = range(self.mesh.num_cells())
 
             for cell_index in cell_indices:
                 self._single_mesh_entity_plot(cell_index, tdim)

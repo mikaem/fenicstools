@@ -83,7 +83,7 @@ class DofHandler(DofMapHandler):
         elif (event.key == 'D') and not self.showing_all_dofs:
             start = time.time()
             self.printer('Processing ...', 'blue')
-            cell_indices = xrange(self.mesh.num_cells())
+            cell_indices = range(self.mesh.num_cells())
             for cell_index in cell_indices:
                 self._cell_dof_plot(cell_index)
             self.fig.canvas.draw()
