@@ -61,6 +61,8 @@ class Probes(compiled_module.Probes):
         self.i += 1
         return p
 
+    next = __next__
+
     def array(self, N=None, filename=None, component=None, root=0):
         """Dump data to numpy format on root processor for all or one snapshot."""
         is_root = comm.Get_rank() == root
@@ -146,6 +148,8 @@ class StatisticsProbes(compiled_module.StatisticsProbes):
             raise StopIteration
         self.i += 1
         return p
+
+    next = __next__
 
     def array(self, N=0, filename=None, component=None, root=0):
         """Dump data to numpy format on root processor."""
