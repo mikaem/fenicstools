@@ -8,7 +8,7 @@ sudo: false
 env:
 
   matrix:
-    - CONDA_PY=36
+    - CONFIG=osx_python3.6
 
   global:
     - FENICS_VERSION="2018.1.0"
@@ -39,18 +39,15 @@ install:
       echo ""
       echo "Configuring conda."
       source /Users/travis/miniconda3/bin/activate root
-      conda config --set always_yes yes
-      conda config --set show_channel_urls true
+      conda config --set always_yes yes      
+      conda config --add channels defaults
       conda config --add channels conda-forge
-      conda update -q conda
+      conda config --set show_channel_urls true
       conda install --yes --quiet conda-forge-ci-setup=1
       source run_conda_forge_build_setup
-      cd fenicstools
-      git fetch --unshallow
-      cd ..
 
 script:
-    - |
-      export INSTANT_CACHE_DIR="${HOME}/instant"
-      conda build conf/conda
-      upload_or_check_non_existence ./conf/conda mikaem --channel main
+    - conda build conf/conda
+
+after_success:
+    - upload_or_check_non_existence ./conf/conda mikaem --channel main
