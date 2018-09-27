@@ -26,35 +26,43 @@ __UINT32_MAX__ = np.iinfo('uint32').max
 # restrict broken in 2018.1. Wrap here for now
 code="""
 #include <pybind11/pybind11.h>
+#include <pybind11/numpy.h>
+#include <pybind11/stl.h>
 #include <pybind11/eigen.h>
 #include <dolfin/function/Function.h>
 #include <dolfin/mesh/Cell.h>
 #include <dolfin/fem/FiniteElement.h>
 
-Eigen::VectorXd restrict(const dolfin::GenericFunction& self,
-                         const dolfin::FiniteElement& element,
-                         const dolfin::Cell& cell){
-
+void restrict(const dolfin::Function& self,
+              const dolfin::FiniteElement& element,
+              const dolfin::Cell& cell,
+              std::vector<double>& w)
+{
     ufc::cell ufc_cell;
     cell.get_cell_data(ufc_cell);
-
     std::vector<double> coordinate_dofs;
     cell.get_coordinate_dofs(coordinate_dofs);
-
     std::size_t s_dim = element.space_dimension();
-    Eigen::VectorXd w(s_dim);
     self.restrict(w.data(), element, cell, coordinate_dofs.data(), ufc_cell);
-
-    return w; // no copy
 }
+
+namespace py = pybind11;
+
 PYBIND11_MODULE(SIGNATURE, m){
-    m.def("restrict", &restrict);
+    m.def("restrict", [](py::object v,
+                         const dolfin::FiniteElement& element,
+                         const dolfin::Cell& cell){
+        auto _v = v.attr("_cpp_object").cast<dolfin::Function&>();
+        std::vector<double> _w(element.space_dimension());
+        restrict(_v, element, cell, _w);
+        return _w;
+    });
 }
 """
 compiled = df.compile_cpp_code(code)
 
 def restrict(function, element, cell):
-    return compiled.restrict(function.cpp_object(), element, cell)
+    return compiled.restrict(function, element, cell)
 
 class Particle:
     __slots__ = ['position', 'properties']
@@ -251,11 +259,13 @@ class LagrangianParticles:
         v_dim = self.element.value_dimension(0)
         for cwp in six.itervalues(self.particle_map):
             # Restrict once per cell
+            #self.coefficients = restrict(u, self.element, cwp.__class__.__base__)
             self.coefficients = restrict(u, self.element, cwp)
+            #print(self.coefficients)
             for particle in cwp.particles:
                 x = particle.position
                 # Compute velocity at position x
-                self.basis_matrix = self.element.evaluate_basis_all(x,
+                self.basis_matrix[:] = self.element.evaluate_basis_all(x,
                                                 cwp.get_vertex_coordinates(),
                                                 cwp.orientation()).reshape((-1, v_dim))
                 x[:] = x[:] + dt*np.dot(self.coefficients, self.basis_matrix)[:]

@@ -39,9 +39,6 @@ namespace dolfin
     void restart_probes(const Array<double>& u, std::size_t num_evals);
     void set_probes_from_ids(const Array<double>& u, std::size_t num_evals);
 
-  //protected:
-  //  std::vector<std::pair<std::size_t, StatisticsProbe*> > _allprobes;
-
   };
 }
 

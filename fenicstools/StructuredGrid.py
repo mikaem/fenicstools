@@ -11,7 +11,7 @@ import copy, warnings
 try:
     import pyvtk, h5py
 except:
-    warnings.warn("Need h5py and pyvtk for StructuredGrid class to work")
+    warnings.warn("Need parallel h5py and pyvtk for StructuredGrid class to work")
 
 try:
     from scitools.std import surfc
