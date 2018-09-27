@@ -2,6 +2,7 @@
 
 using namespace dolfin;
 
+
 Probes::Probes(const Array<double>& x, const FunctionSpace& V)
 {
   const std::size_t Nd = V.mesh()->geometry().dim();
@@ -20,7 +21,7 @@ Probes::Probes(const Array<double>& x, const FunctionSpace& V)
     try
     {
       Probe* probe = new Probe(_x, V);
-      std::pair<std::size_t, Probe*> newprobe = std::make_pair(i, &(*probe));
+      std::pair<std::size_t, Probe*> newprobe = std::make_pair(i, probe);
       _allprobes.push_back(newprobe);
     } 
     catch (std::exception &e)
@@ -28,6 +29,18 @@ Probes::Probes(const Array<double>& x, const FunctionSpace& V)
     }
   }
   //cout << _allprobes.size() << " of " << N  << " probes found on processor " << MPI::process_number() << endl;
+}
+//
+Probes::Probes(const Probes& p)
+{
+  _allprobes = p._allprobes;
+  total_number_probes = p.total_number_probes;
+  _value_size = p._value_size;
+  _num_evals = p._num_evals;
+  for (std::size_t i = 0; i < local_size(); i++)
+  {    
+    _allprobes[i].second = new Probe(*(p._allprobes[i].second));
+  }
 }
 //
 Probes::~Probes()
@@ -120,13 +133,13 @@ void Probes::dump(std::string filename)
   }
 }
 //
-Probe* Probes::get_probe(std::size_t i)
+std::shared_ptr<Probe> Probes::get_probe(std::size_t i)
 {
   if (i >= local_size() || i < 0) 
   {
     dolfin_error("Probes.cpp", "get probe", "Wrong index!");
   }
-  return _allprobes[i].second;
+  return std::make_shared<Probe>(*_allprobes[i].second);
 }
 //
 std::size_t Probes::get_probe_id(std::size_t i)
@@ -162,8 +175,7 @@ std::vector<double> Probes::get_probes_component_and_snapshot(std::size_t comp, 
 
 void Probes::set_probes_from_ids(const Array<double>& u)
 {
-  assert(u.size() == local_size() * value_size());
-  
+  assert(u.size() == local_size() * value_size()); 
   Array<double> _u(value_size());
   for (std::size_t i = 0; i < local_size(); i++)
   {

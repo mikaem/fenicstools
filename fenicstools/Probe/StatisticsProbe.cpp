@@ -2,6 +2,25 @@
 
 using namespace dolfin;
 
+StatisticsProbe::StatisticsProbe(const Array<double>& x, const FunctionSpace& V) 
+  : Probe(x, V), segregated(false)
+{
+  value_size_loc_function = _value_size_loc;
+    
+  // Symmetric statistics. Velocity: u, v, w, uu, vv, ww, uv, uw, vw
+  _value_size_loc = _value_size_loc*(_value_size_loc+3)/2.;
+                 
+  _probes.resize(_value_size_loc);
+    
+  // Make room for exactly two values. The mean and the latest snapshot  
+  for (std::size_t i = 0; i < 2; i++)
+  {
+    for (std::size_t j = 0; j < _value_size_loc; j++)
+      _probes[j].push_back(0.);
+  }
+}
+
+
 StatisticsProbe::StatisticsProbe(const Array<double>& x, const FunctionSpace& V, bool segregated) 
   : Probe(x, V), segregated(segregated)
 {
@@ -26,10 +45,11 @@ StatisticsProbe::StatisticsProbe(const Array<double>& x, const FunctionSpace& V,
   }
 }
 
-StatisticsProbe::StatisticsProbe(const StatisticsProbe& p) : Probe(p)
+StatisticsProbe::StatisticsProbe(const Probe& p) : Probe(p)
 {
-  segregated = p.segregated;
-  value_size_loc_function = p.value_size_loc_function;
+  StatisticsProbe *ps = (StatisticsProbe *) &p;
+  segregated = ps->segregated;
+  value_size_loc_function = ps->value_size_loc_function;
 }
 
 void StatisticsProbe::eval(const Function& u)

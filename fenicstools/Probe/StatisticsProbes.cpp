@@ -29,7 +29,7 @@ StatisticsProbes::StatisticsProbes(const Array<double>& x, const FunctionSpace& 
     try
     {
       StatisticsProbe* probe = new StatisticsProbe(_x, V, segregated);
-      std::pair<std::size_t, StatisticsProbe*> newprobe = std::make_pair(i, &(*probe));
+      std::pair<std::size_t, StatisticsProbe*> newprobe = std::make_pair(i, probe);
       _allprobes.push_back(newprobe);
     } 
     catch (std::exception &e)
@@ -37,6 +37,28 @@ StatisticsProbes::StatisticsProbes(const Array<double>& x, const FunctionSpace& 
     }
   }
   //cout << local_size() << " of " << N  << " probes found on processor " << MPI::process_number() << endl;
+}
+//
+StatisticsProbes::~StatisticsProbes()
+{
+  for (std::size_t i = 0; i < local_size(); i++)
+  {
+    delete _allprobes[i].second;   
+  }
+  _allprobes.clear();      
+}
+
+//
+StatisticsProbes::StatisticsProbes(const StatisticsProbes& p)
+{
+  _allprobes = p._allprobes;
+  total_number_probes = p.total_number_probes;
+  _value_size = p._value_size;
+  _num_evals = p._num_evals;
+  for (std::size_t i = 0; i < local_size(); i++)
+  {    
+    _allprobes[i].second = new StatisticsProbe(*(p._allprobes[i].second));
+  }
 }
 //
 void StatisticsProbes::add_positions(const Array<double>& x, const FunctionSpace& V, bool segregated)
@@ -65,14 +87,13 @@ void StatisticsProbes::add_positions(const Array<double>& x, const FunctionSpace
   //cout << local_size() - old_local_size << " of " << N  << " probes found on processor " << MPI::process_number() << endl;
 }
 //
-StatisticsProbe* StatisticsProbes::get_probe(std::size_t i)
+std::shared_ptr<StatisticsProbe> StatisticsProbes::get_statisticsprobe(std::size_t i)
 {
   if (i >= local_size() || i < 0) 
   {
     dolfin_error("StatisticsProbes.cpp", "get probe", "Wrong index!");
   }
-  StatisticsProbe* probe = (StatisticsProbe*) _allprobes[i].second;
-  return probe;
+  return std::make_shared<StatisticsProbe>(*_allprobes[i].second);
 }
 //
 void StatisticsProbes::eval(const Function& u)

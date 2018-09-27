@@ -7,4 +7,6 @@ fi
 
 export INSTANT_CACHE_DIR=${PWD}/instant
 
-$PYTHON setup.py install
+pip install --no-deps cppimport
+
+python setup.py install

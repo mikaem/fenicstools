@@ -2,12 +2,11 @@ __author__ = "Mikael Mortensen <mikaem@math.uio.no>"
 __date__ = "2013-12-13"
 __copyright__ = "Copyright (C) 2013 " + __author__
 __license__ = "GNU Lesser GPL version 3 or any later version"
-import os, inspect
-from dolfin import info, compile_extension_module, Function, FunctionSpace, assemble, TrialFunction, TestFunction, dx, Matrix
+import cppimport
+import petsc4py
+from dolfin import info, Function, FunctionSpace, assemble, TrialFunction, TestFunction, dx, Matrix, as_backend_type
 
-fem_folder = os.path.abspath(os.path.join(inspect.getfile(inspect.currentframe()), "../fem"))
-gradient_code = open(os.path.join(fem_folder, 'gradient_weight.cpp'), 'r').read()
-compiled_gradient_module = compile_extension_module(code=gradient_code)
+compiled_gradient_module = cppimport.imp('fenicstools.fem.gradient_weight')
 
 def weighted_gradient_matrix(mesh, i, family='CG', degree=1, constrained_domain=None):
     """Compute weighted gradient matrix
@@ -56,13 +55,18 @@ def weighted_gradient_matrix(mesh, i, family='CG', degree=1, constrained_domain=
         for ii in i:
             dP = assemble(TrialFunction(S).dx(ii)*TestFunction(DG)*dx)
             A = Matrix(G)
-            Cp = compiled_gradient_module.compute_weighted_gradient_matrix(A, dP, dg)
-            CC.append(Cp)
+            #Cp = compiled_gradient_module.compute_weighted_gradient_matrix(A, dP, dg)
+            compiled_gradient_module.compute_DG0_to_CG_weight_matrix(A, dg)
+            C = assemble(TrialFunction(S)*TestFunction(T)*dx)
+            A_mat = as_backend_type(A).mat()
+            A_mat.matMult(as_backend_type(dP).mat(), result=as_backend_type(C).mat())
+            CC.append(C)
         return CC
     else:
-        dP = assemble(TrialFunction(S).dx(i)*TestFunction(DG)*dx)        
-        Cp = compiled_gradient_module.compute_weighted_gradient_matrix(G, dP, dg)
-        #info(G, True)        
-        #info(dP, True)        
-        return Cp
+        dP = assemble(TrialFunction(S).dx(i)*TestFunction(DG)*dx)
+        compiled_gradient_module.compute_DG0_to_CG_weight_matrix(G, dg)
+        G_mat = as_backend_type(G).mat()
+        C = assemble(TrialFunction(S)*TestFunction(T)*dx)
+        G_mat.matMult(as_backend_type(dP).mat(), result=as_backend_type(C).mat())
+        return C
 

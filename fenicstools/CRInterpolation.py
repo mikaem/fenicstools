@@ -1,14 +1,12 @@
-import os, inspect
-from dolfin import compile_extension_module, Function, FunctionSpace, assemble,\
+import cppimport
+from dolfin import Function, FunctionSpace, assemble,\
                    TrialFunction, TestFunction, dx, PETScMatrix, VectorFunctionSpace, dot
 
-fem_folder = os.path.abspath(os.path.join(inspect.getfile(inspect.currentframe()), "../fem"))
-i_code = open(os.path.join(fem_folder, 'cr_interpolation.cpp'), 'r').read()
-compiled_i_module = compile_extension_module(code=i_code)
+compiled_i_module = cppimport.imp('fenicstools.fem.cr_interpolation')
 
 def cg1_cr_interpolation_matrix(mesh, constrained_domain=None):
     '''
-    Compute matrix that allows fast interpolation of CG1 function to 
+    Compute matrix that allows fast interpolation of CG1 function to
     Couzeix-Raviart space.
     '''
 
@@ -19,7 +17,7 @@ def cg1_cr_interpolation_matrix(mesh, constrained_domain=None):
     u = TrialFunction(CG1)
     v = TestFunction(CR)
     I = PETScMatrix()
-    assemble(dot(u, v)*dx, tensor=I) 
+    assemble(dot(u, v)*dx, tensor=I)
 
     # Fill the interpolation matrix
     d = mesh.geometry().dim()

@@ -1,4 +1,17 @@
+/*
+<%
+from dolfin.jit.jit import dolfin_pc
+setup_pybind11(cfg)
+cfg['libraries'] = ['dolfin']
+cfg['include_dirs'] = dolfin_pc['include_dirs']
+cfg['library_dirs'] = dolfin_pc['library_dirs']
+%>
+*/
+
 #include "dolfin.h"
+#include <pybind11/pybind11.h>
+#include <pybind11/numpy.h>
+#include <pybind11/stl.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include <fstream>
@@ -67,4 +80,12 @@ namespace dolfin
     A.apply("insert"); 
     
   }  
+}
+
+using namespace dolfin;
+
+PYBIND11_MODULE(common, m)
+{
+    m.def("getMemoryUsage", &getMemoryUsage);
+    m.def("SetMatrixValue", &SetMatrixValue);
 }

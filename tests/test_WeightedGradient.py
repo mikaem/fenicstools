@@ -14,3 +14,8 @@ def test_WeightedGradient(V2):
     for i in range(2):
         du.vector()[:] = wx[i] * u.vector()
         assert round(du.vector().min() - (i+1), 7) == 0
+
+if __name__ == '__main__':
+    mesh = UnitSquareMesh(4, 4)
+    V = FunctionSpace(mesh, "CG", 1)
+    test_WeightedGradient(V)

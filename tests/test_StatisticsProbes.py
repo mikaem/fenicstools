@@ -2,7 +2,7 @@
 
 import pytest
 from dolfin import FunctionSpace, UnitCubeMesh, UnitSquareMesh, interpolate, \
-                   Expression, VectorFunctionSpace, MPI, mpi_comm_world
+                   Expression, VectorFunctionSpace, MPI
 from fenicstools import StatisticsProbes
 from numpy import array
 from fixtures import *
@@ -16,9 +16,9 @@ def test_StatisticsProbes_segregated_2D(V2):
 
     for i in range(5):
         probes(u0, v0)
-        
+
     p = probes.array()
-    if MPI.rank(mpi_comm_world()) == 0:
+    if MPI.rank(MPI.comm_world) == 0:
         assert round(p[0,0] - 2.5, 7) == 0
         assert round(p[0,4] - 0.625, 7) == 0
 
@@ -32,9 +32,9 @@ def test_StatisticsProbes_segregated_3D(V3):
 
     for i in range(5):
         probes(u0, v0, w0)
-        
+
     p = probes.array()
-    if MPI.rank(mpi_comm_world()) == 0:
+    if MPI.rank(MPI.comm_world) == 0:
         assert round(p[0,0] - 2.5, 7) == 0
         assert round(p[0,4] - 0.3125, 7) == 0
 
@@ -46,9 +46,9 @@ def test_StatisticsProbes_vector_2D(VF2):
 
     for i in range(5):
         probes(u0)
-        
+
     p = probes.array()
-    if MPI.rank(mpi_comm_world()) == 0:
+    if MPI.rank(MPI.comm_world) == 0:
         assert round(p[0,0] - 2.5, 7) == 0
         assert round(p[0,4] - 0.625, 7) == 0
 
@@ -60,9 +60,9 @@ def test_StatisticsProbes_vector_3D(VF3):
 
     for i in range(5):
         probes(u0)
-        
+
     p = probes.array()
-    if MPI.rank(mpi_comm_world()) == 0:
+    if MPI.rank(MPI.comm_world) == 0:
         assert round(p[0,0] - 2.5, 7) == 0
         assert round(p[0,4] - 0.3125, 7) == 0
 

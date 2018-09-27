@@ -6,19 +6,20 @@ source:
   git_url: ../../
 
 build:
-  number: 2
+  number: 3
 
 requirements:
   build:
     - fenics =={{FENICS_VERSION}}
-    - pyvtk
-    - h5py-parallel
+    - pip
+    #- pyvtk
+    #- h5py-parallel
 
   run:
     - fenics =={{FENICS_VERSION}}
-    - pyvtk
+    #- pyvtk
+    #- h5py-parallel
     - mpi4py
-    - h5py-parallel
 
 test:
   source_files:

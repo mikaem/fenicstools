@@ -3,16 +3,12 @@ __date__ = '2014-04-23'
 __copyright__ = 'Copyright (C) 2013 ' + __author__
 __license__ = 'GNU Lesser GPL version 3 or any later version'
 
-import inspect
 from os.path import abspath, join
-from dolfin import compile_extension_module
-
+import cppimport
 
 def dmt_number_entities(mesh, tdim):
     'Number (global) mesh entities of topological dimension.'
-    folder = abspath(join(inspect.getfile(inspect.currentframe()), '../cpp'))
-    code = open(join(folder, 'dmt.cpp'), 'r').read()
-    compiled_module = compile_extension_module(code=code)
+    compiled_module = cppimport.imp("fenicstools.dofmapplotter.cpp.dmt")
     return compiled_module.dmt_number_entities(mesh, tdim)
 
 
@@ -99,7 +95,7 @@ def extract_dofmaps(V):
                 Vi = V.sub(i)
                 dofmaps += extract_dofmaps(Vi)
             return dofmaps
-            
+
 def extract_elements(V):
     '''Extract element of every component of V.
     S, space whose signature is 0 has only one element

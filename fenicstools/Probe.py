@@ -9,24 +9,12 @@ from dolfin import *
 from numpy import zeros, array, squeeze, reshape, save
 import os, inspect
 from mpi4py.MPI import COMM_WORLD as comm
+import cppimport
 
-# Compile Probe C++ code
-def strip_essential_code(filenames):
-    code = ""
-    for name in filenames:
-        f = open(name, 'r').read()
-        code += f[f.find("namespace dolfin\n{\n"):f.find("#endif")]
-    return code
-
-dolfin_folder = os.path.abspath(os.path.join(inspect.getfile(inspect.currentframe()), "../Probe"))
-sources = ["Probe.cpp", "Probes.cpp", "StatisticsProbe.cpp", "StatisticsProbes.cpp"]
-headers = map(lambda x: os.path.join(dolfin_folder, x), ['Probe.h', 'Probes.h', 'StatisticsProbe.h', 'StatisticsProbes.h'])
-code = strip_essential_code(headers)
-compiled_module = compile_extension_module(code=code, source_directory=os.path.abspath(dolfin_folder),
-                                           sources=sources, include_dirs=[".", os.path.abspath(dolfin_folder)])
+probe11 = cppimport.imp('fenicstools.probe.probe11')
 
 # Give the compiled classes some additional pythonic functionality
-class Probe(compiled_module.Probe):
+class Probe(probe11.Probe):
 
     def __call__(self, *args):
         return self.eval(*args)
@@ -38,7 +26,7 @@ class Probe(compiled_module.Probe):
         return self.get_probe_at_snapshot(i)
 
 
-class Probes(compiled_module.Probes):
+class Probes(probe11.Probes):
 
     def __call__(self, *args):
         return self.eval(*args)
@@ -51,7 +39,7 @@ class Probes(compiled_module.Probes):
         return self
 
     def __getitem__(self, i):
-        return self.get_probe_id(i), Probe(self.get_probe(i))
+        return self.get_probe_id(i), self.get_probe(i)
 
     def __next__(self):
         try:
@@ -113,7 +101,7 @@ class Probes(compiled_module.Probes):
             return squeeze(z)
 
 
-class StatisticsProbe(compiled_module.StatisticsProbe):
+class StatisticsProbe(probe11.StatisticsProbe):
 
     def __call__(self, *args):
         return self.eval(*args)
@@ -126,7 +114,7 @@ class StatisticsProbe(compiled_module.StatisticsProbe):
         return self.get_probe_at_snapshot(i)
 
 
-class StatisticsProbes(compiled_module.StatisticsProbes):
+class StatisticsProbes(probe11.StatisticsProbes):
 
     def __call__(self, *args):
         return self.eval(*args)
@@ -139,7 +127,7 @@ class StatisticsProbes(compiled_module.StatisticsProbes):
         return self
 
     def __getitem__(self, i):
-        return self.get_probe_id(i), StatisticsProbe(self.get_probe(i))
+        return self.get_probe_id(i), self.get_statisticsprobe(i)
 
     def __next__(self):
         try:

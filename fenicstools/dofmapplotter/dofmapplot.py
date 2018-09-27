@@ -99,7 +99,7 @@ class DofMapPlot(object):
                                      [])))
 
         # Plot inner_edges
-        inner_edges = set(range(mesh.size(1))) - bdr_edges
+        inner_edges = set(range(mesh.num_facets())) - bdr_edges
         x_min_max =\
             self._plot_edges_from_list(ax, mesh, inner_edges, edge_color)
 

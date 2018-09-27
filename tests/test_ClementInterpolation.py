@@ -18,7 +18,7 @@ def test_analyze_extract():
     n = FacetNormal(mesh)
     e = Function(FunctionSpace(mesh, 'CG', 2))
     x = Function(FunctionSpace(UnitIntervalMesh(100), 'CG', 2))
-    
+
     # Raises
     expressions = (u, v, inner(u, v), inner(f, v), dot(grad(f), n),
                    inner(grad(f), grad(v)), inner(f, f)*dx, inner(f, f)*ds)
@@ -30,7 +30,7 @@ def test_analyze_extract():
     assert len(expressions) == count
 
     # Pass analysis
-    expressions = (f, grad(f), inner(f, f) + inner(grad(f), grad(f)), inner(f, g)+c, 
+    expressions = (f, grad(f), inner(f, f) + inner(grad(f), grad(f)), inner(f, g)+c,
                    grad(f)[0], f+g, inner(f, g), c+e, inner(grad(e), grad(f)),
                    x+e, c, g)
     terminals = list(map(ci._analyze_expr, expressions))
@@ -50,9 +50,9 @@ def test_summation(mesh=None):
     meshes = (IntervalMesh(100, -1, 2),
               RectangleMesh(Point(-1, -2), Point(2, 4), 10, 10),
               BoxMesh(Point(0, 0, 0), Point(1, 2, 3), 3, 3, 3))
-   
+
     # Run across all dims
-    if mesh is None: 
+    if mesh is None:
         return [test_summation(mesh) for mesh in range(len(meshes))]
 
     mesh = meshes[mesh]
@@ -72,7 +72,7 @@ def test_summation(mesh=None):
     patch_volumes = Function(V).vector()
     A.mult(volumes, patch_volumes)
 
-    patch_volumes = patch_volumes.array()
+    patch_volumes = patch_volumes.get_local()
     # Check the logic manually
     dofmap = V.dofmap()
     first, last = dofmap.ownership_range()
@@ -85,7 +85,7 @@ def test_summation(mesh=None):
     for vertex in vertices(mesh):
         # It is alway meaning full to compute locally
         b = sum(Cell(mesh, index).volume() for index in vertex.entities(tdim))
-    
+
         local_dof = v2d[vertex.index()]
         global_dof = dofmap.local_to_global_index(local_dof)
         is_owned = first <= global_dof < last
@@ -95,20 +95,21 @@ def test_summation(mesh=None):
             assert is_owned
             value0 = b
             assert abs(patch_volumes[local_dof]-value0) < 1E-14
-        
+
     # The way the offprocess things are handled is not supposed to be efficient
         else:
             # Each process collects global dof, b
             offproc_b.append(b)
             offproc_dof.append(global_dof)
             # Record dofs which the process will check later
-            if is_owned: 
+            if is_owned:
                 my_incomplete_dofs.add(global_dof)
                 # This what we will use to look up the value
                 assert global_dof - first == local_dof
 
     # Communicate
-    comm = mesh.mpi_comm().tompi4py()
+    #comm = mesh.mpi_comm().tompi4py()
+    comm = MPI.comm_world
 
     offproc_dof = np.array(offproc_dof)
     offproc_dof = comm.allgather(offproc_dof)
@@ -144,9 +145,9 @@ def test_averaging(mesh=None):
     meshes = (IntervalMesh(100, -1, 2),
               RectangleMesh(Point(-1, -2), Point(2, 4), 10, 10),
               BoxMesh(Point(0, 0, 0), Point(1, 2, 3), 3, 3, 3))
-   
+
     # Run across all dims
-    if mesh is None: 
+    if mesh is None:
         return [test_averaging(mesh) for mesh in range(len(meshes))]
 
     mesh = meshes[mesh]
@@ -165,7 +166,7 @@ def test_averaging(mesh=None):
     avg_ones = Function(V).vector()
     A.mult(ones, avg_ones)
 
-    avg_ones = avg_ones.array()
+    avg_ones = avg_ones.get_local()
     # Check the logic manually
     dofmap = V.dofmap()
     first, last = dofmap.ownership_range()
@@ -179,7 +180,7 @@ def test_averaging(mesh=None):
         # It is alway meaning full to compute locally
         volume = sum(Cell(mesh, index).volume() for index in vertex.entities(tdim))
         count = len(vertex.entities(tdim))
-    
+
         local_dof = v2d[vertex.index()]
         global_dof = dofmap.local_to_global_index(local_dof)
         is_owned = first <= global_dof < last
@@ -196,14 +197,13 @@ def test_averaging(mesh=None):
             offproc_data.append([count, volume])
             offproc_dof.append(global_dof)
             # Record dofs which the process will check later
-            if is_owned: 
+            if is_owned:
                 my_incomplete_dofs.add(global_dof)
                 # This what we will use to look up the value
                 assert global_dof - first == local_dof
 
     # Communicate
-    comm = mesh.mpi_comm().tompi4py()
-
+    comm = MPI.comm_world
     offproc_dof = np.array(offproc_dof)
     offproc_dof = comm.allgather(offproc_dof)
 
@@ -239,9 +239,9 @@ def test_ci(mesh=None):
     meshes = (IntervalMesh(100, -1, 2),
               RectangleMesh(Point(-1, -2), Point(2, 4), 10, 10),
               BoxMesh(Point(0, 0, 0), Point(1, 2, 3), 3, 3, 3))
-   
+
     # Run across all dims
-    if mesh is None: 
+    if mesh is None:
         return [test_ci(mesh) for mesh in range(len(meshes))]
 
     mesh = meshes[mesh]
@@ -252,8 +252,8 @@ def test_ci(mesh=None):
                       V)
     # Compute first the interpolant
     uh, CI = ci.clement_interpolate(lhs, True)
-    uh_values = uh.vector().array()
-    
+    uh_values = uh.vector().get_local()
+
     # Check the logic manually
     V = uh.function_space()
     dofmap = V.dofmap()
@@ -272,7 +272,7 @@ def test_ci(mesh=None):
                               for cell in patch_cells])
         b = sum(lhs(mp)*volume for mp, volume in zip(midpoints, volumes))
         A = sum(volumes)
-    
+
         local_dof = v2d[vertex.index()]
         global_dof = dofmap.local_to_global_index(local_dof)
         is_owned = first <= global_dof < last
@@ -282,21 +282,20 @@ def test_ci(mesh=None):
             assert is_owned
             value0 = b/A
             assert abs(uh_values[local_dof]-value0) < 1E-14
-        
+
     # The way the offprocess things are handled is not supposed to be efficient
         else:
             # Each process collects global dof, b, A
             offproc_bA.append([b, A])
             offproc_dof.append(global_dof)
             # Record dofs which the process will check later
-            if is_owned: 
+            if is_owned:
                 my_incomplete_dofs.add(global_dof)
                 # This what we will use to look up the value
                 assert global_dof - first == local_dof
 
     # Communicate
-    comm = mesh.mpi_comm().tompi4py()
-
+    comm = MPI.comm_world
     offproc_dof = np.array(offproc_dof)
     offproc_dof = comm.allgather(offproc_dof)
 
@@ -334,6 +333,6 @@ def test_ci(mesh=None):
 
 if __name__ == '__main__':
     test_analyze_extract()
-    test_summation() 
+    test_summation()
     test_averaging()
     test_ci()

@@ -1,7 +1,8 @@
 #!/usr/bin/env py.test
-
+import warnings
+warnings.filterwarnings("ignore", category=DeprecationWarning)
 from dolfin import VectorFunctionSpace, UnitSquareMesh, UnitCubeMesh,\
-                   interpolate, Expression, MPI, mpi_comm_world
+                   interpolate, Expression, MPI
 from fenicstools import gauss_divergence
 import pytest
 
@@ -16,7 +17,12 @@ def test_GaussDivergence(mesh):
     V = VectorFunctionSpace(mesh, 'CG', 1)
     u = interpolate(Expression(tuple(expr), degree=1), V)
     divu = gauss_divergence(u)
-    DIVU = divu.vector().array()
+    DIVU = divu.vector().get_local()
     point_0 = all(abs(DIVU - dim*dim) < 1E-13)
-    if MPI.rank(mpi_comm_world()) == 0:
+    if MPI.rank(MPI.comm_world) == 0:
         assert point_0
+
+if __name__ == '__main__':
+    mesh = UnitSquareMesh(4, 4)
+    test_GaussDivergence(mesh)
+

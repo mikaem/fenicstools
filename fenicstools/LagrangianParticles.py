@@ -23,6 +23,39 @@ comm = pyMPI.COMM_WORLD
 # collisions tests return this value or -1 if there is no collision
 __UINT32_MAX__ = np.iinfo('uint32').max
 
+# restrict broken in 2018.1. Wrap here for now
+code="""
+#include <pybind11/pybind11.h>
+#include <pybind11/eigen.h>
+#include <dolfin/function/Function.h>
+#include <dolfin/mesh/Cell.h>
+#include <dolfin/fem/FiniteElement.h>
+
+Eigen::VectorXd restrict(const dolfin::GenericFunction& self,
+                         const dolfin::FiniteElement& element,
+                         const dolfin::Cell& cell){
+
+    ufc::cell ufc_cell;
+    cell.get_cell_data(ufc_cell);
+
+    std::vector<double> coordinate_dofs;
+    cell.get_coordinate_dofs(coordinate_dofs);
+
+    std::size_t s_dim = element.space_dimension();
+    Eigen::VectorXd w(s_dim);
+    self.restrict(w.data(), element, cell, coordinate_dofs.data(), ufc_cell);
+
+    return w; // no copy
+}
+PYBIND11_MODULE(SIGNATURE, m){
+    m.def("restrict", &restrict);
+}
+"""
+compiled = df.compile_cpp_code(code)
+
+def restrict(function, element, cell):
+    return compiled.restrict(function.cpp_object(), element, cell)
+
 class Particle:
     __slots__ = ['position', 'properties']
     'Lagrangian particle with position and some other passive properties.'
@@ -55,7 +88,7 @@ class CellWithParticles(df.Cell):
 
         neighbors = sum((vertex.entities(tdim).tolist() for vertex in df.vertices(self)), [])
         neighbors = set(neighbors) - set([cell_id])   # Remove self
-        self.neighbors = map(lambda neighbor_index: df.Cell(mesh, neighbor_index), 
+        self.neighbors = map(lambda neighbor_index: df.Cell(mesh, neighbor_index),
                              neighbors)
 
     def __add__(self, particle):
@@ -131,8 +164,9 @@ class LagrangianParticles:
 
         self.element = V.dolfin_element()
         self.num_tensor_entries = 1
-        for i in range(self.element.value_rank()):
-            self.num_tensor_entries *= self.element.value_dimension(i)
+        #for i in range(self.element.value_rank()):
+        #    self.num_tensor_entries *= self.element.value_dimension(i)
+        self.num_tensor_entries = V.ufl_element().value_size()
         # For VectorFunctionSpace CG1 this is 3
         self.coefficients = np.zeros(self.element.space_dimension())
         # For VectorFunctionSpace CG1 this is 3x3
@@ -214,20 +248,16 @@ class LagrangianParticles:
     def step(self, u, dt):
         'Move particles by forward Euler x += u*dt'
         start = df.Timer('shift')
+        v_dim = self.element.value_dimension(0)
         for cwp in six.itervalues(self.particle_map):
             # Restrict once per cell
-            u.restrict(self.coefficients,
-                       self.element,
-                       cwp,
-                       cwp.get_vertex_coordinates(),
-                       cwp)
+            self.coefficients = restrict(u, self.element, cwp)
             for particle in cwp.particles:
                 x = particle.position
                 # Compute velocity at position x
-                self.element.evaluate_basis_all(self.basis_matrix,
-                                                x,
+                self.basis_matrix = self.element.evaluate_basis_all(x,
                                                 cwp.get_vertex_coordinates(),
-                                                cwp.orientation())
+                                                cwp.orientation()).reshape((-1, v_dim))
                 x[:] = x[:] + dt*np.dot(self.coefficients, self.basis_matrix)[:]
         # Recompute the map
         stop_shift = start.stop()

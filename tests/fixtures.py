@@ -37,11 +37,11 @@ def VF3(mesh_3D):
 
 @fixture
 def mesh_2D_self():
-    return UnitSquareMesh(mpi_comm_self(), 4, 4)
+    return UnitSquareMesh(MPI.comm_self, 4, 4)
 
 @fixture
 def mesh_3D_self():
-    return UnitCubeMesh(mpi_comm_self(), 4, 4, 4)
+    return UnitCubeMesh(MPI.comm_self, 4, 4, 4)
 
 @fixture
 def V2_self(mesh_2D_self):

@@ -3,7 +3,7 @@
 from distutils.core import setup
 
 # Version number
-major = 2017
+major = 2018
 minor = 1
 
 setup(name = "fenicstools",
@@ -15,7 +15,6 @@ setup(name = "fenicstools",
       classifiers = [
           'Intended Audience :: Developers',
           'Intended Audience :: Science/Research',
-          'Programming Language :: Python :: 2.6',
           'License :: OSI Approved :: GNU Library or Lesser General Public License (LGPL)',
           'Topic :: Scientific/Engineering :: Mathematics',
           'Topic :: Software Development :: Libraries :: Python Modules',

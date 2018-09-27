@@ -10,13 +10,13 @@ Probe::~Probe()
 Probe::Probe(const Array<double>& x, const FunctionSpace& V) :
   _element(V.element()), _num_evals(0)
 {
+  auto mesh = V.mesh();
+  std::size_t gdim = mesh->geometry().dim();
+  _x.resize(3);
 
-  const Mesh& mesh = *V.mesh();
-  std::size_t gdim = mesh.geometry().dim();
-    
   // Find the cell that contains probe
   const Point point(gdim, x.data());
-  unsigned int cell_id = mesh.bounding_box_tree()->compute_first_entity_collision(point);
+  unsigned int cell_id = mesh->bounding_box_tree()->compute_first_entity_collision(point);
 
   // If the cell is on this process, then create an instance 
   // of the Probe class. Otherwise raise a dolfin_error.
@@ -25,7 +25,7 @@ Probe::Probe(const Array<double>& x, const FunctionSpace& V) :
     // Store position of probe
     for (std::size_t i = 0; i < 3; i++) 
       _x[i] = (i < gdim ? x[i] : 0.0);
-    
+
     // Compute in tensor (one for scalar function, . . .)
     _value_size_loc = 1;
     for (std::size_t i = 0; i < _element->value_rank(); i++)
@@ -34,7 +34,7 @@ Probe::Probe(const Array<double>& x, const FunctionSpace& V) :
     _probes.resize(_value_size_loc);
 
     // Create cell that contains point
-    dolfin_cell.reset(new Cell(mesh, cell_id));
+    dolfin_cell.reset(new Cell(*mesh, cell_id));
     dolfin_cell->get_cell_data(ufc_cell);
     
     coefficients.resize(_element->space_dimension());
@@ -68,6 +68,7 @@ Probe::Probe(const Probe& p)
 {
   basis_matrix = p.basis_matrix;
   coefficients = p.coefficients;
+  _x = p._x;
   vertex_coordinates = p.vertex_coordinates;
   _element = p._element;
   dolfin_cell.reset(new Cell(p.dolfin_cell->mesh(), p.dolfin_cell->index()));
@@ -133,8 +134,7 @@ double Probe::get_probe_component_and_snapshot(std::size_t comp, std::size_t i)
 // Return coordinates of probe
 std::vector<double> Probe::coordinates()
 {
-  std::vector<double> x(3);
-  x.assign(_x, _x+3);
+  std::vector<double> x(_x);
   return x;
 }
 //
@@ -182,3 +182,5 @@ void Probe::restart_probe(const Array<double>& u)
   for (std::size_t j = 0; j < _value_size_loc; j++)
     _probes[j].push_back(u[j]);
 }
+
+

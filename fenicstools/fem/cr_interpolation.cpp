@@ -1,3 +1,17 @@
+/*
+<%
+from dolfin.jit.jit import dolfin_pc
+setup_pybind11(cfg)
+cfg['libraries'] = ['dolfin']
+cfg['include_dirs'] = dolfin_pc['include_dirs']
+cfg['library_dirs'] = dolfin_pc['library_dirs']
+%>
+*/
+
+#include "dolfin.h"
+#include <pybind11/pybind11.h>
+#include <pybind11/numpy.h>
+#include <pybind11/stl.h>
 #include <dolfin/la/GenericMatrix.h>
 #include <algorithm>
 
@@ -45,4 +59,11 @@ namespace dolfin
     A.apply("insert");
   }
 
+}
+
+using namespace dolfin;
+
+PYBIND11_MODULE(cr_interpolation, m)
+{
+    m.def("compute_cg1_cr_interpolation_matrix", &compute_cg1_cr_interpolation_matrix);
 }

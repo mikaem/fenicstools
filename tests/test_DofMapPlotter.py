@@ -3,12 +3,12 @@
 import pytest
 import subprocess
 from fenicstools import DofMapPlotter
-from dolfin import MPI, mpi_comm_world
+from dolfin import MPI
 
 #def test_DofMapPlotter():
     #'''Test logic used in DofMapPlotter by comparing its string representation
     #with FunctionSpace.print_dofmap.'''
-    
+
     #if MPI.size(mpi_comm_world()) == 1:
         #command =\
         #'''
