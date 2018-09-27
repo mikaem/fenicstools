@@ -11,7 +11,7 @@ env:
     - CONDA_PY=36
 
   global:
-    - FENICS_VERSION="2017.2.dev"
+    - FENICS_VERSION="2018.1.0"
     - secure: "JsygfPwIhsn6ywcqP2PjQhwNMZ3KuNuEo0Zyyg1r0KlyVHuGBnt/HUoLjtTGa7mjCvvevCko+BbAaTjTLB56OiqXiteMoutAQMSEjbM9tKV9TwgTcCtPSwMq8Kk1QqiAHRgQW/VWWlEUlIrXE3Zas34+3i1+xvA1ovettMrlFU4="
 
 before_install:
@@ -42,17 +42,12 @@ install:
       conda config --set always_yes yes
       conda config --set show_channel_urls true
       conda config --add channels conda-forge
-      conda config --add channels mikaem/label/OSX-10.12-clang
       conda update -q conda
       conda install conda-forge-build-setup
-      conda install --yes fenics=${FENICS_VERSION} pyvtk h5py-parallel pytest
       source run_conda_forge_build_setup
       cd fenicstools
       git fetch --unshallow
       cd ..
-
-after_failure:
-    - find /Users/travis/miniconda2/.cache/instant/error/* -name 'compile.log' -print -exec cat '{}' \;
 
 script:
     - |
