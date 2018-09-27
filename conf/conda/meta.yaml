@@ -12,11 +12,13 @@ requirements:
   build:
     - fenics =={{FENICS_VERSION}}
     - pip
+    - pybind ==2.2.3
     #- pyvtk
     #- h5py-parallel
 
   run:
     - fenics =={{FENICS_VERSION}}
+    - pybind ==2.2.3
     #- pyvtk
     #- h5py-parallel
     - mpi4py
