@@ -43,7 +43,7 @@ install:
       conda config --set show_channel_urls true
       conda config --add channels conda-forge
       conda update -q conda
-      conda install conda-forge-build-setup
+      conda install --yes --quiet conda-forge-ci-setup=1
       source run_conda_forge_build_setup
       cd fenicstools
       git fetch --unshallow
@@ -53,4 +53,4 @@ script:
     - |
       export INSTANT_CACHE_DIR="${HOME}/instant"
       conda build conf/conda
-      upload_or_check_non_existence ./conf/conda mikaem --channel main || exit 1
+      upload_or_check_non_existence ./conf/conda mikaem --channel main
