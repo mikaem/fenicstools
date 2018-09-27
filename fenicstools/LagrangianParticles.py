@@ -28,7 +28,6 @@ code="""
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
 #include <pybind11/stl.h>
-#include <pybind11/eigen.h>
 #include <dolfin/function/Function.h>
 #include <dolfin/mesh/Cell.h>
 #include <dolfin/fem/FiniteElement.h>
@@ -60,9 +59,7 @@ PYBIND11_MODULE(SIGNATURE, m){
 }
 """
 compiled = df.compile_cpp_code(code)
-
-def restrict(function, element, cell):
-    return compiled.restrict(function, element, cell)
+restrict = compiled.restrict
 
 class Particle:
     __slots__ = ['position', 'properties']
