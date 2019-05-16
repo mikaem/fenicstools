@@ -43,11 +43,9 @@ install:
       conda config --add channels defaults
       conda config --add channels conda-forge
       conda config --set show_channel_urls true
-      conda install --yes --quiet conda-forge-ci-setup=1
-      source run_conda_forge_build_setup
 
 script:
     - conda build conf/conda
 
 after_success:
-    - upload_or_check_non_existence ./conf/conda mikaem --channel main
+    - anaconda upload -u mikaem -c main --skip-existing $CONDA_BUILD_PATH/*.tar.bz2

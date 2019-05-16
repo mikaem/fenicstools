@@ -2,7 +2,7 @@ version: 2
 jobs:
   build:
     machine: true
-    environment: 
+    environment:
       FENICS_VERSION: 2018.1
     steps:
       - checkout
@@ -24,8 +24,8 @@ jobs:
             conda update -q conda
             conda config --add channels conda-forge
             conda install -n root conda-build
-            conda install --yes --quiet conda-forge-ci-setup=1
-            source run_conda_forge_build_setup
+            #conda install --yes --quiet conda-forge-ci-setup=1
+            #source run_conda_forge_build_setup
 
       - save_cache:
           key: v1-miniconda-{{ .Branch }}
@@ -39,7 +39,7 @@ jobs:
             cd /home/circleci/project
             #conda build --python 2.7 ./conf/conda
             conda build --python 3.6 ./conf/conda
-        
+
       - run:
           name: Upload packages
           command: |
@@ -48,5 +48,4 @@ jobs:
               #export CONDA_PY=27
               #upload_or_check_non_existence ./conf/conda mikaem --channel main
               export CONDA_PY=36
-              upload_or_check_non_existence ./conf/conda mikaem --channel main
-
+              anaconda upload -u mikaem -c main ./conf/conda/*.tar.bz2 --skip-existing
