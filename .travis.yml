@@ -1,17 +1,17 @@
 language: generic
 
 os: osx
-osx_image: xcode6.4
+osx_image: xcode9.2
 
 sudo: false
 
 env:
 
   matrix:
-    - CONDA_PY=36
+    - CONDA_PY=37
 
   global:
-    - FENICS_VERSION="2018.1.0"
+    - FENICS_VERSION="2019.1.0"
     - secure: "JsygfPwIhsn6ywcqP2PjQhwNMZ3KuNuEo0Zyyg1r0KlyVHuGBnt/HUoLjtTGa7mjCvvevCko+BbAaTjTLB56OiqXiteMoutAQMSEjbM9tKV9TwgTcCtPSwMq8Kk1QqiAHRgQW/VWWlEUlIrXE3Zas34+3i1+xvA1ovettMrlFU4="
 
 before_install:
@@ -39,7 +39,7 @@ install:
       echo ""
       echo "Configuring conda."
       source /Users/travis/miniconda3/bin/activate root
-      conda config --set always_yes yes      
+      conda config --set always_yes yes
       conda config --add channels defaults
       conda config --add channels conda-forge
       conda config --set show_channel_urls true
