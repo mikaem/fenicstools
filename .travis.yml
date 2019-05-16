@@ -12,7 +12,7 @@ env:
 
   global:
     - FENICS_VERSION="2019.1.0"
-    - secure: "JsygfPwIhsn6ywcqP2PjQhwNMZ3KuNuEo0Zyyg1r0KlyVHuGBnt/HUoLjtTGa7mjCvvevCko+BbAaTjTLB56OiqXiteMoutAQMSEjbM9tKV9TwgTcCtPSwMq8Kk1QqiAHRgQW/VWWlEUlIrXE3Zas34+3i1+xvA1ovettMrlFU4="
+    - secure: "FsaxTWmCYU8spBD/dlo7ZOEV801Wivdop8JkosJTnGxbfbIiyN6naSfflrm9d8vKPKvSB7ics+QVr4s0dZ2f/jT0o0GdCqUr7hgeSeprUtWlZHBNMVggZIp1Dke7Y4gLgOJ5Jwg8hRkn3pzClip54nFqwSqEuS9gSuKzsQbNVMM="
 
 before_install:
     # Remove homebrew.
