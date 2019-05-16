@@ -48,4 +48,4 @@ jobs:
               #export CONDA_PY=27
               #upload_or_check_non_existence ./conf/conda mikaem --channel main
               export CONDA_PY=36
-              anaconda upload -u mikaem -c main ./conf/conda/*.tar.bz2 --skip-existing
+              anaconda upload -u mikaem -c main $CONDA_BUILD_PATH/*.tar.bz2 --skip-existing
