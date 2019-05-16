@@ -49,5 +49,6 @@ script:
     - conda build conf/conda
 
 after_success:
-    - source /Users/travis/miniconda3/bin/activate root
-    - anaconda upload -u mikaem -c main --skip-existing $CONDA_BUILD_PATH/*.tar.bz2
+    - |
+      source /Users/travis/miniconda3/bin/activate root
+      anaconda upload -u mikaem -c main --skip-existing ~/miniconda3/conda-bld/osx-64/*.tar.bz2
