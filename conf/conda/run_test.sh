@@ -14,7 +14,7 @@ pushd tests
 # Downgrade pybind11 cause 2.2.4 is buggy
 #conda install pybind11=2.2.3
 
-$PYTHON -m pip install -v --no-deps cppimport
+$PYTHON -m pip install cppimport
 
 $PYTHON -b -m pytest -vs
 
