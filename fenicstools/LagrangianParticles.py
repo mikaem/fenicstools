@@ -470,7 +470,6 @@ class RandomGenerator(object):
             points_inside = np.array(filter(self.rule, points))
         else:
             points_inside = None
-
         points_inside = comm.bcast(points_inside, root=0)
 
         return points_inside

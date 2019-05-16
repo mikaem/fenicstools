@@ -55,18 +55,19 @@ def weighted_gradient_matrix(mesh, i, family='CG', degree=1, constrained_domain=
         for ii in i:
             dP = assemble(TrialFunction(S).dx(ii)*TestFunction(DG)*dx)
             A = Matrix(G)
-            #Cp = compiled_gradient_module.compute_weighted_gradient_matrix(A, dP, dg)
-            compiled_gradient_module.compute_DG0_to_CG_weight_matrix(A, dg)
-            C = assemble(TrialFunction(S)*TestFunction(T)*dx)
-            A_mat = as_backend_type(A).mat()
-            A_mat.matMult(as_backend_type(dP).mat(), result=as_backend_type(C).mat())
+            C = compiled_gradient_module.compute_weighted_gradient_matrix(A, dP, dg)
+            #compiled_gradient_module.compute_DG0_to_CG_weight_matrix(A, dg)
+            #C = assemble(TrialFunction(S)*TestFunction(T)*dx)
+            #A_mat = as_backend_type(A).mat()
+            #A_mat.matMult(as_backend_type(dP).mat(), result=as_backend_type(C).mat())
             CC.append(C)
         return CC
     else:
         dP = assemble(TrialFunction(S).dx(i)*TestFunction(DG)*dx)
-        compiled_gradient_module.compute_DG0_to_CG_weight_matrix(G, dg)
-        G_mat = as_backend_type(G).mat()
-        C = assemble(TrialFunction(S)*TestFunction(T)*dx)
-        G_mat.matMult(as_backend_type(dP).mat(), result=as_backend_type(C).mat())
+        C = compiled_gradient_module.compute_weighted_gradient_matrix(A, dP, dg)
+        #compiled_gradient_module.compute_DG0_to_CG_weight_matrix(G, dg)
+        #G_mat = as_backend_type(G).mat()
+        #C = assemble(TrialFunction(S)*TestFunction(T)*dx)
+        #G_mat.matMult(as_backend_type(dP).mat(), result=as_backend_type(C).mat())
         return C
 

@@ -8,7 +8,7 @@ sudo: false
 env:
 
   matrix:
-    - CONFIG=osx_python3.6
+    - CONDA_PY=36
 
   global:
     - FENICS_VERSION="2018.1.0"

@@ -2,7 +2,6 @@
 <%
 from dolfin.jit.jit import dolfin_pc
 setup_pybind11(cfg)
-cfg['libraries'] = dolfin_pc['libraries']
 cfg['include_dirs'] = dolfin_pc['include_dirs']
 cfg['library_dirs'] = dolfin_pc['library_dirs']
 %>
@@ -17,7 +16,6 @@ cfg['library_dirs'] = dolfin_pc['library_dirs']
 #include <dolfin/fem/GenericDofMap.h>
 #include <dolfin/la/GenericVector.h>
 #include <dolfin/la/GenericMatrix.h>
-#include <dolfin/la/PETScMatrix.h>
 #include <dolfin/geometry/Point.h>
 #include <dolfin/mesh/Facet.h>
 #include <dolfin/mesh/Edge.h>
@@ -204,17 +202,6 @@ void cr_divergence2(Function& divu, const Function& u,
     }
   }
 }
-
-//std::shared_ptr<GenericMatrix> MatMatMult(GenericMatrix& A, GenericMatrix& B)
-//{
-//  const dolfin::PETScMatrix* Ap = &as_type<const dolfin::PETScMatrix>(A);
-//  const dolfin::PETScMatrix* Bp = &as_type<const dolfin::PETScMatrix>(B);
-//  Mat CC;
-//  PetscErrorCode ierr = MatMatMult(Ap->mat(), Bp->mat(), MAT_INITIAL_MATRIX, PETSC_DEFAULT, &CC);
-//  dolfin::PETScMatrix CCC = PETScMatrix(CC);
-//  return CCC.copy();  
-//}
-
 // Base case for all divergence computations. 
 // Compute divergence of vector field u.
 void cr_divergence_matrix(GenericMatrix& M, GenericMatrix& A,

@@ -2,7 +2,6 @@
 <%
 from dolfin.jit.jit import dolfin_pc
 setup_pybind11(cfg)
-cfg['libraries'] = ['dolfin']
 cfg['include_dirs'] = dolfin_pc['include_dirs']
 cfg['library_dirs'] = dolfin_pc['library_dirs']
 %>

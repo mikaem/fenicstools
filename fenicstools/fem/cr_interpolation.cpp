@@ -2,7 +2,6 @@
 <%
 from dolfin.jit.jit import dolfin_pc
 setup_pybind11(cfg)
-cfg['libraries'] = ['dolfin']
 cfg['include_dirs'] = dolfin_pc['include_dirs']
 cfg['library_dirs'] = dolfin_pc['library_dirs']
 %>
@@ -13,7 +12,6 @@ cfg['library_dirs'] = dolfin_pc['library_dirs']
 #include <pybind11/numpy.h>
 #include <pybind11/stl.h>
 #include <dolfin/la/GenericMatrix.h>
-#include <algorithm>
 
 namespace dolfin
 {
