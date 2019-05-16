@@ -9,16 +9,14 @@ build:
   number: 3
 
 requirements:
-  build:
+  host:
+    - python
     - fenics =={{FENICS_VERSION}}
     - pip
-    #- pyvtk
-    #- h5py-parallel
 
   run:
+    - python
     - fenics =={{FENICS_VERSION}}
-    #- pyvtk
-    #- h5py-parallel
     - mpi4py
 
 test:
