@@ -48,4 +48,4 @@ jobs:
               #export CONDA_PY=27
               #upload_or_check_non_existence ./conf/conda mikaem --channel main
               export CONDA_PY=36
-              anaconda upload -u mikaem -c main --skip-existing ~/miniconda/conda-bld/linux-64/*.tar.bz2
+              anaconda upload -t $BINSTAR_TOKEN -u mikaem -c main --skip-existing ~/miniconda/conda-bld/linux-64/*.tar.bz2

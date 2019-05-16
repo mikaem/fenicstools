@@ -51,4 +51,4 @@ script:
 after_success:
     - |
       source /Users/travis/miniconda3/bin/activate root
-      anaconda upload -u mikaem -c main --skip-existing ~/miniconda3/conda-bld/osx-64/*.tar.bz2
+      anaconda upload -t $BINSTAR_TOKEN -u mikaem -c main --skip-existing ~/miniconda3/conda-bld/osx-64/*.tar.bz2
