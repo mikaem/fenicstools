@@ -11,7 +11,6 @@ env:
     - CONDA_PY=37
 
   global:
-    - FENICS_VERSION="2019.1.0"
     - secure: "FsaxTWmCYU8spBD/dlo7ZOEV801Wivdop8JkosJTnGxbfbIiyN6naSfflrm9d8vKPKvSB7ics+QVr4s0dZ2f/jT0o0GdCqUr7hgeSeprUtWlZHBNMVggZIp1Dke7Y4gLgOJ5Jwg8hRkn3pzClip54nFqwSqEuS9gSuKzsQbNVMM="
 
 before_install:

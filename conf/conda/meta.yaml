@@ -1,22 +1,24 @@
+{% set version = "2019.1.0" %}
+
 package:
   name: fenicstools
-  version: {{FENICS_VERSION}}
+  version: {{ version }}
 
 source:
   git_url: ../../
 
 build:
-  number: 3
+  number: 0
 
 requirements:
   host:
     - python
-    - fenics =={{FENICS_VERSION}}
+    - fenics =={{ version }}
     - pip
 
   run:
     - python
-    - fenics =={{FENICS_VERSION}}
+    - fenics =={{ version }}
     - mpi4py
 
 test:

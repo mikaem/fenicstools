@@ -2,8 +2,6 @@ version: 2
 jobs:
   build:
     machine: true
-    environment:
-      FENICS_VERSION: 2019.1.0
     steps:
       - checkout
 
