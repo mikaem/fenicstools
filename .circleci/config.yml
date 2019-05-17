@@ -44,7 +44,7 @@ jobs:
           name: Upload packages
           command: |
               source ~/miniconda/bin/activate root
-              cd /home/circleci/project
+              cd /home/circleci/project/conf/conda
               #export CONDA_PY=27
               #upload_or_check_non_existence ./conf/conda mikaem --channel main
               export CONDA_PY=36
