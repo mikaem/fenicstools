@@ -51,4 +51,4 @@ after_success:
     - |
       source /Users/travis/miniconda3/bin/activate root
       cd conf/conda
-      anaconda upload -t $BINSTAR_TOKEN -u mikaem -c main --skip-existing ~/miniconda3/conda-bld/osx-64/*.tar.bz2
+      anaconda -t $BINSTAR_TOKEN upload -u mikaem -c main --skip-existing ~/miniconda3/conda-bld/osx-64/*.tar.bz2
