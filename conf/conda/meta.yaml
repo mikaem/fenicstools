@@ -18,6 +18,7 @@ requirements:
 
   run:
     - python
+    #- pip
     - fenics =={{ version }}
     - mpi4py
 
@@ -26,6 +27,7 @@ test:
     - tests
 
   requires:
+    - pip
     - pytest
 
 # See
