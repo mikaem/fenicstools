@@ -11,7 +11,6 @@ cfg['compiler_args']  = ['-std=c++11', '-DHAS_MPI']
 #include <pybind11/eigen.h>
 #include <pybind11/numpy.h>
 #include <pybind11/stl.h>
-
 #include <dolfin/function/Function.h>
 #include <dolfin/function/FunctionSpace.h>
 #include <dolfin/function/Expression.h>
@@ -54,14 +53,14 @@ struct lt_coordinate
   }
 
   // Tolerance
-  const double TOL;                  
+  const double TOL;
 };
 
-void extract_dof_component_map(std::unordered_map<std::size_t, 
-                               std::size_t>& dof_component_map, 
-                               const FunctionSpace& V, 
+void extract_dof_component_map(std::unordered_map<std::size_t,
+                               std::size_t>& dof_component_map,
+                               const FunctionSpace& V,
                                int* component)
-{ 
+{
   // Extract sub dofmaps recursively and store dof to component map
   if (V.element()->num_sub_elements() == 0)
   {
@@ -101,10 +100,10 @@ bool in_bounding_box(const std::vector<double>& point,
     }
   }
   return true;}
-    
-std::map<std::vector<double>, std::vector<std::size_t>, lt_coordinate> 
+
+std::map<std::vector<double>, std::vector<std::size_t>, lt_coordinate>
 tabulate_coordinates_to_dofs(const FunctionSpace& V)
-{      
+{
     std::map<std::vector<double>, std::vector<std::size_t>, lt_coordinate>
     coords_to_dofs(lt_coordinate(1.0e-12));
 
@@ -166,8 +165,8 @@ tabulate_coordinates_to_dofs(const FunctionSpace& V)
   return coords_to_dofs;
 }
 
-void interpolate1(const Expression& u0, Function& u) 
-{    
+void interpolate1(const Expression& u0, Function& u)
+{
   // Get function space and element interpolating to
   dolfin_assert(u.function_space());
   const FunctionSpace& V = *u.function_space();
@@ -237,7 +236,7 @@ void interpolate1(const Expression& u0, Function& u)
   u.vector()->apply("insert");
 }
 
-void interpolate2(const Function& u0, Function& u) 
+void interpolate2(const Function& u0, Function& u)
 {
   // Interpolate from Function u0 to Function u.
   // This mesh of u0 may be different from that of u
@@ -473,7 +472,7 @@ void interpolate_any1(const Function& u0, Function& u)
   //      be required
   //   6) Call evaluate_dofs for all cells on local mesh using the
   //      wrapped function as the ufc function.
-  //   7) Update coefficients of local vector with results from 
+  //   7) Update coefficients of local vector with results from
   //      evaluate_dofs
 
   // Get function spaces of Functions interpolating to/from
@@ -550,7 +549,7 @@ void interpolate_any1(const Function& u0, Function& u)
   // Create map from coordinate to global result of eval
   static std::map<std::vector<double>, std::vector<double>, lt_coordinate>
       coords_to_values(lt_coordinate(1.0e-12));
-      
+
   // Create an Expression wrapping the set of coordinates
   // Objective is to obtain all points in need of evaluation.
   static std::set<std::vector<double>> coords;
@@ -571,7 +570,7 @@ void interpolate_any1(const Function& u0, Function& u)
   cord._xx = x;
   ufc::cell ufc_cell;
   std::vector<double> vertex_coordinates;
-  std::vector<double> cell_coefficients(dofmap.max_element_dofs());  
+  std::vector<double> cell_coefficients(dofmap.max_element_dofs());
   const std::size_t local_size = dofmap.ownership_range().second
                               - dofmap.ownership_range().first;
   for (CellIterator cell(mesh1); !cell.end(); ++cell)
@@ -589,8 +588,8 @@ void interpolate_any1(const Function& u0, Function& u)
   //        for (auto y = it->begin(); y != it->end(); ++y)
   //           std::cout << *y << " ";
   //       std::cout << std::endl;
-  //   }        
-  //   std::cout << coords.size() << " " << coords_to_dofs.size() << std::endl;    
+  //   }
+  //   std::cout << coords.size() << " " << coords_to_dofs.size() << std::endl;
 
   // Search this process first for all coordinates in u's local mesh
   std::vector<double> points_not_found;
@@ -698,22 +697,22 @@ void interpolate_any1(const Function& u0, Function& u)
       coords_to_values.insert(std::make_pair(x, values));
       }
   }
-  
+
   // Create an Expression wrapping coords_to_values such that these
   // results will be retrieved when calling evaluate_dofs
   class WrapperFunction : public Expression
   {
   public:
-          
+
       WrapperFunction(int value_shape) : Expression(value_shape) {};
-          
+
       mutable std::vector<double> _xx;
 
       void eval(Array<double>& values, const Array<double>& x) const
       {
       for (uint j = 0; j < x.size(); j++)
               _xx[j] = x[j];
-          
+
       const std::vector<double>& v = coords_to_values[_xx];
       for (std::size_t j = 0; j < v.size(); j++)
           values[j] = v[j];
@@ -722,12 +721,12 @@ void interpolate_any1(const Function& u0, Function& u)
 
   WrapperFunction wrapper(u.value_size());
   wrapper._xx = x;
-  
+
   // Iterate over mesh and interpolate on each cell
   //   ufc::cell ufc_cell;
   //   std::vector<double> vertex_coordinates;
   //   std::vector<double> cell_coefficients(dofmap.max_element_dofs());
-  //   
+  //
   //   const std::size_t local_size = dofmap.ownership_range().second
   //                                - dofmap.ownership_range().first;
   for (CellIterator cell(mesh1); !cell.end(); ++cell)
@@ -736,7 +735,7 @@ void interpolate_any1(const Function& u0, Function& u)
       cell->get_vertex_coordinates(vertex_coordinates);
       cell->get_cell_data(ufc_cell);
 
-      // Call evaluate_dofs with wrapper function around the globally 
+      // Call evaluate_dofs with wrapper function around the globally
       // computed interpolation points.
       element.evaluate_dofs(cell_coefficients.data(), wrapper,
               vertex_coordinates.data(), ufc_cell.orientation, ufc_cell);
@@ -752,11 +751,11 @@ void interpolate_any1(const Function& u0, Function& u)
               local_u_vector[d] = cell_coefficients[i];
       }
   }
-  
+
   // Set and finalize vector
   u.vector()->set_local(local_u_vector);
   u.vector()->apply("insert");
-}    
+}
 //
 void interpolate_any2(const Expression& u0, Function& u)
 {
@@ -811,10 +810,10 @@ void interpolate_any2(const Expression& u0, Function& u)
   // Get dofmap of u
   dolfin_assert(V1.dofmap());
   const GenericDofMap& dofmap = *V1.dofmap();
-  
+
   ufc::cell ufc_cell;
   std::vector<double> vertex_coordinates;
-  std::vector<double> cell_coefficients(dofmap.max_element_dofs());  
+  std::vector<double> cell_coefficients(dofmap.max_element_dofs());
   const std::size_t local_size = dofmap.ownership_range().second
                               - dofmap.ownership_range().first;
 
@@ -826,7 +825,7 @@ void interpolate_any2(const Expression& u0, Function& u)
       cell->get_vertex_coordinates(vertex_coordinates);
       cell->get_cell_data(ufc_cell);
 
-      // Call evaluate_dofs with wrapper function around the globally 
+      // Call evaluate_dofs with wrapper function around the globally
       // computed interpolation points.
       element.evaluate_dofs(cell_coefficients.data(), u0,
               vertex_coordinates.data(), ufc_cell.orientation, ufc_cell);
@@ -842,17 +841,17 @@ void interpolate_any2(const Expression& u0, Function& u)
               local_u_vector[d] = cell_coefficients[i];
       }
   }
-  
+
   // Set and finalize vector
   u.vector()->set_local(local_u_vector);
   u.vector()->apply("insert");
-}      
+}
 
 PYBIND11_MODULE(interpolation, m)
 {
-  m.def("interpolate", (void (*)(const Function&, Function&)) 
+  m.def("interpolate", (void (*)(const Function&, Function&))
       &interpolate2);
-  m.def("interpolate", (void (*)(const Expression&, Function&)) 
+  m.def("interpolate", (void (*)(const Expression&, Function&))
       &interpolate1);
   m.def("interpolate", [](py::object u0, py::object v){
       auto _u = u0.attr("_cpp_object");
@@ -883,4 +882,3 @@ PYBIND11_MODULE(interpolation, m)
     }
     });
 }
-

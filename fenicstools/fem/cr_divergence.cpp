@@ -24,7 +24,7 @@ cfg['library_dirs'] = dolfin_pc['library_dirs']
 
 using namespace dolfin;
 
-// Base case for all divergence computations. 
+// Base case for all divergence computations.
 // Compute divergence of vector field u.
 void cr_divergence(Function& divu, const Function& u)
 {
@@ -36,7 +36,7 @@ void cr_divergence(Function& divu, const Function& u)
   std::shared_ptr<const GenericVector> U = u.vector();
   std::shared_ptr<GenericVector> DIVU = divu.vector();
 
-  // Figure out about the local dofs of DG0 
+  // Figure out about the local dofs of DG0
   std::pair<std::size_t, std::size_t>
   first_last_dof = DG0_dofmap->ownership_range();
   std::size_t first_dof = first_last_dof.first;
@@ -48,7 +48,7 @@ void cr_divergence(Function& divu, const Function& u)
 
   // Get topological dimension so that we know what Facet is
   const Mesh mesh = *u.function_space()->mesh();
-  std::size_t tdim = mesh.topology().dim(); 
+  std::size_t tdim = mesh.topology().dim();
   // Get the info on length of u and gdim for the dot product
   std::size_t gdim = mesh.geometry().dim();
   std::size_t udim = u.value_dimension(0); // Rank 1!
@@ -65,10 +65,10 @@ void cr_divergence(Function& divu, const Function& u)
     {
       Point cell_mp = cell->midpoint();
       double cell_volume = cell->volume();
-      
+
       // Dofs of CR on all facets of the cell, global order
       auto facets_dofs = CR1_dofmap->cell_dofs(cell->index());
-      
+
       double cell_integral = 0;
       std::size_t local_facet_index = 0;
       for(FacetIterator facet(*cell); !facet.end(); ++facet)
@@ -79,7 +79,7 @@ void cr_divergence(Function& divu, const Function& u)
         else if(tdim == 3)
           facet_measure = Face(mesh, facet->index()).area();
         // Tdim 1 will not happen because CR is not defined there
-        
+
         Point facet_normal = facet->normal();
 
         // Flip the normal if it is not outer already
@@ -115,7 +115,7 @@ void cr_divergence(Function& divu, const Function& u)
 void cr_divergence2(Function& divu, const Function& u,
                 const FunctionSpace& DGscalar, const FunctionSpace& CRvector)
 {
-  // Divu scalar from u vector 
+  // Divu scalar from u vector
   std::size_t u_rank = u.value_rank();
   std::size_t divu_rank = divu.value_rank();
   if((divu_rank == 0) and (u_rank == 1))
@@ -139,10 +139,10 @@ void cr_divergence2(Function& divu, const Function& u,
     std::shared_ptr<const GenericVector> U = u.vector();
     std::shared_ptr<GenericVector> DIVU = divu.vector();
 
-    // Get dofmaps 
+    // Get dofmaps
     std::shared_ptr<const FunctionSpace> DGvector = divu.function_space();
     std::shared_ptr<const FunctionSpace> CRtensor = u.function_space();
-    
+
     std::size_t len_divu = divu.value_dimension(0);
     // With scalar U can be extracted only once
     std::vector<double> U_values;
@@ -163,7 +163,7 @@ void cr_divergence2(Function& divu, const Function& u,
           CRi_rows = CRvector[i]->dofmap()->dofs();
         std::size_t m = CRi_rows.size();
         U_i->zero();
-        U_i->set(U_values.data(), m, CRi_rows.data()); 
+        U_i->set(U_values.data(), m, CRi_rows.data());
         U_i->apply("insert");
       }
       // For tensor, U_i represents T_ij, (T_i0, T_i1, T_i2)
@@ -183,7 +183,7 @@ void cr_divergence2(Function& divu, const Function& u,
           std::vector<dolfin::la_index>
             CRj_rows = CRvector[j]->dofmap()->dofs();
 
-          U_i->set(U_values.data(), m, CRj_rows.data()); 
+          U_i->set(U_values.data(), m, CRj_rows.data());
           U_i->apply("insert");
         }
       }
@@ -197,22 +197,22 @@ void cr_divergence2(Function& divu, const Function& u,
       std::size_t m = DGi_rows.size();
       std::vector<double> DIVU_i_values;
       DIVU_i->get_local(DIVU_i_values);
-      DIVU->set(DIVU_i_values.data(), m, DGi_rows.data()); 
+      DIVU->set(DIVU_i_values.data(), m, DGi_rows.data());
       DIVU->apply("insert");
     }
   }
 }
-// Base case for all divergence computations. 
+// Base case for all divergence computations.
 // Compute divergence of vector field u.
 void cr_divergence_matrix(GenericMatrix& M, GenericMatrix& A,
-                       const FunctionSpace& DGscalar, 
+                       const FunctionSpace& DGscalar,
                        const FunctionSpace& CRvector)
 {
   std::shared_ptr<const GenericDofMap>
     CR1_dofmap = CRvector.dofmap(),
     DG0_dofmap = DGscalar.dofmap();
 
-  // Figure out about the local dofs of DG0 
+  // Figure out about the local dofs of DG0
   std::pair<std::size_t, std::size_t>
   first_last_dof = DG0_dofmap->ownership_range();
   std::size_t first_dof = first_last_dof.first;
@@ -221,25 +221,25 @@ void cr_divergence_matrix(GenericMatrix& M, GenericMatrix& A,
 
   // Get topological dimension so that we know what Facet is
   const Mesh mesh = *DGscalar.mesh();
-  std::size_t tdim = mesh.topology().dim(); 
+  std::size_t tdim = mesh.topology().dim();
   std::size_t gdim = mesh.geometry().dim();
-  
+
   std::vector<std::size_t> columns;
   std::vector<double> values;
-  
+
   // Fill the values
   for(CellIterator cell(mesh); !cell.end(); ++cell)
   {
     auto dg_dofs = DG0_dofmap->cell_dofs(cell->index());
     // There is only one DG0 dof per cell
     dolfin::la_index cell_dof = dg_dofs[0];
-    
+
     Point cell_mp = cell->midpoint();
     double cell_volume = cell->volume();
-    std::size_t local_facet_index = 0;      
-    
+    std::size_t local_facet_index = 0;
+
     auto cr_dofs = CR1_dofmap->cell_dofs(cell->index());
-    
+
     for(FacetIterator facet(*cell); !facet.end(); ++facet)
     {
       double facet_measure=0;
@@ -248,23 +248,23 @@ void cr_divergence_matrix(GenericMatrix& M, GenericMatrix& A,
       else if(tdim == 3)
         facet_measure = Face(mesh, facet->index()).area();
       // Tdim 1 will not happen because CR is not defined there
-      
+
       Point facet_normal = facet->normal();
 
       // Flip the normal if it is not outer already
       Point facet_mp = facet->midpoint();
       double sign = (facet_normal.dot(facet_mp - cell_mp) > 0.0) ? 1.0 : -1.0;
       facet_normal *= (sign*facet_measure/cell_volume);
-      
+
       // Dofs of CR on the facet, local order
       std::vector<std::size_t> facet_dofs;
       CR1_dofmap->tabulate_facet_dofs(facet_dofs, local_facet_index);
-      
+
       for (std::size_t j = 0 ; j < facet_dofs.size(); j++)
-      {   
+      {
         columns.push_back(cr_dofs[facet_dofs[j]]);
         values.push_back(facet_normal[j]);
-      }        
+      }
       local_facet_index += 1;
     }
     M.setrow(cell_dof, columns, values);
@@ -275,7 +275,6 @@ void cr_divergence_matrix(GenericMatrix& M, GenericMatrix& A,
   //std::shared_ptr<GenericMatrix> Cp = MatMatMult(M, A);
   //return Cp;
 }
-
 namespace py = pybind11;
 
 PYBIND11_MODULE(cr_divergence, m)
@@ -299,4 +298,3 @@ PYBIND11_MODULE(cr_divergence, m)
     cr_divergence_matrix(M, A, _U, _V);
   });
 }
-

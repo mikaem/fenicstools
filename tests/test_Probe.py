@@ -51,3 +51,8 @@ def test_Probe_vectorfunctionspace_3D(VF3_self):
     assert round(p[0][0] - 0.25, 7) == 0
     assert round(p[1][1] - 0.50, 7) == 0
     assert round(p[1][2] - 0.75, 7) == 0
+
+if __name__ == '__main__':
+    mesh = UnitSquareMesh(4, 4)
+    V = FunctionSpace(mesh, 'CG', 1)
+    test_Probe_functionspace_2D(V)
