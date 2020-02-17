@@ -693,7 +693,7 @@ void interpolate_any1(const Function& u0, Function& u)
       // Store received result in map
       for (uint i = 0; i < u0.value_size(); i++)
           values[i] = vals[j*u0.value_size() + i];
-
+      
       coords_to_values.insert(std::make_pair(x, values));
       }
   }
@@ -751,7 +751,9 @@ void interpolate_any1(const Function& u0, Function& u)
               local_u_vector[d] = cell_coefficients[i];
       }
   }
-
+  
+  coords_to_values.clear();
+  coords.clear();
   // Set and finalize vector
   u.vector()->set_local(local_u_vector);
   u.vector()->apply("insert");
